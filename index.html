@@ -212,7 +212,7 @@ dialog::backdrop{background:rgba(0,0,0,.6)}
 const API = 'https://api.elevenlabs.io/v1';
 const PREFIX = 'StudentDay-';
 
-const DEFAULT_READ = 'مثلاً: سلّم وعرّف بنفسك، وقل اسمك ووش تدرس، ووش أكثر دولة تحب تزورها وليش. كل ما تكلمت أكثر (30 ثانية أو أكثر)، طلع الصوت أقرب لك.';
+const DEFAULT_READ = 'اضغط الزر وجاوب على الأسئلة اللي بتطلع هنا. تكلّم براحتك 30 ثانية أو أكثر، وكل ما تكلمت أكثر طلع الصوت أقرب لك.';
 const DEFAULT_LANGS = [
   {flag:'🇬🇧', country:'بريطانيا', lang:'English',  code:'en', stamp:'LONDON'},
   {flag:'🇯🇵', country:'اليابان',  lang:'日本語',    code:'ja', stamp:'TOKYO'},
@@ -221,8 +221,17 @@ const DEFAULT_LANGS = [
   {flag:'🇮🇹', country:'إيطاليا',  lang:'Italiano', code:'it', stamp:'ROMA'},
 ];
 const FALLBACK_MODEL = 'eleven_multilingual_v2';
-const CFG_VER = 3;
-const MAX_CHARS = 400;
+const CFG_VER = 4;
+const MAX_CHARS = 180;   // what gets translated and voiced (saves credits)
+const MIN_SECS = 20;     // longer sample = closer clone
+const PROMPTS = [
+  'عرّف بنفسك: وش اسمك؟ ووش تدرس؟',
+  'وش أكثر دولة تحب تزورها؟ وليش؟',
+  'وش أكلتك المفضلة؟ وكيف تحبها؟',
+  'لو تقدر تسافر بكرة، وين بتروح؟ ومع مين؟',
+  'وش هوايتك؟ ومن متى بديت فيها؟',
+  'وش أحلى ذكرى عندك من سفرة أو رحلة؟',
+];
 const DEFAULTS = {ver:CFG_VER, key:'', secs:60, model:'eleven_multilingual_v2', sim:1, stab:0.5, noise:true, mode:'clone', read:DEFAULT_READ, langs:DEFAULT_LANGS, pending:[], pendingDubs:[]};
 
 let cfg = loadCfg();
@@ -303,11 +312,16 @@ async function retryPending(){
 }
 
 /* ---------- Recording ---------- */
+let warnUntil=0;
 let mediaRec=null, stream=null, chunks=[], t0=0, tick=null, recording=false;
 
 $('recBtn').addEventListener('click', async () => {
   clearErr();
-  if (recording){ stopRec(); return; }
+  if (recording){
+    const el = (performance.now()-t0)/1000;
+    if (el < MIN_SECS){ warnUntil = performance.now() + 2500; $('timer').textContent = `⏳ كمّل كلام شوي… باقي ${Math.ceil(MIN_SECS-el)} ث عشان يطلع صوتك أقرب`; return; }
+    stopRec(); return;
+  }
   if (!cfg.key){ showErr('ما فيه مفتاح API. افتح الإعدادات ⚙️ وحط المفتاح.'); $('settings').showModal(); return; }
   if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){ enableAlt(); return; }
   try {
@@ -325,7 +339,10 @@ $('recBtn').addEventListener('click', async () => {
     const el = (performance.now()-t0)/1000;
     const left = Math.max(0, cfg.secs - el);
     setRing(Math.min(1, el/cfg.secs));
-    $('timer').textContent = el < 10 ? `🔴 تكلّم… (أقل شي 10 ثواني) ${Math.ceil(left)} ث` : `🔴 تكلّم… اضغط إيقاف لما تخلص · ${Math.ceil(left)} ث`;
+    const pi = Math.floor(el/9) % PROMPTS.length;
+    if ($('readText').dataset.pi !== String(pi)){ $('readText').dataset.pi = pi; $('readText').textContent = '💬 ' + PROMPTS[pi]; }
+    if (performance.now() < warnUntil) { if (el >= cfg.secs) stopRec(); return; }
+    $('timer').textContent = el < MIN_SECS ? `🔴 تكلّم… جاوب على السؤال اللي فوق (أقل شي ${MIN_SECS} ثانية) · ${Math.ceil(el)} ث` : `🔴 ممتاز! كمّل أو اضغط إيقاف · باقي ${Math.ceil(left)} ث`;
     if (el >= cfg.secs) stopRec();
   }, 100);
 });
@@ -364,7 +381,7 @@ async function onRecStop(){
   stream && stream.getTracks().forEach(t=>t.stop());
   if (dur < 10){
     resetRecordUI();
-    showErr('التسجيل قصير. لازم 10 ثواني على الأقل، ويفضّل تكمل النص كامل.');
+    showErr('التسجيل قصير. تكلّم 20 ثانية على الأقل.');
     return;
   }
   const blob = new Blob(chunks, {type: mediaRec.mimeType || 'audio/webm'});
@@ -395,6 +412,15 @@ async function toWav(blob){
 
 /* ---------- The trip ---------- */
 let players = [];
+
+function shortenForVoice(t){
+  if (t.length <= MAX_CHARS) return t;
+  const parts = t.match(/[^.!?؟،,]+[.!?؟،,]?/g) || [t];
+  let out = '';
+  for (const p of parts){ if ((out + p).length > MAX_CHARS) break; out += p; }
+  if (out.trim().length < 40){ const cut = t.slice(0, MAX_CHARS); out = cut.slice(0, Math.max(cut.lastIndexOf(' '), 40)); }
+  return out.trim().replace(/[،,]$/, '') ;
+}
 
 async function transcribe(sample){
   const fd = new FormData();
@@ -435,7 +461,7 @@ async function runTrip(sample){
     log('heard ['+heard.lang+']: '+heard.text);
     if (!heard.text || heard.text.length < 3) throw new Error('NO_SPEECH');
     let text = heard.text;
-    if (text.length > MAX_CHARS){ const cut = text.slice(0, MAX_CHARS); const i = Math.max(cut.lastIndexOf('.'), cut.lastIndexOf('،'), cut.lastIndexOf('؟'), cut.lastIndexOf(' ')); text = cut.slice(0, i>200?i:MAX_CHARS); }
+    text = shortenForVoice(text);
 
     work('جاري تجهيز رحلتك…', 'ننسخ صوتك 🎙️');
     const fd = new FormData();
@@ -626,6 +652,7 @@ $('newVisitor').addEventListener('click', ()=>{
 
 function resetRecordUI(){
   setRing(0);
+  $('readText').textContent = cfg.read; delete $('readText').dataset.pi;
   $('recBtn').textContent='اضغط وسجّل'; $('recBtn').classList.remove('recording');
   $('consent').disabled=false; $('consent').checked=false; $('recBtn').disabled=true;
   $('timer').textContent='علّم الموافقة أولاً';
