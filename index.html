@@ -400,10 +400,10 @@ details.logbox summary{cursor:pointer;color:var(--muted);font-size:14px;padding:
         <div class="field">
           <label for="sModel">الموديل</label>
           <select id="sModel" class="ltr">
-            <option value="eleven_multilingual_v2">Multilingual v2 — أعلى جودة</option>
+            <option value="eleven_v4">Eleven v4 — الأحدث (شبه أعلى)</option>
+            <option value="eleven_multilingual_v2">Multilingual v2 — مجرّب وثابت</option>
             <option value="eleven_flash_v2_5">Flash v2.5 — أرخص وأسرع</option>
-            <option value="eleven_v3">Eleven v3 — تجريبي</option>
-          </select>
+                      </select>
         </div>
         <div class="slider">
           <div class="top"><span>الشبه بصوت الزائر (Similarity)</span><b id="vSim"></b></div>
@@ -851,8 +851,14 @@ async function genOne(voiceId, i, text, srcLang, pre){
   try { t = (pre && pre[l.code]) ? pre[l.code].trim() : await translate(text, l.code, srcLang); tx.textContent = t; }
   catch(e){ log('translate '+l.code+': '+e.message); card.classList.add('err'); tx.textContent = 'ما زبطت الترجمة'; b.innerHTML = '✕'; return; }
   try {
-    const r = await api(`/text-to-speech/${voiceId}?output_format=mp3_44100_128`, {method:'POST', headers:{'Content-Type':'application/json','Accept':'audio/mpeg'},
-      body: JSON.stringify({text:t, model_id:cfg.model, voice_settings:{stability:+cfg.stab, similarity_boost:+cfg.sim, use_speaker_boost:true}})});
+    const call = model => api(`/text-to-speech/${voiceId}?output_format=mp3_44100_128`, {method:'POST', headers:{'Content-Type':'application/json','Accept':'audio/mpeg'},
+      body: JSON.stringify({text:t, model_id:model, voice_settings:{stability:+cfg.stab, similarity_boost:+cfg.sim, use_speaker_boost:true}})});
+    let r;
+    try { r = await call(cfg.model); }
+    catch(e){
+      if (cfg.model !== 'eleven_multilingual_v2' && /HTTP 4(00|04|22)/.test(e.message)){ log('model '+cfg.model+' rejected, fallback v2: '+e.message.slice(0,160)); r = await call('eleven_multilingual_v2'); }
+      else throw e;
+    }
     const bl = await r.blob(); blobs[i] = bl;
     players[i] = new Audio(URL.createObjectURL(bl));
     b.disabled = false; b.innerHTML = PLAY;
