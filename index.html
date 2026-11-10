@@ -187,6 +187,13 @@ dialog::backdrop{background:rgba(0,0,0,.6)}
       <div class="field" style="flex:1"><label>Similarity: <b id="vSim"></b></label><input type="range" id="sSim" min="0" max="1" step="0.05"></div>
       <div class="field" style="flex:1"><label>Stability: <b id="vStab"></b></label><input type="range" id="sStab" min="0" max="1" step="0.05"></div>
     </div>
+    <div class="field"><label>طريقة التوليد</label>
+      <select id="sMode" style="background:var(--bg);border:1px solid var(--line);color:var(--ink);border-radius:10px;padding:10px 12px;font-family:inherit;font-size:15px">
+        <option value="clone">نسخ الصوت (أسرع وأرخص)</option>
+        <option value="dub">Dubbing (شبه أعلى، أبطأ وأغلى)</option>
+      </select>
+      <div class="hint">Dubbing يحتاج صلاحية Dubbing في مفتاح API. راقب الرصيد بعد أول تجربة.</div>
+    </div>
     <label class="consent"><input type="checkbox" id="sNoise"> إزالة الضوضاء من التسجيل (أنصح فيها في البوث)</label>
     <div class="sep"></div>
     <div class="field"><label>اقتراح يظهر للزائر فوق الزر</label><textarea id="sRead" style="direction:rtl;text-align:right;min-height:90px"></textarea></div>
@@ -216,7 +223,7 @@ const DEFAULT_LANGS = [
 const FALLBACK_MODEL = 'eleven_multilingual_v2';
 const CFG_VER = 3;
 const MAX_CHARS = 400;
-const DEFAULTS = {ver:CFG_VER, key:'', secs:60, model:'eleven_multilingual_v2', sim:1, stab:0.5, noise:true, read:DEFAULT_READ, langs:DEFAULT_LANGS, pending:[]};
+const DEFAULTS = {ver:CFG_VER, key:'', secs:60, model:'eleven_multilingual_v2', sim:1, stab:0.5, noise:true, mode:'clone', read:DEFAULT_READ, langs:DEFAULT_LANGS, pending:[], pendingDubs:[]};
 
 let cfg = loadCfg();
 function loadCfg(){
@@ -225,6 +232,8 @@ function loadCfg(){
   const merged = Object.assign({}, DEFAULTS, c);
   if (!Array.isArray(merged.langs) || merged.langs.length === 0) merged.langs = DEFAULT_LANGS;
   if (!Array.isArray(merged.pending)) merged.pending = [];
+  if (!Array.isArray(merged.pendingDubs)) merged.pendingDubs = [];
+  if (merged.mode !== 'dub') merged.mode = 'clone';
   if ((c.ver||1) < CFG_VER){ Object.assign(merged, {model:DEFAULTS.model, sim:DEFAULTS.sim, stab:DEFAULTS.stab, secs:DEFAULTS.secs, read:DEFAULT_READ, langs:JSON.parse(JSON.stringify(DEFAULT_LANGS)), ver:CFG_VER}); }
   return merged;
 }
@@ -284,7 +293,12 @@ async function deleteVoice(id){
   try { await api('/voices/'+id, {method:'DELETE'}); log('deleted '+id); cfg.pending = cfg.pending.filter(x=>x!==id); saveCfg(); return true; }
   catch(e){ log('delete failed '+id+': '+e.message); if(!cfg.pending.includes(id)){cfg.pending.push(id); saveCfg();} return false; }
 }
+async function deleteDub(id){
+  try { await api('/dubbing/'+id, {method:'DELETE'}); log('dub deleted '+id); cfg.pendingDubs = cfg.pendingDubs.filter(x=>x!==id); saveCfg(); }
+  catch(e){ log('dub delete failed '+id+': '+e.message); if(!cfg.pendingDubs.includes(id)){cfg.pendingDubs.push(id); saveCfg();} }
+}
 async function retryPending(){
+  for (const id of [...(cfg.pendingDubs||[])]) await deleteDub(id);
   for (const id of [...cfg.pending]) await deleteVoice(id);
 }
 
@@ -413,6 +427,7 @@ async function translate(text, target, srcHint){
 }
 
 async function runTrip(sample){
+  if (cfg.mode === 'dub') return runDub(sample);
   let voiceId = null;
   try {
     work('جاري تجهيز رحلتك…', 'نسمع كلامك 👂');
@@ -464,6 +479,7 @@ function friendly(e){
   if (m.includes('401')) return 'مفتاح API غير صحيح، أو ناقصه صلاحية (لازم: Text to Speech و Speech to Text و Voices و User).';
   if (m.includes('quota') || m.includes('credits')) return 'الرصيد خلص أو ما يكفي.';
   if (m.includes('voice_limit') || m.includes('maximum amount of custom voices')) return 'وصلت للحد الأعلى من الأصوات. اضغط 🧹 في الإعدادات عشان تحذف الأصوات القديمة.';
+  if (m.startsWith('DUB_TIMEOUT')) return 'الدبلجة طولت أكثر من اللازم. جرّب تسجيل أقصر.';
   if (m.includes('429')) return 'طلبات كثيرة بنفس الوقت. انتظر ثواني وجرب مرة ثانية.';
   return 'صار خطأ. جرّب مرة ثانية.';
 }
@@ -480,6 +496,87 @@ function buildCards(){
     d.querySelector('.play').addEventListener('click', ()=>playOne(i));
     g.appendChild(d);
   });
+}
+
+
+/* ---------- Dubbing mode ---------- */
+const sleep = ms => new Promise(r=>setTimeout(r,ms));
+async function apiRetry(path, opts, tries=8){
+  for (let k=0;;k++){
+    try { return await api(path, opts); }
+    catch(e){ if (k < tries && /HTTP 429/.test(e.message)){ await sleep(4000 + k*2000); continue; } throw e; }
+  }
+}
+function vttToText(vtt){
+  return vtt.split(/\r?\n/).filter(l => l.trim() && !/^WEBVTT/.test(l) && !/-->/.test(l) && !/^\d+$/.test(l.trim())).join(' ').replace(/\s+/g,' ').trim();
+}
+
+async function runDub(sample){
+  const ids = [];
+  try {
+    work('جاري تجهيز رحلتك…', 'نسمع كلامك 👂');
+    const heard = await transcribe(sample);
+    log('heard ['+heard.lang+']: '+heard.text);
+    if (!heard.text || heard.text.length < 3) throw new Error('NO_SPEECH');
+
+    buildCards();
+    $('said').innerHTML = '<b>قلت:</b> ';
+    $('said').appendChild(document.createTextNode(heard.text));
+    document.querySelectorAll('.dest .text').forEach(t => t.textContent = '…جاري الدبلجة');
+    show('results');
+    $('deletedNote').textContent = '⏳ ندبلج صوتك… ممكن ياخذ دقيقة أو دقيقتين';
+
+    await Promise.all(cfg.langs.map((l,i) => dubOne(i, sample, ids)));
+  } catch(e){
+    log('dub trip error: '+e.message);
+    show('record'); resetRecordUI();
+    showErr(friendly(e), e.message);
+  } finally {
+    for (const id of ids) await deleteDub(id);
+    if (ids.length) $('deletedNote').textContent = '🗑️ تم حذف تسجيلك ومشاريع الدبلجة من النظام';
+    refreshCredits();
+  }
+}
+
+async function dubOne(i, sample, ids){
+  const l = cfg.langs[i], d = $('dest'+i), b = d.querySelector('.play');
+  const t0 = performance.now();
+  const tick = setInterval(()=>{ b.textContent = '⏳ ندبلج… ' + Math.round((performance.now()-t0)/1000) + 'ث'; }, 1000);
+  try {
+    const fd = new FormData();
+    fd.append('file', sample, sample.type==='audio/wav' ? 'sample.wav' : (sample.name || 'sample.webm'));
+    fd.append('target_lang', l.code);
+    fd.append('source_lang', 'ar');
+    fd.append('num_speakers', '1');
+    fd.append('name', PREFIX + l.code + '-' + Date.now());
+    fd.append('drop_background_audio', 'true');
+    const job = await (await apiRetry('/dubbing', {method:'POST', body:fd})).json();
+    const id = job.dubbing_id; ids.push(id); cfg.pendingDubs.push(id); saveCfg();
+    log('dub '+l.code+' started '+id);
+
+    const deadline = Date.now() + 6*60*1000;
+    while (true){
+      await sleep(3000);
+      const st = await (await apiRetry('/dubbing/'+id, {})).json();
+      if (st.status === 'dubbed') break;
+      if (st.status === 'failed') throw new Error('DUB_FAILED: '+(st.error||''));
+      if (Date.now() > deadline) throw new Error('DUB_TIMEOUT');
+    }
+    const audio = await (await apiRetry('/dubbing/'+id+'/audio/'+l.code, {})).blob();
+    players[i] = new Audio(URL.createObjectURL(audio));
+    clearInterval(tick);
+    b.disabled = false; b.textContent = '▶ اسمع';
+    try {
+      const vtt = await (await api('/dubbing/'+id+'/transcript/'+l.code+'?format_type=webvtt', {})).text();
+      const txt = vttToText(vtt);
+      d.querySelector('.text').textContent = txt || '—';
+    } catch(e){ log('transcript '+l.code+': '+e.message); d.querySelector('.text').textContent = '—'; }
+  } catch(e){
+    clearInterval(tick);
+    log('dub '+l.code+' failed: '+e.message);
+    d.classList.add('error'); b.textContent = '✕ ما زبطت'; b.disabled = true;
+    d.querySelector('.text').textContent = /dubbing|permission|401/.test(e.message) ? 'تأكد من صلاحية Dubbing في المفتاح' : 'ما زبطت الدبلجة';
+  }
 }
 
 async function genOne(voiceId, i, srcText, srcLang){
@@ -544,7 +641,7 @@ function renderLangFields(){
 }
 function fillSettings(){
   $('sKey').value = cfg.key; $('sSecs').value = cfg.secs; $('sModel').value = cfg.model;
-  $('sSim').value = cfg.sim; $('sStab').value = cfg.stab; $('sNoise').checked = !!cfg.noise;
+  $('sSim').value = cfg.sim; $('sStab').value = cfg.stab; $('sNoise').checked = !!cfg.noise; $('sMode').value = cfg.mode;
   $('vSim').textContent = Math.round(cfg.sim*100)+'%'; $('vStab').textContent = Math.round(cfg.stab*100)+'%';
   $('sRead').value = cfg.read; renderLangFields();
 }
@@ -552,7 +649,7 @@ function readSettings(){
   cfg.key = $('sKey').value.trim();
   cfg.secs = Math.min(90, Math.max(10, parseInt($('sSecs').value)||30));
   cfg.model = $('sModel').value.trim() || DEFAULTS.model;
-  cfg.sim = +$('sSim').value; cfg.stab = +$('sStab').value; cfg.noise = $('sNoise').checked;
+  cfg.sim = +$('sSim').value; cfg.stab = +$('sStab').value; cfg.noise = $('sNoise').checked; cfg.mode = $('sMode').value;
   cfg.read = $('sRead').value.trim() || DEFAULT_READ;
   document.querySelectorAll('#langFields textarea').forEach(t=>{ cfg.langs[+t.dataset.i] = Object.assign({}, cfg.langs[+t.dataset.i], {text:t.value.trim()}); });
 }
