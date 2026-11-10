@@ -79,7 +79,9 @@ h1{
 .phase.done{color:var(--gold)}
 .phase.msg.on{background:linear-gradient(180deg,#ffd9dc,var(--rose));border-color:var(--rose)}
 .prompt{min-height:118px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;text-align:center}
-.prompt .q{font-family:var(--f-display);font-size:clamp(22px,3vw,34px);line-height:1.5;text-wrap:balance;color:var(--cream);transition:opacity .35s}
+.prompt .q{font-family:var(--f-body);font-weight:600;font-size:clamp(21px,3vw,32px);line-height:1.6;text-wrap:balance;color:var(--cream)}
+.prompt .q.swap{animation:qin .45s ease both}
+@keyframes qin{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 .prompt .hint{color:var(--muted);font-size:15px}
 .prompt.msg .q{color:var(--rose)}
 .consent{display:flex;gap:10px;align-items:center;justify-content:center;color:var(--muted);font-size:15px;cursor:pointer;user-select:none;margin:6px 0 4px}
@@ -188,14 +190,14 @@ h1{
 @keyframes spin{to{transform:rotate(360deg)}}
 .pass.err .text{color:#9b2c2c}
 .stamp{
-  position:absolute;top:44%;inset-inline-start:30%;width:126px;height:126px;border-radius:50%;
-  border:3px double var(--stamp);color:var(--stamp);display:grid;place-items:center;text-align:center;
-  font-family:var(--f-latin);font-weight:700;font-size:13px;letter-spacing:.12em;line-height:1.35;direction:ltr;
-  transform:rotate(-16deg) scale(1.9);opacity:0;pointer-events:none;mix-blend-mode:multiply;
+  position:absolute;left:50%;bottom:46px;margin-left:-46px;width:92px;height:92px;border-radius:50%;
+  border:3px double var(--stamp);color:var(--stamp);display:grid;place-items:center;align-content:center;text-align:center;
+  font-family:var(--f-latin);font-weight:700;font-size:11px;letter-spacing:.1em;line-height:1.3;direction:ltr;
+  transform:rotate(-16deg) scale(1.9);opacity:0;pointer-events:none;mix-blend-mode:multiply;background:rgba(251,245,230,.35);
   transition:transform .45s cubic-bezier(.2,1.6,.35,1),opacity .2s;
 }
-.stamp small{display:block;font-family:var(--f-mono);font-size:10px;letter-spacing:.06em;font-weight:500}
-.pass.stamped .stamp{opacity:.82;transform:rotate(-16deg) scale(1)}
+.stamp small{display:block;font-family:var(--f-mono);font-size:9px;letter-spacing:.04em;font-weight:500}
+.pass.stamped .stamp{opacity:.85;transform:rotate(-16deg) scale(1)}
 .actions{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
 .note{color:var(--ok);font-size:15px;text-align:center}
 .usage{color:var(--muted);font-size:13px;text-align:center}
@@ -259,10 +261,10 @@ details.logbox summary{cursor:pointer;color:var(--muted);font-size:14px;padding:
   .pass .stub{border-inline-start:0;border-top:2px dashed rgba(143,108,43,.45);flex-direction:row}
   .pass .stub::before,.pass .stub::after{display:none}
   .recwrap{width:200px;height:200px}.recbtn{width:156px;height:156px}
-  .stamp{top:24%}
+  .stamp{left:8px;bottom:auto;top:50%;margin-left:0;margin-top:-46px}
 }
 @media (prefers-reduced-motion:reduce){
-  h1,.globe .orbit,.recbtn.live,.steps li.on .dot,.pass .spin{animation:none}
+  h1,.globe .orbit,.recbtn.live,.steps li.on .dot,.pass .spin,.prompt .q.swap{animation:none}
 }
 </style>
 </head>
@@ -416,6 +418,22 @@ details.logbox summary{cursor:pointer;color:var(--muted);font-size:14px;padding:
       </section>
 
       <section class="grp">
+        <h4>الترجمة</h4>
+        <div class="field">
+          <label for="sCKey">مفتاح Claude API (اختياري)</label>
+          <div class="row-key"><input type="password" id="sCKey" class="ltr" placeholder="sk-ant-..." autocomplete="off" autocapitalize="off" spellcheck="false"><button type="button" class="btn mini" id="testCKey">اختبار</button></div>
+          <div class="hint" id="cKeyStatus">لو حطيته، الترجمة تصير من Claude (تفهم اللهجة وتترجم المعنى). ولو صار فيه خطأ، ترجع لـ Google تلقائياً.</div>
+        </div>
+        <div class="field">
+          <label for="sCModel">موديل الترجمة</label>
+          <select id="sCModel" class="ltr">
+            <option value="claude-haiku-5-5">Claude Haiku 5.5 — سريع ورخيص</option>
+            <option value="claude-sonnet-5-5">Claude Sonnet 5.5 — أدق وأبطأ شوي</option>
+          </select>
+        </div>
+      </section>
+
+      <section class="grp">
         <h4>الإرسال والرصيد</h4>
         <div class="field"><label for="sWa">رقم واتساب البوث (اختياري)</label><input type="text" id="sWa" class="ltr" inputmode="numeric" placeholder="9665XXXXXXXX">
           <div class="hint">مع رمز الدولة، بدون + أو مسافات. لو تركته فاضي ما يطلع كود الواتساب.</div></div>
@@ -458,14 +476,14 @@ const MSG_PROMPT = '💌 الحين وجّه رسالة لشخص تحبه… ا�
 const MSG_HINT = 'مثلاً: «يا أمي، شكراً على كل شي… أحبك»';
 const MIN_ABOUT = 10, MIN_MSG = 6;
 const CFG_VER = 5;
-const DEFAULTS = {ver:CFG_VER, key:'', model:'eleven_multilingual_v2', sim:1, stab:0.5, noise:true, aboutSecs:30, msgSecs:20, maxChars:700, wa:'', pending:[]};
+const DEFAULTS = {ver:CFG_VER, key:'', model:'eleven_multilingual_v2', sim:1, stab:0.5, noise:true, aboutSecs:30, msgSecs:20, maxChars:700, wa:'', ckey:'', cmodel:'claude-haiku-5-5', pending:[]};
 
 let cfg = loadCfg();
 function loadCfg(){
   let c = {};
   try { c = JSON.parse(localStorage.getItem('voiceTripCfg')) || {}; } catch(e) {}
   let m = Object.assign({}, DEFAULTS, c);
-  if ((c.ver||1) < CFG_VER) m = Object.assign({}, DEFAULTS, {key:c.key||'', wa:c.wa||'', pending:Array.isArray(c.pending)?c.pending:[]});
+  if ((c.ver||1) < CFG_VER) m = Object.assign({}, DEFAULTS, {key:c.key||'', wa:c.wa||'', ckey:c.ckey||'', pending:Array.isArray(c.pending)?c.pending:[]});
   if (!Array.isArray(m.pending)) m.pending = [];
   return m;
 }
@@ -541,7 +559,8 @@ $('consent').addEventListener('change', ()=>{
 });
 function setPrompt(q, hint, isMsg){
   const p = $('prompt'); p.classList.toggle('msg', !!isMsg);
-  if ($('q').textContent !== q){ $('q').style.opacity = 0; setTimeout(()=>{ $('q').textContent = q; $('q').style.opacity = 1; }, 180); }
+  const el = $('q');
+  if (el.dataset.v !== q){ el.dataset.v = q; el.textContent = q; el.classList.remove('swap'); void el.offsetWidth; el.classList.add('swap'); }
   $('qhint').textContent = hint || '';
 }
 function setPhase(n){
@@ -677,9 +696,12 @@ async function toWav(blob){
 async function transcribe(sample){
   const fd = new FormData();
   fd.append('model_id','scribe_v1');
+  fd.append('tag_audio_events','false');
   fd.append('file', sample, sample.type==='audio/wav'?'sample.wav':(sample.name||'sample.webm'));
   const r = await (await api('/speech-to-text', {method:'POST', body:fd})).json();
-  return {text:(r.text||'').trim(), lang:(r.language_code||'').toLowerCase(), words:Array.isArray(r.words)?r.words:[]};
+  const clean = t => (t||'').replace(/\[[^\]]*\]|\([^)]*(صوت|ضحك|موسيقى|تصفيق|سعال|laugh|music|noise|sound)[^)]*\)/gi,' ').replace(/\s{2,}/g,' ').trim();
+  const words = (Array.isArray(r.words)?r.words:[]).filter(w=>w.type!=='audio_event').map(w=>Object.assign({}, w, {text:clean(w.text)===''&&/\S/.test(w.text||'')?'':(w.text||'').replace(/\[[^\]]*\]/g,'')}));
+  return {text:clean(r.text), lang:(r.language_code||'').toLowerCase(), words};
 }
 function splitByTime(words, t){
   if (t==null || !words.length) return null;
@@ -711,6 +733,33 @@ async function translate(text, target, srcHint){
   return outs.join(' ');
 }
 
+/* ---- Claude translation: one call, all five languages ---- */
+async function claudeTranslate(text){
+  const sys = `You translate short spoken messages recorded by visitors at a university "World Students Day" booth in Tabuk, Saudi Arabia.
+The input is a speech-to-text transcript, usually in Saudi colloquial Arabic, sometimes with small transcription errors.
+Translate the MEANING naturally (not word-for-word) into: English (en), Japanese (ja), Korean (ko), Spanish (es), Italian (it).
+Rules:
+- It will be read aloud by a text-to-speech voice, so write natural spoken sentences, warm and personal.
+- Render Arabic blessings and idioms with their natural equivalent (e.g. "الله يطول بعمرك" -> "May God grant you a long life").
+- Keep people's names; write them in each target language's normal script (e.g. Japanese katakana, Korean hangul).
+- Fix obvious transcription errors silently. Do not add, explain, or summarise anything. No notes, no brackets, no sound descriptions.
+- Japanese and Korean: polite but friendly register.
+Return ONLY a JSON object exactly like {"en":"...","ja":"...","ko":"...","es":"...","it":"..."}.`;
+  let r;
+  try {
+    r = await fetch('https://api.anthropic.com/v1/messages', {method:'POST',
+      headers:{'x-api-key':cfg.ckey,'anthropic-version':'2023-06-01','content-type':'application/json','anthropic-dangerous-direct-browser-access':'true'},
+      body: JSON.stringify({model:cfg.cmodel||DEFAULTS.cmodel, max_tokens:3000, temperature:0.3, system:sys, messages:[{role:'user', content:text}]})});
+  } catch(e){ throw new Error('CLAUDE_NET: '+e.message); }
+  if (!r.ok){ let t=''; try{ t = await r.text(); }catch(e){} throw new Error('CLAUDE HTTP '+r.status+': '+t.slice(0,300)); }
+  const d = await r.json();
+  const raw = (d.content||[]).filter(c=>c.type==='text').map(c=>c.text).join('');
+  const m = raw.match(/\{[\s\S]*\}/); if (!m) throw new Error('CLAUDE: no JSON');
+  const out = JSON.parse(m[0]);
+  for (const l of LANGS){ if (typeof out[l.code] !== 'string' || !out[l.code].trim()) throw new Error('CLAUDE: missing '+l.code); }
+  return out;
+}
+
 let players = [], blobs = [];
 async function runTrip(sample, msgAt){
   let voiceId = null; const before = lastCredits;
@@ -732,10 +781,12 @@ async function runTrip(sample, msgAt){
     cfg.pending.push(voiceId); saveCfg(); log('cloned '+voiceId);
 
     step(3);
+    let pre = null;
+    if (cfg.ckey){ try { pre = await claudeTranslate(text); log('claude translated'); } catch(e){ log('claude failed, using google: '+e.message); } }
     renderSaid(text, parts);
     buildPasses();
     const queue = LANGS.map((l,i)=>i), done = [];
-    const worker = async () => { while(queue.length){ const i = queue.shift(); await genOne(voiceId, i, text, heard.lang); done.push(i); if (done.length===1){ step(4); setTimeout(()=>show('results'), 500); } } };
+    const worker = async () => { while(queue.length){ const i = queue.shift(); await genOne(voiceId, i, text, heard.lang, pre); done.push(i); if (done.length===1){ step(4); setTimeout(()=>show('results'), 500); } } };
     await Promise.all([worker(), worker()]);
     if ($('stageResults').hidden) show('results');
     if (blobs.some(Boolean)){ $('saveTrip').hidden = false; $('toPhone').hidden = false; }
@@ -789,15 +840,15 @@ function buildPasses(){
         <div class="kv"><i>GATE</i><b>${l.gate}</b></div>
         <button class="play" disabled aria-label="اسمع"><span class="spin"></span></button>
         <div class="kv"><i>SEAT</i><b>${(i+1)*3}A</b></div>
+        <div class="stamp">${l.cityEn}<small>${date}</small>✓ ARRIVED</div>
       </div>
-      <div class="stamp">${l.cityEn}<small>${date}</small>✓ ARRIVED</div>
     </article>`).join('');
   document.querySelectorAll('.pass .play').forEach((b,i)=>b.addEventListener('click', ()=>playOne(i)));
 }
-async function genOne(voiceId, i, text, srcLang){
+async function genOne(voiceId, i, text, srcLang, pre){
   const l = LANGS[i], card = $('pass'+i), b = card.querySelector('.play'), tx = card.querySelector('.text');
   let t;
-  try { t = await translate(text, l.code, srcLang); tx.textContent = t; }
+  try { t = (pre && pre[l.code]) ? pre[l.code].trim() : await translate(text, l.code, srcLang); tx.textContent = t; }
   catch(e){ log('translate '+l.code+': '+e.message); card.classList.add('err'); tx.textContent = 'ما زبطت الترجمة'; b.innerHTML = '✕'; return; }
   try {
     const r = await api(`/text-to-speech/${voiceId}?output_format=mp3_44100_128`, {method:'POST', headers:{'Content-Type':'application/json','Accept':'audio/mpeg'},
@@ -881,7 +932,7 @@ function fillSettings(){
   if (![...sel.options].some(o=>o.value===cfg.model)){ const o = document.createElement('option'); o.value = o.textContent = cfg.model; sel.appendChild(o); }
   sel.value = cfg.model;
   $('sSim').value = cfg.sim; $('sStab').value = cfg.stab; $('sNoise').checked = !!cfg.noise;
-  $('sMax').value = cfg.maxChars; $('sWa').value = cfg.wa||'';
+  $('sMax').value = cfg.maxChars; $('sWa').value = cfg.wa||''; $('sCKey').value = cfg.ckey||''; $('sCModel').value = cfg.cmodel||DEFAULTS.cmodel;
   $('vSim').textContent = Math.round(cfg.sim*100)+'%'; $('vStab').textContent = Math.round(cfg.stab*100)+'%';
 }
 function readSettings(){
@@ -892,6 +943,7 @@ function readSettings(){
   if (mx) cfg.maxChars = Math.min(1500, Math.max(100, mx));
   cfg.model = $('sModel').value || DEFAULTS.model;
   cfg.sim = +$('sSim').value; cfg.stab = +$('sStab').value; cfg.noise = $('sNoise').checked;
+  cfg.ckey = $('sCKey').value.trim(); cfg.cmodel = $('sCModel').value || DEFAULTS.cmodel;
   cfg.wa = ($('sWa').value||'').replace(/\D/g,'').replace(/^00/,'');
 }
 let savedT = 0;
@@ -914,6 +966,12 @@ $('testKey').addEventListener('click', async ()=>{
   try { const s = await (await api('/user/subscription')).json(); const left = (s.character_limit??0)-(s.character_count??0);
     $('keyStatus').textContent = `✅ المفتاح شغال. الباقة: ${s.tier||'?'} · الرصيد: ${left.toLocaleString('en-US')}`; refreshCredits(); }
   catch(e){ $('keyStatus').textContent = '❌ '+friendly(e)+'  ('+e.message.slice(0,120)+')'; }
+});
+$('testCKey').addEventListener('click', async ()=>{
+  autoSave(); if (!cfg.ckey){ $('cKeyStatus').textContent = 'حط المفتاح أول.'; return; }
+  $('cKeyStatus').textContent = '…جاري الاختبار';
+  try { const o = await claudeTranslate('يمه، الله يطول بعمرك، أحبك'); $('cKeyStatus').textContent = '✅ شغال: ' + o.en; }
+  catch(e){ $('cKeyStatus').textContent = '❌ ' + (e.message.includes('401') ? 'المفتاح غير صحيح.' : e.message.includes('400') && e.message.includes('credit') ? 'رصيد Claude خلص.' : e.message.includes('404') ? 'اسم الموديل غير متاح لحسابك. جرّب الثاني.' : 'ما زبط.') + '  (' + e.message.slice(0,120) + ')'; }
 });
 $('cleanup').addEventListener('click', async ()=>{
   autoSave(); $('cleanup').disabled = true; $('cleanup').textContent = '…جاري الحذف';
