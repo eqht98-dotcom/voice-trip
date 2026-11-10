@@ -206,7 +206,9 @@ const DEFAULT_LANGS = [
   {flag:'🇨🇳', country:'الصين',    lang:'中文',      stamp:'BEIJING', text:'大家好！我今天在北京，正在学生日环游世界。'},
   {flag:'🇪🇸', country:'إسبانيا',  lang:'Español',  stamp:'MADRID',  text:'¡Hola a todos! Hoy estoy en Madrid, viajando por el mundo en el Día del Estudiante.'},
 ];
-const DEFAULTS = {key:'', secs:30, model:'eleven_multilingual_v2', sim:0.85, stab:0.5, noise:true, read:DEFAULT_READ, langs:DEFAULT_LANGS, pending:[]};
+const FALLBACK_MODEL = 'eleven_multilingual_v2';
+const CFG_VER = 2;
+const DEFAULTS = {ver:CFG_VER, key:'', secs:30, model:'eleven_v3', sim:1, stab:0.5, noise:true, read:DEFAULT_READ, langs:DEFAULT_LANGS, pending:[]};
 
 let cfg = loadCfg();
 function loadCfg(){
@@ -215,6 +217,7 @@ function loadCfg(){
   const merged = Object.assign({}, DEFAULTS, c);
   if (!Array.isArray(merged.langs) || merged.langs.length === 0) merged.langs = DEFAULT_LANGS;
   if (!Array.isArray(merged.pending)) merged.pending = [];
+  if ((c.ver||1) < CFG_VER){ merged.model = DEFAULTS.model; merged.sim = DEFAULTS.sim; merged.stab = DEFAULTS.stab; merged.ver = CFG_VER; }
   return merged;
 }
 function saveCfg(){ try { localStorage.setItem('voiceTripCfg', JSON.stringify(cfg)); } catch(e) {} }
@@ -433,12 +436,18 @@ function buildCards(){
 
 async function genOne(voiceId, i){
   const l = cfg.langs[i], d = $('dest'+i), b = d.querySelector('.play');
-  try {
-    const r = await api(`/text-to-speech/${voiceId}?output_format=mp3_44100_128`, {
+  const call = model => api(`/text-to-speech/${voiceId}?output_format=mp3_44100_128`, {
       method:'POST',
       headers:{'Content-Type':'application/json','Accept':'audio/mpeg'},
-      body: JSON.stringify({text:l.text, model_id:cfg.model, voice_settings:{stability:+cfg.stab, similarity_boost:+cfg.sim, use_speaker_boost:true}})
+      body: JSON.stringify({text:l.text, model_id:model, voice_settings:{stability:+cfg.stab, similarity_boost:+cfg.sim, use_speaker_boost:true}})
     });
+  try {
+    let r;
+    try { r = await call(cfg.model); }
+    catch(e){
+      if (cfg.model !== FALLBACK_MODEL && /HTTP 4(00|22|04)/.test(e.message)){ log('model '+cfg.model+' failed, falling back: '+e.message); r = await call(FALLBACK_MODEL); }
+      else throw e;
+    }
     const url = URL.createObjectURL(await r.blob());
     players[i] = new Audio(url);
     b.disabled = false; b.textContent = '▶ اسمع';
