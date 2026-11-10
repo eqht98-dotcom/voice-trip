@@ -2,712 +2,854 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>رحلة حول العالم بصوتك</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Reem+Kufi:wght@500;700&family=IBM+Plex+Sans+Arabic:wght@300;400;600;700&family=Cinzel:wght@500;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
+/* Concept: a first-class boarding experience — deep night-sky navy, gold foil, passport guilloche.
+   Record = check-in desk, processing = flight, results = five boarding passes with flags. */
 :root{
-  --bg:#0d1726;--bg2:#13223a;--card:#182a45;--line:#26406a;
-  --ink:#f5efe3;--muted:#9db0cb;--gold:#e9b949;--gold2:#f6d58a;
-  --red:#ef5350;--green:#4cc38a;
+  --night:#060a13; --navy:#0b1424; --navy-2:#111d33; --navy-3:#172744;
+  --gold:#d6b46a; --gold-hi:#f6e3a8; --gold-lo:#8f6c2b; --gold-line:rgba(214,180,106,.28);
+  --cream:#f3ead6; --muted:#a99f88; --rose:#e9a2a8; --stamp:#c8473a; --ok:#7fd1a6;
+  --f-display:"Reem Kufi","IBM Plex Sans Arabic",system-ui,sans-serif;
+  --f-body:"IBM Plex Sans Arabic",system-ui,-apple-system,"Segoe UI",Tahoma,sans-serif;
+  --f-latin:"Cinzel","Times New Roman",serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+  color-scheme:dark;
 }
 *{box-sizing:border-box}
-html,body{margin:0;height:100%}
+html,body{margin:0;min-height:100%}
+html{background:var(--night)}
 body{
-  background:radial-gradient(1200px 600px at 80% -10%,#1f3a63 0%,transparent 60%),var(--bg);
-  color:var(--ink);font-family:"IBM Plex Sans Arabic",system-ui,-apple-system,"Segoe UI",Tahoma,sans-serif;
-  display:flex;flex-direction:column;min-height:100vh;
+  background:
+    radial-gradient(900px 520px at 85% -10%, rgba(214,180,106,.13), transparent 60%),
+    radial-gradient(800px 600px at 0% 110%, rgba(60,90,160,.22), transparent 60%),
+    linear-gradient(180deg,var(--navy) 0%,var(--night) 100%);
+  background-attachment:fixed;
+  color:var(--cream);font-family:var(--f-body);font-weight:400;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  overflow-x:hidden;
 }
-header{display:flex;align-items:center;justify-content:space-between;padding:18px 28px}
-.brand{display:flex;align-items:center;gap:12px}
-.brand .globe{font-size:34px}
-.brand h1{margin:0;font-size:clamp(20px,2.6vw,30px);font-weight:700}
-.brand small{display:block;color:var(--muted);font-weight:400;font-size:14px}
+#guilloche{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;opacity:.55}
+.wrap{position:relative;z-index:1;max-width:1240px;margin:0 auto;padding-block:18px 48px;display:flex;flex-direction:column;align-items:center;gap:26px}
+
+/* ---------- top bar ---------- */
+.topbar{width:100%;display:flex;justify-content:space-between;align-items:center}
+.brandline{font-family:var(--f-latin);letter-spacing:.32em;font-size:12px;color:var(--gold);opacity:.85;direction:ltr}
 .tools{display:flex;gap:10px;align-items:center}
-.pill{background:var(--bg2);border:1px solid var(--line);color:var(--muted);border-radius:999px;padding:6px 12px;font-size:13px}
-.iconbtn{background:var(--bg2);border:1px solid var(--line);color:var(--ink);border-radius:12px;width:42px;height:42px;font-size:20px;cursor:pointer}
-main{flex:1;display:flex;flex-direction:column;align-items:center;padding:8px 20px 40px;gap:22px;width:100%;max-width:1100px;margin:0 auto}
+.pill{border:1px solid var(--gold-line);background:rgba(11,20,36,.6);color:var(--muted);border-radius:999px;padding:6px 14px;font-size:13px;font-variant-numeric:tabular-nums;backdrop-filter:blur(6px)}
+.iconbtn{width:40px;height:40px;border-radius:50%;border:1px solid var(--gold-line);background:rgba(11,20,36,.6);color:var(--gold);cursor:pointer;display:grid;place-items:center}
+.iconbtn:hover{border-color:var(--gold)}
+.iconbtn svg{width:18px;height:18px}
 
-/* stage 1 */
-.readbox{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:22px 26px;max-width:820px;width:100%;text-align:center}
-.readbox .label{color:var(--gold);font-weight:600;font-size:14px;letter-spacing:.3px;margin-bottom:8px}
-.readbox p{margin:0;font-size:clamp(20px,2.4vw,28px);line-height:1.9}
-.consent{display:flex;gap:10px;align-items:center;color:var(--muted);font-size:16px;cursor:pointer;user-select:none}
-.consent input{width:22px;height:22px;accent-color:var(--gold)}
+/* ---------- hero ---------- */
+.hero{display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center}
+.crest{width:86px;height:86px}
+.eyebrow{font-family:var(--f-latin);font-size:13px;letter-spacing:.42em;color:var(--gold);direction:ltr}
+h1{
+  margin:0;font-family:var(--f-display);font-weight:700;font-size:clamp(34px,5.4vw,66px);line-height:1.15;text-wrap:balance;
+  background:linear-gradient(100deg,var(--gold-lo) 0%,var(--gold-hi) 22%,var(--gold) 40%,#fff4cf 50%,var(--gold) 60%,var(--gold-hi) 78%,var(--gold-lo) 100%);
+  background-size:220% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;
+  animation:foil 7s linear infinite;
+  filter:drop-shadow(0 2px 18px rgba(214,180,106,.18));
+}
+@keyframes foil{from{background-position:0% 0}to{background-position:-220% 0}}
+.sub{color:var(--muted);font-size:clamp(15px,1.6vw,18px);margin:0}
+.flags{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;margin-top:6px}
+.flagchip{display:flex;align-items:center;gap:8px;padding:6px 12px 6px 8px;border:1px solid var(--gold-line);border-radius:999px;background:rgba(11,20,36,.55);font-size:14px;color:var(--cream)}
+.flagchip svg{width:30px;height:20px;border-radius:3px;box-shadow:0 0 0 1px rgba(255,255,255,.18)}
+.origin{color:var(--gold);font-family:var(--f-latin);letter-spacing:.2em;font-size:13px;direction:ltr}
 
-.recwrap{position:relative;width:220px;height:220px;display:grid;place-items:center}
+/* ---------- panel (passport page) ---------- */
+.panel{
+  position:relative;width:100%;max-width:860px;border-radius:26px;padding:28px clamp(18px,4vw,42px) 30px;
+  background:linear-gradient(180deg,rgba(23,39,68,.88),rgba(11,20,36,.92));
+  border:1px solid var(--gold-line);
+  box-shadow:0 30px 80px rgba(0,0,0,.45), inset 0 1px 0 rgba(246,227,168,.12);
+}
+.panel::before{content:"";position:absolute;inset:8px;border:1px solid rgba(214,180,106,.12);border-radius:20px;pointer-events:none}
+.phases{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-bottom:18px}
+.phase{display:flex;align-items:center;gap:8px;padding:8px 16px;border-radius:999px;border:1px solid var(--gold-line);color:var(--muted);font-size:15px;transition:all .3s}
+.phase b{font-family:var(--f-latin);color:var(--gold-lo);font-size:14px}
+.phase.on{color:#1a1206;background:linear-gradient(180deg,var(--gold-hi),var(--gold));border-color:var(--gold)}
+.phase.on b{color:#1a1206}
+.phase.done{color:var(--gold)}
+.phase.msg.on{background:linear-gradient(180deg,#ffd9dc,var(--rose));border-color:var(--rose)}
+.prompt{min-height:118px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;text-align:center}
+.prompt .q{font-family:var(--f-display);font-size:clamp(22px,3vw,34px);line-height:1.5;text-wrap:balance;color:var(--cream);transition:opacity .35s}
+.prompt .hint{color:var(--muted);font-size:15px}
+.prompt.msg .q{color:var(--rose)}
+.consent{display:flex;gap:10px;align-items:center;justify-content:center;color:var(--muted);font-size:15px;cursor:pointer;user-select:none;margin:6px 0 4px}
+.consent input{appearance:none;width:22px;height:22px;border:1.5px solid var(--gold);border-radius:6px;display:grid;place-items:center;cursor:pointer;margin:0}
+.consent input:checked{background:var(--gold)}
+.consent input:checked::after{content:"✓";color:#1a1206;font-weight:700;font-size:14px}
+.consent input:focus-visible{outline:2px solid var(--gold-hi);outline-offset:2px}
+
+.recwrap{position:relative;width:236px;height:236px;margin:14px auto 6px;display:grid;place-items:center}
 .ring{position:absolute;inset:0;transform:rotate(-90deg);pointer-events:none}
-.ring circle{fill:none;stroke-width:10}
-.ring .bgc{stroke:var(--line)}
-.ring .fg{stroke:var(--red);stroke-linecap:round;transition:stroke-dashoffset .2s linear}
+.ring circle{fill:none;stroke-width:6}
+.ring .bgc{stroke:rgba(214,180,106,.16)}
+.ring .fg{stroke:var(--gold);stroke-linecap:round;transition:stroke-dashoffset .15s linear,stroke .3s}
+.ring.msg .fg{stroke:var(--rose)}
 .recbtn{
-  width:170px;height:170px;border-radius:50%;border:0;cursor:pointer;
-  background:radial-gradient(circle at 35% 30%,#ff7a75,var(--red) 60%,#b52f2c);
-  color:#fff;font-family:inherit;font-size:22px;font-weight:700;
-  box-shadow:0 12px 40px rgba(239,83,80,.35);transition:transform .15s;
+  width:184px;height:184px;border-radius:50%;cursor:pointer;border:0;padding:0;
+  background:
+    radial-gradient(circle at 50% 38%, #1c2d4d 0%, #0b1424 70%);
+  box-shadow:
+    0 0 0 3px var(--gold-lo), 0 0 0 7px rgba(214,180,106,.18), 0 0 0 8px var(--gold),
+    0 18px 50px rgba(0,0,0,.6), inset 0 2px 0 rgba(246,227,168,.15);
+  color:var(--gold-hi);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;
+  font-family:var(--f-display);font-size:20px;transition:transform .15s, box-shadow .3s;
 }
-.recbtn:hover{transform:scale(1.03)}
-.recbtn:disabled{filter:grayscale(.8) brightness(.6);cursor:not-allowed;transform:none}
-.recbtn.recording{animation:pulse 1.2s infinite}
-@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(239,83,80,.55)}50%{box-shadow:0 0 0 22px rgba(239,83,80,0)}}
-.timer{font-size:18px;color:var(--muted);min-height:26px;text-align:center}
+.recbtn svg{width:46px;height:46px}
+.recbtn:hover{transform:scale(1.025)}
+.recbtn:disabled{filter:grayscale(.85) brightness(.6);cursor:not-allowed;transform:none}
+.recbtn:focus-visible{outline:2px solid var(--gold-hi);outline-offset:8px}
+.recbtn.live{animation:breathe 1.6s ease-in-out infinite}
+.recbtn.live.msg{color:#ffe1e3}
+@keyframes breathe{0%,100%{box-shadow:0 0 0 3px var(--gold-lo),0 0 0 7px rgba(214,180,106,.18),0 0 0 8px var(--gold),0 0 0 0 rgba(214,180,106,.35)}50%{box-shadow:0 0 0 3px var(--gold-lo),0 0 0 7px rgba(214,180,106,.18),0 0 0 8px var(--gold),0 0 0 26px rgba(214,180,106,0)}}
+.timer{text-align:center;color:var(--muted);min-height:26px;font-size:16px;font-variant-numeric:tabular-nums}
+.btn{border:1px solid var(--gold-line);background:rgba(11,20,36,.6);color:var(--cream);border-radius:14px;padding:12px 24px;font-family:var(--f-body);font-size:17px;font-weight:600;cursor:pointer}
+.btn:hover{border-color:var(--gold)}
+.btn.gold{background:linear-gradient(180deg,var(--gold-hi),var(--gold) 55%,var(--gold-lo));color:#1a1206;border-color:var(--gold)}
+.btn:focus-visible{outline:2px solid var(--gold-hi);outline-offset:3px}
+.center{display:flex;justify-content:center}
 
-/* processing */
-.status{display:none;flex-direction:column;align-items:center;gap:14px;padding:30px 0}
-.plane{font-size:64px;animation:fly 2.4s ease-in-out infinite}
-@keyframes fly{0%{transform:translateX(60px) rotate(-8deg)}50%{transform:translateX(-60px) rotate(4deg)}100%{transform:translateX(60px) rotate(-8deg)}}
-.status h2{margin:0;font-size:28px}
-.status p{margin:0;color:var(--muted)}
+/* ---------- flight (processing) ---------- */
+.flight{display:flex;flex-direction:column;align-items:center;gap:22px;padding:10px 0}
+.globe{width:min(210px,56vw);height:auto}
+.flight{gap:16px}
+.globe .orbit{transform-origin:150px 150px;animation:orbit 3.2s linear infinite}
+@keyframes orbit{to{transform:rotate(360deg)}}
+.steps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px;min-width:min(340px,100%)}
+.steps li{display:flex;align-items:center;gap:12px;color:var(--muted);font-size:17px}
+.steps li .dot{width:26px;height:26px;border-radius:50%;border:1.5px solid var(--gold-line);display:grid;place-items:center;font-size:13px;flex:none}
+.steps li.on{color:var(--cream)}
+.steps li.on .dot{border-color:var(--gold);box-shadow:0 0 0 4px rgba(214,180,106,.15);animation:pulse 1.2s infinite}
+.steps li.ok{color:var(--gold)}
+.steps li.ok .dot{background:var(--gold);color:#1a1206;border-color:var(--gold)}
+@keyframes pulse{50%{box-shadow:0 0 0 8px rgba(214,180,106,0)}}
 
-/* results */
-.results{display:none;width:100%;flex-direction:column;align-items:center;gap:18px}
-.results h2{margin:0;font-size:clamp(24px,3vw,34px);text-align:center}
-.grid{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;width:100%}
-@media (max-width:1000px){.grid{grid-template-columns:repeat(3,1fr)}}
-@media (max-width:640px){.grid{grid-template-columns:1fr}}
-.dest{
-  position:relative;background:var(--card);border:1px solid var(--line);border-radius:20px;padding:18px;
-  display:flex;flex-direction:column;gap:10px;min-height:190px;overflow:hidden;
+/* ---------- results ---------- */
+.results{width:100%;display:flex;flex-direction:column;align-items:center;gap:22px}
+.results h2{margin:0;font-family:var(--f-display);font-size:clamp(28px,3.6vw,42px);color:var(--gold-hi);text-align:center}
+.said{width:100%;max-width:980px;display:grid;gap:12px}
+.said .blk{border:1px solid var(--gold-line);border-radius:18px;padding:14px 20px;background:rgba(11,20,36,.66);line-height:1.9;font-size:17px;min-width:0}
+.said .blk .lbl{display:block;font-size:13px;color:var(--gold);letter-spacing:.04em;margin-bottom:2px}
+.said .blk.love{border-color:rgba(233,162,168,.45);background:linear-gradient(180deg,rgba(233,162,168,.12),rgba(11,20,36,.66))}
+.said .blk.love .lbl{color:var(--rose)}
+
+.passes{width:100%;display:flex;flex-wrap:wrap;justify-content:center;gap:20px}
+.passes>.pass{flex:1 1 370px;max-width:400px}
+.pass{
+  position:relative;display:grid;grid-template-columns:1fr 112px;min-height:250px;border-radius:20px;overflow:hidden;
+  background:linear-gradient(160deg,#fbf5e6 0%,#efe3c6 100%);color:#1d1a14;
+  box-shadow:0 18px 45px rgba(0,0,0,.45),0 0 0 1px rgba(214,180,106,.5);
+  transition:transform .3s, box-shadow .3s;
 }
-.dest .top{display:flex;align-items:center;gap:10px}
-.dest .flag{font-size:38px;line-height:1}
-.dest .country{font-weight:700;font-size:20px}
-.dest .lang{color:var(--muted);font-size:13px}
-.dest .text{direction:ltr;text-align:left;color:var(--ink);opacity:.85;font-size:15px;line-height:1.6;flex:1}
-.dest .play{
-  align-self:stretch;border:0;border-radius:12px;padding:12px;font-family:inherit;font-size:17px;font-weight:600;cursor:pointer;
-  background:var(--gold);color:#1b1404;
+.pass.playing{transform:translateY(-4px);box-shadow:0 26px 60px rgba(0,0,0,.55),0 0 0 2px var(--gold),0 0 40px rgba(214,180,106,.35)}
+.pass .band{position:absolute;inset:0 0 auto 0;height:7px;background:linear-gradient(90deg,var(--c1),var(--c2),var(--c1))}
+.pass .main{padding:22px 20px 18px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.pass .top{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.pass .airline{font-family:var(--f-latin);font-size:10.5px;letter-spacing:.2em;color:#7a5e25;direction:ltr;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.pass .fno{font-family:var(--f-mono);font-size:12px;color:#6b6250;direction:ltr;white-space:nowrap}
+.pass .route{display:flex;align-items:center;gap:10px}
+.pass .ap{display:flex;flex-direction:column;align-items:center;min-width:64px}
+.pass .ap b{font-family:var(--f-latin);font-size:30px;font-weight:700;letter-spacing:.06em;color:#14100a;line-height:1;direction:ltr}
+.pass .ap small{font-size:13px;color:#6b6250;margin-top:4px}
+.pass .path{flex:1;position:relative;height:22px;display:grid;place-items:center}
+.pass .path::before{content:"";position:absolute;inset:50% 0 auto;border-top:2px dotted #b39553}
+.pass .path svg{position:relative;width:24px;height:24px;background:#f5ecd6;padding:2px;border-radius:50%;color:#8f6c2b}
+.pass .lang{display:flex;align-items:center;gap:10px;font-weight:600;font-size:16px}
+.pass .lang svg{width:46px;height:30px;border-radius:4px;box-shadow:0 0 0 1px rgba(0,0,0,.18),0 3px 8px rgba(0,0,0,.18);flex:none}
+.pass .lang span small{display:block;font-weight:400;color:#6b6250;font-size:13px}
+.pass .text{margin:0;font-size:15.5px;line-height:1.75;color:#2b261d;max-height:9.2em;overflow:auto;padding-inline-end:4px;overflow-wrap:anywhere}
+.pass .stub{
+  position:relative;border-inline-start:2px dashed rgba(143,108,43,.45);padding:22px 12px 16px;
+  display:flex;flex-direction:column;align-items:center;justify-content:space-between;gap:10px;background:rgba(214,180,106,.12)
 }
-.dest .play:disabled{background:var(--line);color:var(--muted);cursor:wait}
-.dest.playing{border-color:var(--gold);box-shadow:0 0 0 2px var(--gold) inset}
-.dest.error .play{background:#3a2430;color:#ffb3b3}
+.pass .stub::before,.pass .stub::after{content:"";position:absolute;inset-inline-start:-13px;width:24px;height:24px;border-radius:50%;background:var(--navy)}
+.pass .stub::before{top:-12px}.pass .stub::after{bottom:-12px}
+.pass .kv{text-align:center}
+.pass .kv i{display:block;font-style:normal;font-family:var(--f-latin);font-size:10px;letter-spacing:.22em;color:#8f7a4d;direction:ltr}
+.pass .kv b{font-family:var(--f-mono);font-size:17px;color:#1d1a14;direction:ltr;display:block}
+.pass .play{
+  width:64px;height:64px;border-radius:50%;border:0;cursor:pointer;display:grid;place-items:center;
+  background:radial-gradient(circle at 50% 35%,#24375c,#0b1424);color:var(--gold-hi);
+  box-shadow:0 0 0 2px var(--gold),0 8px 18px rgba(0,0,0,.35)
+}
+.pass .play svg{width:26px;height:26px}
+.pass .play:disabled{opacity:.55;cursor:wait}
+.pass .play:focus-visible{outline:2px solid var(--gold-lo);outline-offset:4px}
+.pass .spin{width:26px;height:26px;border:2.5px solid rgba(246,227,168,.25);border-top-color:var(--gold-hi);border-radius:50%;animation:spin .9s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.pass.err .text{color:#9b2c2c}
 .stamp{
-  position:absolute;top:12px;left:12px;width:74px;height:74px;border-radius:50%;
-  border:3px solid var(--red);color:var(--red);display:grid;place-items:center;text-align:center;
-  font-size:11px;font-weight:700;line-height:1.2;transform:rotate(-14deg) scale(1.6);opacity:0;transition:all .35s cubic-bezier(.2,1.6,.4,1);
+  position:absolute;top:44%;inset-inline-start:30%;width:126px;height:126px;border-radius:50%;
+  border:3px double var(--stamp);color:var(--stamp);display:grid;place-items:center;text-align:center;
+  font-family:var(--f-latin);font-weight:700;font-size:13px;letter-spacing:.12em;line-height:1.35;direction:ltr;
+  transform:rotate(-16deg) scale(1.9);opacity:0;pointer-events:none;mix-blend-mode:multiply;
+  transition:transform .45s cubic-bezier(.2,1.6,.35,1),opacity .2s;
 }
-.dest.stamped .stamp{opacity:.9;transform:rotate(-14deg) scale(1)}
-.row{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
-.btn{border:1px solid var(--line);background:var(--bg2);color:var(--ink);border-radius:14px;padding:12px 22px;font-family:inherit;font-size:17px;font-weight:600;cursor:pointer}
-.btn.primary{background:var(--gold);color:#1b1404;border-color:var(--gold)}
-.deleted{color:var(--green);font-size:15px}
-.said{max-width:820px;width:100%;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px 18px;font-size:17px;line-height:1.8;color:var(--ink)}
-.said b{color:var(--gold)}
-.readbox p{font-size:clamp(18px,2vw,24px)}
+.stamp small{display:block;font-family:var(--f-mono);font-size:10px;letter-spacing:.06em;font-weight:500}
+.pass.stamped .stamp{opacity:.82;transform:rotate(-16deg) scale(1)}
+.actions{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
+.note{color:var(--ok);font-size:15px;text-align:center}
+.usage{color:var(--muted);font-size:13px;text-align:center}
 
-/* error */
-.err{display:none;max-width:760px;width:100%;background:#3a1e24;border:1px solid #7a2f3a;color:#ffd0d0;border-radius:16px;padding:14px 18px;font-size:15px;line-height:1.7}
-.err code{direction:ltr;display:block;text-align:left;margin-top:6px;opacity:.75;font-size:12px;white-space:pre-wrap;word-break:break-word}
+.waqr{display:flex;align-items:center;gap:16px;padding:14px 18px;border-radius:18px;border:1px solid var(--gold-line);background:rgba(11,20,36,.66);max-width:560px;width:100%}
+.waqr .qr{flex:none;width:132px;height:132px;padding:8px;border-radius:12px;background:var(--cream);display:grid;place-items:center}
+.waqr .qr img,.waqr .qr canvas{width:116px!important;height:116px!important}
+.waqr p{margin:0;font-size:16px;line-height:1.7;color:var(--cream)}
+.waqr p small{display:block;color:var(--muted);font-size:13px}
+.err{display:none;width:100%;max-width:820px;background:rgba(120,30,40,.35);border:1px solid rgba(233,120,130,.5);color:#ffd9dc;border-radius:16px;padding:14px 18px;font-size:15px;line-height:1.7}
+.err code{direction:ltr;display:block;text-align:left;margin-top:6px;opacity:.75;font-size:12px;white-space:pre-wrap;overflow-wrap:anywhere}
 
-/* settings */
-dialog{background:var(--bg2);color:var(--ink);border:1px solid var(--line);border-radius:20px;padding:0;width:min(640px,94vw);max-height:90vh}
-dialog::backdrop{background:rgba(0,0,0,.6)}
+/* ---------- settings ---------- */
+dialog{background:var(--navy-2);color:var(--cream);border:1px solid var(--gold-line);border-radius:22px;padding:0;width:min(620px,94vw);max-height:90vh}
+dialog::backdrop{background:rgba(3,6,12,.72);backdrop-filter:blur(3px)}
 .dlg{padding:22px 24px;display:flex;flex-direction:column;gap:14px;overflow:auto;max-height:90vh}
-.dlg h3{margin:0 0 4px;font-size:20px}
-.field{display:flex;flex-direction:column;gap:6px}
+.dlg h3{margin:0;font-family:var(--f-display);color:var(--gold-hi);font-size:22px}
+.field{display:flex;flex-direction:column;gap:6px;min-width:0}
 .field label{font-size:14px;color:var(--muted)}
-.field input[type=text],.field input[type=password],.field input[type=number],.field textarea{
-  background:var(--bg);border:1px solid var(--line);color:var(--ink);border-radius:10px;padding:10px 12px;font-family:inherit;font-size:15px
-}
-.field textarea{direction:ltr;text-align:left;min-height:54px;resize:vertical}
-.field .ltr{direction:ltr;text-align:left}
-.inline{display:flex;gap:10px;align-items:center}
+.field input[type=text],.field input[type=password],.field input[type=number]{background:var(--night);border:1px solid var(--gold-line);color:var(--cream);border-radius:10px;padding:10px 12px;font-family:var(--f-body);font-size:15px;width:100%}
+.ltr{direction:ltr;text-align:left}
+.inline{display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap}
+.inline>.field{flex:1;min-width:150px}
+input[type=range]{accent-color:var(--gold)}
 .hint{color:var(--muted);font-size:13px;line-height:1.6}
-.sep{height:1px;background:var(--line);margin:4px 0}
+.sep{height:1px;background:var(--gold-line)}
 .mini{font-size:14px;padding:8px 14px}
-.log{direction:ltr;text-align:left;font-size:12px;color:var(--muted);white-space:pre-wrap;max-height:120px;overflow:auto;background:var(--bg);border-radius:8px;padding:8px}
-@media (max-width:600px){header{padding:14px 16px}.recwrap{width:180px;height:180px}.recbtn{width:140px;height:140px;font-size:19px}}
+.log{direction:ltr;text-align:left;font-size:12px;color:var(--muted);white-space:pre-wrap;max-height:130px;overflow:auto;background:var(--night);border-radius:8px;padding:8px;font-family:var(--f-mono)}
+[hidden]{display:none!important}
+
+@media (max-width:560px){
+  .pass{grid-template-columns:1fr}
+  .pass .stub{border-inline-start:0;border-top:2px dashed rgba(143,108,43,.45);flex-direction:row}
+  .pass .stub::before,.pass .stub::after{display:none}
+  .recwrap{width:200px;height:200px}.recbtn{width:156px;height:156px}
+  .stamp{top:24%}
+}
+@media (prefers-reduced-motion:reduce){
+  h1,.globe .orbit,.recbtn.live,.steps li.on .dot,.pass .spin{animation:none}
+}
 </style>
 </head>
 <body>
-<header>
-  <div class="brand">
-    <span class="globe">🌍</span>
-    <h1>رحلة حول العالم بصوتك<small>يوم الطلاب العالمي</small></h1>
-  </div>
-  <div class="tools">
-    <span class="pill" id="credits" title="الرصيد المتبقي">—</span>
-    <button class="iconbtn" id="openSettings" title="الإعدادات (للمنظمين)">⚙️</button>
-  </div>
-</header>
+<canvas id="guilloche" aria-hidden="true"></canvas>
 
-<main>
-  <!-- STAGE: record -->
-  <section id="stageRecord" style="display:contents">
-    <div class="readbox">
-      <div class="label">تكلّم بالعربي عن أي شي تبيه 🎙️</div>
-      <p id="readText"></p>
+<div class="wrap">
+  <div class="topbar">
+    <span class="brandline">VOICE AIRWAYS · STUDENT DAY</span>
+    <div class="tools">
+      <span class="pill" id="credits">—</span>
+      <button class="iconbtn" id="openSettings" title="إعدادات المنظمين" aria-label="إعدادات المنظمين">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <header class="hero">
+    <svg class="crest" viewBox="0 0 100 100" aria-hidden="true">
+      <defs><linearGradient id="cg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f6e3a8"/><stop offset=".5" stop-color="#d6b46a"/><stop offset="1" stop-color="#8f6c2b"/></linearGradient></defs>
+      <circle cx="50" cy="50" r="46" fill="none" stroke="url(#cg)" stroke-width="2"/>
+      <circle cx="50" cy="50" r="40" fill="none" stroke="url(#cg)" stroke-width=".8" stroke-dasharray="2 3"/>
+      <circle cx="50" cy="50" r="28" fill="none" stroke="url(#cg)" stroke-width="1.6"/>
+      <ellipse cx="50" cy="50" rx="12" ry="28" fill="none" stroke="url(#cg)" stroke-width="1.2"/>
+      <path d="M22 50h56M25 38h50M25 62h50" stroke="url(#cg)" stroke-width="1.1" fill="none"/>
+      <path d="M50 8l2.2 4.5 5 .7-3.6 3.5.9 5-4.5-2.4-4.5 2.4.9-5-3.6-3.5 5-.7z" fill="url(#cg)"/>
+    </svg>
+    <div class="eyebrow">AROUND THE WORLD IN YOUR VOICE</div>
+    <h1>رحلة حول العالم بصوتك</h1>
+    <p class="sub">تكلّم بالعربي، واسمع نفسك بصوتك في خمس دول</p>
+    <div class="flags" id="flagStrip"></div>
+  </header>
+
+  <!-- ===== Check-in (record) ===== -->
+  <section class="panel" id="stageRecord">
+    <div class="phases">
+      <div class="phase" id="ph1"><b>I</b> عرّف بنفسك</div>
+      <div class="phase msg" id="ph2"><b>II</b> رسالة لشخص تحبه 💌</div>
+    </div>
+    <div class="prompt" id="prompt">
+      <div class="q" id="q">اضغط الزر وجاوب على الأسئلة، وفي آخر 20 ثانية وجّه رسالة لشخص تحبه</div>
+      <div class="hint" id="qhint">كل ما تكلمت أكثر، طلع صوتك أقرب لك</div>
     </div>
     <label class="consent"><input type="checkbox" id="consent"> أوافق على نسخ صوتي مؤقتاً، ويُحذف فوراً بعد التجربة</label>
-    <div class="recwrap">
-      <svg class="ring" viewBox="0 0 220 220"><circle class="bgc" cx="110" cy="110" r="100"/><circle class="fg" id="ringFg" cx="110" cy="110" r="100"/></svg>
-      <button class="recbtn" id="recBtn" disabled>اضغط وسجّل</button>
+    <div class="recwrap" id="recwrap">
+      <svg class="ring" id="ring" viewBox="0 0 236 236"><circle class="bgc" cx="118" cy="118" r="112"/><circle class="fg" id="ringFg" cx="118" cy="118" r="112"/></svg>
+      <button class="recbtn" id="recBtn" disabled>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M8.5 21h7"/></svg>
+        <span id="recLabel">ابدأ الرحلة</span>
+      </button>
     </div>
     <div class="timer" id="timer">علّم الموافقة أولاً</div>
-    <button class="btn" id="altRec" hidden>🎙️ سجّل بتطبيق التسجيل في الجهاز</button>
+    <div class="center"><button class="btn gold" id="altRec" hidden>🎙️ سجّل بتطبيق التسجيل في الجهاز</button></div>
     <input type="file" id="altFile" accept="audio/*" capture hidden>
   </section>
 
-  <!-- STAGE: processing -->
-  <section class="status" id="stageWork">
-    <div class="plane">✈️</div>
-    <h2 id="workTitle">جاري تجهيز رحلتك…</h2>
-    <p id="workSub">ننسخ صوتك الحين</p>
+  <!-- ===== Flight (processing) ===== -->
+  <section class="panel flight" id="stageWork" hidden>
+    <svg class="globe" viewBox="0 0 300 300" aria-hidden="true">
+      <defs>
+        <radialGradient id="gg" cx=".38" cy=".32"><stop offset="0" stop-color="#22385f"/><stop offset="1" stop-color="#0a1322"/></radialGradient>
+        <linearGradient id="gl" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f6e3a8"/><stop offset="1" stop-color="#8f6c2b"/></linearGradient>
+      </defs>
+      <circle cx="150" cy="150" r="96" fill="url(#gg)" stroke="url(#gl)" stroke-width="1.5"/>
+      <g fill="none" stroke="rgba(214,180,106,.35)" stroke-width="1">
+        <ellipse cx="150" cy="150" rx="40" ry="96"/><ellipse cx="150" cy="150" rx="75" ry="96"/>
+        <path d="M54 150h192M64 105h172M64 195h172M90 70h120M90 230h120"/>
+      </g>
+      <circle cx="150" cy="150" r="128" fill="none" stroke="rgba(214,180,106,.25)" stroke-dasharray="3 6"/>
+      <g class="orbit">
+        <g transform="translate(150 22) rotate(90)">
+          <path d="M0-12 2 -3 12 2v3L2 2l-1 7 3 2v2l-4-1-4 1v-2l3-2-1-7-10 3v-3l10-5z" fill="url(#gl)" transform="scale(1.4)"/>
+        </g>
+      </g>
+    </svg>
+    <ul class="steps" id="steps">
+      <li data-s="1"><span class="dot">1</span>نسمع كلامك</li>
+      <li data-s="2"><span class="dot">2</span>ننسخ صوتك</li>
+      <li data-s="3"><span class="dot">3</span>نترجم لخمس لغات</li>
+      <li data-s="4"><span class="dot">4</span>نطبع تذاكرك</li>
+    </ul>
+    <div class="waqr" data-qr hidden><div class="qr"></div><p>وأنت تنتظر: امسح الكود بجوالك وأرسل الرسالة<small>عشان نرسل لك رحلتك الصوتية على واتساب</small></p></div>
   </section>
 
-  <!-- STAGE: results -->
-  <section class="results" id="stageResults">
-    <h2>اسمع نفسك حول العالم 🌏</h2>
+  <!-- ===== Boarding passes (results) ===== -->
+  <section class="results" id="stageResults" hidden>
+    <h2>تذاكرك جاهزة ✈</h2>
     <div class="said" id="said"></div>
-    <div class="grid" id="grid"></div>
-    <div class="row">
-      <button class="btn primary" id="playAll">▶ شغّل الرحلة كاملة</button>
-      <button class="btn" id="newVisitor">زائر جديد ↺</button>
+    <div class="passes" id="passes"></div>
+    <div class="actions">
+      <button class="btn gold" id="playAll">▶ شغّل الرحلة كاملة</button>
+      <button class="btn gold" id="toPhone" hidden>📱 خذ رحلتك على جوالك</button>
+      <button class="btn" id="saveTrip" hidden>📲 مشاركة من الجهاز</button>
+      <button class="btn" id="newVisitor">مسافر جديد ↺</button>
     </div>
-    <div class="deleted" id="deletedNote"></div>
+    <div class="note" id="deletedNote"></div>
+    <div class="waqr" id="phoneBox" hidden><div class="qr" id="phoneQr"></div><p id="phoneTxt">…جاري تجهيز الرابط</p></div>
+    <div class="waqr" data-qr hidden><div class="qr"></div><p>تبي رحلتك على جوالك؟ امسح الكود وأرسل الرسالة<small>وبعدها نرسل لك الملف على واتساب</small></p></div>
+    <div class="usage" id="saveHint" hidden>اختر التطبيق اللي تبيه (Quick Share، بلوتوث، إيميل…)</div>
+    <div class="usage" id="usage"></div>
   </section>
 
   <div class="err" id="err"></div>
-</main>
+</div>
 
 <dialog id="settings">
   <div class="dlg">
-    <h3>⚙️ إعدادات المنظمين</h3>
+    <h3>إعدادات المنظمين</h3>
     <div class="field">
-      <label>مفتاح ElevenLabs API</label>
-      <div class="inline"><input type="password" id="sKey" class="ltr" style="flex:1" placeholder="sk_..."><button class="btn mini" id="testKey">اختبار</button></div>
-      <div class="hint" id="keyStatus">المفتاح يُحفظ في هذا المتصفح فقط.</div>
+      <label for="sKey">مفتاح ElevenLabs API</label>
+      <div class="inline"><input type="password" id="sKey" class="ltr" style="flex:1;min-width:200px" placeholder="sk_..."><button class="btn mini" id="testKey">اختبار</button></div>
+      <div class="hint" id="keyStatus">المفتاح يُحفظ في هذا المتصفح فقط. الصلاحيات المطلوبة: Text to Speech، Speech to Text، Voices (Write)، User.</div>
     </div>
     <div class="inline">
-      <div class="field" style="flex:1"><label>مدة التسجيل (ثانية)</label><input type="number" id="sSecs" min="10" max="90"></div>
-      <div class="field" style="flex:2"><label>الموديل (model_id)</label><input type="text" id="sModel" class="ltr"></div>
+      <div class="field"><label for="sAbout">مدة "عرّف بنفسك" (أقصى، ثانية)</label><input type="number" id="sAbout" min="10" max="60"></div>
+      <div class="field"><label for="sMsg">مدة الرسالة (ثانية)</label><input type="number" id="sMsg" min="8" max="40"></div>
     </div>
+    <div class="field"><label for="sModel">الموديل (model_id)</label><input type="text" id="sModel" class="ltr">
+      <div class="hint">eleven_multilingual_v2 = أعلى جودة. eleven_flash_v2_5 = أرخص (غالباً نص التكلفة) وجودته أقل شوي.</div></div>
     <div class="inline">
-      <div class="field" style="flex:1"><label>Similarity: <b id="vSim"></b></label><input type="range" id="sSim" min="0" max="1" step="0.05"></div>
-      <div class="field" style="flex:1"><label>Stability: <b id="vStab"></b></label><input type="range" id="sStab" min="0" max="1" step="0.05"></div>
+      <div class="field"><label for="sSim">Similarity: <b id="vSim"></b></label><input type="range" id="sSim" min="0" max="1" step="0.05"></div>
+      <div class="field"><label for="sStab">Stability: <b id="vStab"></b></label><input type="range" id="sStab" min="0" max="1" step="0.05"></div>
     </div>
-    <div class="field"><label>طريقة التوليد</label>
-      <select id="sMode" style="background:var(--bg);border:1px solid var(--line);color:var(--ink);border-radius:10px;padding:10px 12px;font-family:inherit;font-size:15px">
-        <option value="clone">نسخ الصوت (أسرع وأرخص)</option>
-        <option value="dub">Dubbing (شبه أعلى، أبطأ وأغلى)</option>
-      </select>
-      <div class="hint">Dubbing يحتاج صلاحية Dubbing في مفتاح API. راقب الرصيد بعد أول تجربة.</div>
-    </div>
-    <label class="consent"><input type="checkbox" id="sNoise"> إزالة الضوضاء من التسجيل (أنصح فيها في البوث)</label>
+    <label class="consent" style="justify-content:flex-start"><input type="checkbox" id="sNoise"> إزالة الضوضاء من التسجيل</label>
+    <div class="field"><label for="sWa">رقم واتساب البوث (مع رمز الدولة، بدون + أو مسافات)</label><input type="text" id="sWa" class="ltr" inputmode="numeric" placeholder="9665XXXXXXXX">
+      <div class="hint">لو كتبته، يطلع للزائر كود QR يرسل لكم فيه رسالة، فتصير محادثته أول وحدة في واتساب وترسلون له الملف بثواني.</div></div>
+    <div class="field"><label for="sMax">أقصى عدد حروف يترجم وينطق (حماية للرصيد)</label><input type="number" id="sMax" min="100" max="1500"></div>
     <div class="sep"></div>
-    <div class="field"><label>اقتراح يظهر للزائر فوق الزر</label><textarea id="sRead" style="direction:rtl;text-align:right;min-height:90px"></textarea></div>
-    <div id="langFields"></div>
-    <div class="sep"></div>
-    <div class="row" style="justify-content:flex-start">
-      <button class="btn mini" id="cleanup">🧹 احذف كل أصوات الزوار المتبقية</button>
-      <button class="btn mini" id="resetTexts">إرجاع النصوص الافتراضية</button>
-    </div>
+    <div class="inline"><button class="btn mini" id="cleanup">🧹 احذف كل أصوات الزوار المتبقية</button></div>
     <div class="log" id="log"></div>
-    <div class="row" style="justify-content:flex-end"><button class="btn primary" id="saveSettings">حفظ وإغلاق</button></div>
+    <div class="inline" style="justify-content:flex-end"><button class="btn gold mini" id="saveSettings">حفظ وإغلاق</button></div>
   </div>
 </dialog>
 
 <script>
+/* ================= config ================= */
 const API = 'https://api.elevenlabs.io/v1';
 const PREFIX = 'StudentDay-';
-
-const DEFAULT_READ = 'اضغط الزر وجاوب على الأسئلة اللي بتطلع هنا. تكلّم براحتك 30 ثانية أو أكثر، وكل ما تكلمت أكثر طلع الصوت أقرب لك.';
-const DEFAULT_LANGS = [
-  {flag:'🇬🇧', country:'بريطانيا', lang:'English',  code:'en', stamp:'LONDON'},
-  {flag:'🇯🇵', country:'اليابان',  lang:'日本語',    code:'ja', stamp:'TOKYO'},
-  {flag:'🇰🇷', country:'كوريا',    lang:'한국어',    code:'ko', stamp:'SEOUL'},
-  {flag:'🇪🇸', country:'إسبانيا',  lang:'Español',  code:'es', stamp:'MADRID'},
-  {flag:'🇮🇹', country:'إيطاليا',  lang:'Italiano', code:'it', stamp:'ROMA'},
+const LANGS = [
+  {code:'en', name:'English',  ar:'الإنجليزية', city:'لندن',  cityEn:'LONDON', ap:'LHR', flag:'gb', c1:'#012169', c2:'#C8102E', gate:'A1'},
+  {code:'ja', name:'日本語',    ar:'اليابانية',  city:'طوكيو', cityEn:'TOKYO',  ap:'HND', flag:'jp', c1:'#BC002D', c2:'#f3ead6', gate:'B2'},
+  {code:'ko', name:'한국어',    ar:'الكورية',    city:'سيول',  cityEn:'SEOUL',  ap:'ICN', flag:'kr', c1:'#0047A0', c2:'#CD2E3A', gate:'C3'},
+  {code:'es', name:'Español',  ar:'الإسبانية',  city:'مدريد', cityEn:'MADRID', ap:'MAD', flag:'es', c1:'#AA151B', c2:'#F1BF00', gate:'D4'},
+  {code:'it', name:'Italiano', ar:'الإيطالية',  city:'روما',  cityEn:'ROMA',   ap:'FCO', flag:'it', c1:'#009246', c2:'#CE2B37', gate:'E5'},
 ];
-const FALLBACK_MODEL = 'eleven_multilingual_v2';
-const CFG_VER = 4;
-const MAX_CHARS = 180;   // what gets translated and voiced (saves credits)
-const MIN_SECS = 20;     // longer sample = closer clone
 const PROMPTS = [
   'عرّف بنفسك: وش اسمك؟ ووش تدرس؟',
   'وش أكثر دولة تحب تزورها؟ وليش؟',
-  'وش أكلتك المفضلة؟ وكيف تحبها؟',
-  'لو تقدر تسافر بكرة، وين بتروح؟ ومع مين؟',
+  'وش أكلتك المفضلة؟',
+  'لو تقدر تسافر بكرة، وين بتروح؟',
   'وش هوايتك؟ ومن متى بديت فيها؟',
-  'وش أحلى ذكرى عندك من سفرة أو رحلة؟',
 ];
-const DEFAULTS = {ver:CFG_VER, key:'', secs:60, model:'eleven_multilingual_v2', sim:1, stab:0.5, noise:true, mode:'clone', read:DEFAULT_READ, langs:DEFAULT_LANGS, pending:[], pendingDubs:[]};
+const MSG_PROMPT = '💌 الحين وجّه رسالة لشخص تحبه… ابدأ باسمه';
+const MSG_HINT = 'مثلاً: «يا أمي، شكراً على كل شي… أحبك»';
+const MIN_ABOUT = 10, MIN_MSG = 6;
+const CFG_VER = 5;
+const DEFAULTS = {ver:CFG_VER, key:'', model:'eleven_multilingual_v2', sim:1, stab:0.5, noise:true, aboutSecs:30, msgSecs:20, maxChars:700, wa:'', pending:[]};
 
 let cfg = loadCfg();
 function loadCfg(){
   let c = {};
   try { c = JSON.parse(localStorage.getItem('voiceTripCfg')) || {}; } catch(e) {}
-  const merged = Object.assign({}, DEFAULTS, c);
-  if (!Array.isArray(merged.langs) || merged.langs.length === 0) merged.langs = DEFAULT_LANGS;
-  if (!Array.isArray(merged.pending)) merged.pending = [];
-  if (!Array.isArray(merged.pendingDubs)) merged.pendingDubs = [];
-  if (merged.mode !== 'dub') merged.mode = 'clone';
-  if ((c.ver||1) < CFG_VER){ Object.assign(merged, {model:DEFAULTS.model, sim:DEFAULTS.sim, stab:DEFAULTS.stab, secs:DEFAULTS.secs, read:DEFAULT_READ, langs:JSON.parse(JSON.stringify(DEFAULT_LANGS)), ver:CFG_VER}); }
-  return merged;
+  let m = Object.assign({}, DEFAULTS, c);
+  if ((c.ver||1) < CFG_VER) m = Object.assign({}, DEFAULTS, {key:c.key||'', wa:c.wa||'', pending:Array.isArray(c.pending)?c.pending:[]});
+  if (!Array.isArray(m.pending)) m.pending = [];
+  return m;
 }
 function saveCfg(){ try { localStorage.setItem('voiceTripCfg', JSON.stringify(cfg)); } catch(e) {} }
 
 const $ = id => document.getElementById(id);
 const logLines = [];
-function log(msg){ logLines.push(new Date().toLocaleTimeString()+'  '+msg); $('log').textContent = logLines.slice(-40).join('\n'); }
+function log(msg){ logLines.push(new Date().toLocaleTimeString()+'  '+msg); $('log').textContent = logLines.slice(-50).join('\n'); }
+const esc = s => String(s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 
-/* ---------- UI helpers ---------- */
+/* ================= flags (inline SVG) ================= */
+let flagN = 0;
+function flagSVG(code){
+  const u = 'f'+(++flagN);
+  switch(code){
+    case 'gb': return `<svg viewBox="0 0 60 30" aria-label="UK"><clipPath id="${u}a"><path d="M0,0v30h60V0z"/></clipPath><clipPath id="${u}b"><path d="M30,15h30v15zv15H0zH0V0zV0h30z"/></clipPath><g clip-path="url(#${u}a)"><path d="M0,0v30h60V0z" fill="#012169"/><path d="M0,0 60,30M60,0 0,30" stroke="#fff" stroke-width="6"/><path d="M0,0 60,30M60,0 0,30" clip-path="url(#${u}b)" stroke="#C8102E" stroke-width="4"/><path d="M30,0v30M0,15h60" stroke="#fff" stroke-width="10"/><path d="M30,0v30M0,15h60" stroke="#C8102E" stroke-width="6"/></g></svg>`;
+    case 'jp': return `<svg viewBox="0 0 900 600" aria-label="Japan"><rect width="900" height="600" fill="#fff"/><circle cx="450" cy="300" r="180" fill="#BC002D"/></svg>`;
+    case 'kr': return `<svg viewBox="-36 -24 72 48" aria-label="Korea"><path d="M-36-24h72v48h-72z" fill="#fff"/><g transform="rotate(-56.3099325)"><g id="${u}b2"><path id="${u}b" d="M-6-25H6M-6-22H6M-6-19H6" stroke="#000" stroke-width="2"/><use href="#${u}b" y="44"/></g><path stroke="#fff" d="M0,17v10"/><circle fill="#cd2e3a" r="12"/><path fill="#0047a0" d="M0-12A6,6 0 0 0 0,0A6,6 0 0 1 0,12A12,12 0 0,1 0-12z"/></g><g transform="rotate(-123.6900675)"><use href="#${u}b2"/><path stroke="#fff" d="M0-23.5v3M0,17v3.5M0,23.5v3"/></g></svg>`;
+    case 'es': return `<svg viewBox="0 0 750 500" aria-label="Spain"><rect width="750" height="500" fill="#AA151B"/><rect y="125" width="750" height="250" fill="#F1BF00"/></svg>`;
+    case 'it': return `<svg viewBox="0 0 3 2" aria-label="Italy"><rect width="1" height="2" fill="#009246"/><rect x="1" width="1" height="2" fill="#fff"/><rect x="2" width="1" height="2" fill="#CE2B37"/></svg>`;
+  }
+  return '';
+}
+const PLANE = `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M21 15.5v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V8.5l-8 5v2l8-2.5V18l-2 1.5V21l3.5-1 3.5 1v-1.5L13 18v-5z" transform="rotate(-90 12 12)"/></svg>`;
+const PLAY = `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13l11-6.5z"/></svg>`;
+
+$('flagStrip').innerHTML = `<span class="flagchip"><span class="origin">TUU</span> تبوك</span>` +
+  LANGS.map(l=>`<span class="flagchip">${flagSVG(l.flag)}${l.city}</span>`).join('');
+
+/* ================= guilloche background ================= */
+function drawGuilloche(){
+  const c = $('guilloche'), dpr = Math.min(2, window.devicePixelRatio||1);
+  const w = c.clientWidth, h = c.clientHeight; c.width = w*dpr; c.height = h*dpr;
+  const g = c.getContext('2d'); g.scale(dpr,dpr); g.clearRect(0,0,w,h);
+  const rosette = (cx, cy, R, r, d, turns, alpha) => {
+    g.beginPath(); g.strokeStyle = `rgba(214,180,106,${alpha})`; g.lineWidth = .6;
+    for (let t=0; t<=Math.PI*2*turns; t+=0.012){
+      const x = cx + (R-r)*Math.cos(t) + d*Math.cos((R-r)/r*t);
+      const y = cy + (R-r)*Math.sin(t) - d*Math.sin((R-r)/r*t);
+      t===0 ? g.moveTo(x,y) : g.lineTo(x,y);
+    }
+    g.stroke();
+  };
+  const s = Math.max(w,h);
+  rosette(w*0.92, h*0.06, s*0.36, s*0.36/7.2, s*0.10, 36, .07);
+  rosette(w*0.06, h*0.98, s*0.30, s*0.30/6.4, s*0.09, 32, .06);
+  g.lineWidth=.5;
+  for (let k=0;k<14;k++){ g.beginPath(); g.strokeStyle='rgba(214,180,106,.035)'; g.arc(w/2, h*1.35, s*0.55 + k*9, Math.PI*1.05, Math.PI*1.95); g.stroke(); }
+}
+drawGuilloche(); addEventListener('resize', ()=>{ clearTimeout(drawGuilloche._t); drawGuilloche._t = setTimeout(drawGuilloche, 150); });
+
+/* ================= stages & UI ================= */
 function show(stage){
-  $('stageRecord').style.display = stage==='record' ? 'contents' : 'none';
-  $('stageWork').style.display = stage==='work' ? 'flex' : 'none';
-  $('stageResults').style.display = stage==='results' ? 'flex' : 'none';
+  $('stageRecord').hidden = stage!=='record';
+  $('stageWork').hidden = stage!=='work';
+  $('stageResults').hidden = stage!=='results';
+  window.scrollTo({top:0, behavior:'smooth'});
 }
-function showErr(msg, detail){
-  const e = $('err');
-  e.innerHTML = '⚠️ ' + msg + (detail ? '<code>'+String(detail).replace(/[<>&]/g, c=>({'<':'&lt;','>':'&gt;','&':'&amp;'}[c]))+'</code>' : '');
-  e.style.display = 'block';
-}
+function step(n){ document.querySelectorAll('#steps li').forEach(li=>{ const s=+li.dataset.s; li.className = s<n?'ok':(s===n?'on':''); li.querySelector('.dot').textContent = s<n?'✓':s; }); }
+function showErr(msg, detail){ const e=$('err'); e.innerHTML = '⚠️ '+esc(msg)+(detail?'<code>'+esc(detail)+'</code>':''); e.style.display='block'; }
 function clearErr(){ $('err').style.display='none'; }
-function work(title, sub){ $('workTitle').textContent = title; $('workSub').textContent = sub || ''; }
 
-const R = 100, CIRC = 2*Math.PI*R;
+const R = 112, CIRC = 2*Math.PI*R;
 $('ringFg').style.strokeDasharray = CIRC;
-function setRing(frac){ $('ringFg').style.strokeDashoffset = CIRC*(1-frac); }
+function setRing(f){ $('ringFg').style.strokeDashoffset = CIRC*(1-Math.max(0,Math.min(1,f))); }
 setRing(0);
 
-$('readText').textContent = cfg.read;
-$('consent').addEventListener('change', () => {
-  $('recBtn').disabled = !$('consent').checked;
-  $('timer').textContent = $('consent').checked ? 'جاهز؟ اضغط الزر وابدأ تتكلّم' : 'علّم الموافقة أولاً';
+$('consent').addEventListener('change', ()=>{
+  $('recBtn').disabled = !$('consent').checked; $('altRec').disabled = !$('consent').checked;
+  $('timer').textContent = $('consent').checked ? 'جاهز؟ اضغط "ابدأ الرحلة" وتكلّم' : 'علّم الموافقة أولاً';
 });
+function setPrompt(q, hint, isMsg){
+  const p = $('prompt'); p.classList.toggle('msg', !!isMsg);
+  if ($('q').textContent !== q){ $('q').style.opacity = 0; setTimeout(()=>{ $('q').textContent = q; $('q').style.opacity = 1; }, 180); }
+  $('qhint').textContent = hint || '';
+}
+function setPhase(n){
+  $('ph1').className = 'phase' + (n===1?' on':(n>1?' done':''));
+  $('ph2').className = 'phase msg' + (n===2?' on':'');
+  $('ring').classList.toggle('msg', n===2); $('recBtn').classList.toggle('msg', n===2);
+}
 
-/* ---------- API ---------- */
+/* ================= API ================= */
 async function api(path, opts={}){
   if (!cfg.key) throw new Error('NO_KEY');
   const headers = Object.assign({'xi-api-key': cfg.key}, opts.headers||{});
   let r;
   try { r = await fetch(API+path, Object.assign({}, opts, {headers})); }
   catch(e){ throw new Error('NETWORK: '+e.message); }
-  if (!r.ok){
-    let t=''; try { t = await r.text(); } catch(e){}
-    throw new Error('HTTP '+r.status+': '+t.slice(0,400));
-  }
+  if (!r.ok){ let t=''; try{ t = await r.text(); }catch(e){} throw new Error('HTTP '+r.status+': '+t.slice(0,400)); }
   return r;
 }
+let lastCredits = null;
 async function refreshCredits(){
-  if (!cfg.key){ $('credits').textContent='بدون مفتاح'; return; }
+  if (!cfg.key){ $('credits').textContent='بدون مفتاح'; return null; }
   try {
     const s = await (await api('/user/subscription')).json();
     const left = (s.character_limit ?? 0) - (s.character_count ?? 0);
     $('credits').textContent = 'الرصيد: ' + left.toLocaleString('en-US');
-  } catch(e){ $('credits').textContent='—'; log('credits: '+e.message); }
+    lastCredits = left; return left;
+  } catch(e){ $('credits').textContent='—'; log('credits: '+e.message); return null; }
 }
 async function deleteVoice(id){
   try { await api('/voices/'+id, {method:'DELETE'}); log('deleted '+id); cfg.pending = cfg.pending.filter(x=>x!==id); saveCfg(); return true; }
   catch(e){ log('delete failed '+id+': '+e.message); if(!cfg.pending.includes(id)){cfg.pending.push(id); saveCfg();} return false; }
 }
-async function deleteDub(id){
-  try { await api('/dubbing/'+id, {method:'DELETE'}); log('dub deleted '+id); cfg.pendingDubs = cfg.pendingDubs.filter(x=>x!==id); saveCfg(); }
-  catch(e){ log('dub delete failed '+id+': '+e.message); if(!cfg.pendingDubs.includes(id)){cfg.pendingDubs.push(id); saveCfg();} }
-}
-async function retryPending(){
-  for (const id of [...(cfg.pendingDubs||[])]) await deleteDub(id);
-  for (const id of [...cfg.pending]) await deleteVoice(id);
-}
+async function retryPending(){ for (const id of [...cfg.pending]) await deleteVoice(id); }
 
-/* ---------- Recording ---------- */
-let warnUntil=0;
-let mediaRec=null, stream=null, chunks=[], t0=0, tick=null, recording=false;
+/* ================= recording (two phases) ================= */
+const rec = {mr:null, stream:null, chunks:[], t0:0, p2:0, phase:0, tick:null, warnUntil:0};
 
-$('recBtn').addEventListener('click', async () => {
+$('recBtn').addEventListener('click', async ()=>{
   clearErr();
-  if (recording){
-    const el = (performance.now()-t0)/1000;
-    if (el < MIN_SECS){ warnUntil = performance.now() + 2500; $('timer').textContent = `⏳ كمّل كلام شوي… باقي ${Math.ceil(MIN_SECS-el)} ث عشان يطلع صوتك أقرب`; return; }
+  const now = performance.now();
+  if (rec.phase===1){
+    const el = (now-rec.t0)/1000;
+    if (el < MIN_ABOUT){ warn(`كمّل كلام شوي… باقي ${Math.ceil(MIN_ABOUT-el)} ث`); return; }
+    toPhase2(); return;
+  }
+  if (rec.phase===2){
+    const m = (now-rec.p2)/1000;
+    if (m < MIN_MSG){ warn(`كمّل رسالتك… باقي ${Math.ceil(MIN_MSG-m)} ث`); return; }
     stopRec(); return;
   }
-  if (!cfg.key){ showErr('ما فيه مفتاح API. افتح الإعدادات ⚙️ وحط المفتاح.'); $('settings').showModal(); return; }
+  if (!cfg.key){ showErr('ما فيه مفتاح API. افتح الإعدادات وحط المفتاح.'); fillSettings(); $('settings').showModal(); return; }
   if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){ enableAlt(); return; }
-  try {
-    stream = await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false, noiseSuppression:false, autoGainControl:true, channelCount:1}});
-  } catch(e){ log('mic: '+e.message); enableAlt(); return; }
-  chunks = [];
-  mediaRec = new MediaRecorder(stream);
-  mediaRec.ondataavailable = e => { if (e.data && e.data.size) chunks.push(e.data); };
-  mediaRec.onstop = onRecStop;
-  mediaRec.start(250);
-  recording = true; t0 = performance.now();
-  $('recBtn').classList.add('recording'); $('recBtn').textContent = 'إيقاف';
-  $('consent').disabled = true;
-  tick = setInterval(() => {
-    const el = (performance.now()-t0)/1000;
-    const left = Math.max(0, cfg.secs - el);
-    setRing(Math.min(1, el/cfg.secs));
-    const pi = Math.floor(el/9) % PROMPTS.length;
-    if ($('readText').dataset.pi !== String(pi)){ $('readText').dataset.pi = pi; $('readText').textContent = '💬 ' + PROMPTS[pi]; }
-    if (performance.now() < warnUntil) { if (el >= cfg.secs) stopRec(); return; }
-    $('timer').textContent = el < MIN_SECS ? `🔴 تكلّم… جاوب على السؤال اللي فوق (أقل شي ${MIN_SECS} ثانية) · ${Math.ceil(el)} ث` : `🔴 ممتاز! كمّل أو اضغط إيقاف · باقي ${Math.ceil(left)} ث`;
-    if (el >= cfg.secs) stopRec();
-  }, 100);
+  try { rec.stream = await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false, noiseSuppression:false, autoGainControl:true, channelCount:1}}); }
+  catch(e){ log('mic: '+e.message); enableAlt(); return; }
+  rec.chunks = [];
+  rec.mr = new MediaRecorder(rec.stream);
+  rec.mr.ondataavailable = e => { if (e.data && e.data.size) rec.chunks.push(e.data); };
+  rec.mr.onstop = onRecStop;
+  rec.mr.start(250);
+  rec.t0 = performance.now(); rec.p2 = 0; rec.phase = 1;
+  $('recBtn').classList.add('live'); $('consent').disabled = true; setPhase(1);
+  rec.tick = setInterval(onTick, 100); onTick();
 });
+function warn(t){ rec.warnUntil = performance.now()+2200; $('timer').textContent = '⏳ '+t; }
+function onTick(){
+  const now = performance.now();
+  if (rec.phase===1){
+    const el = (now-rec.t0)/1000;
+    setPrompt('💬 '+PROMPTS[Math.floor(el/9)%PROMPTS.length], 'جاوب براحتك… وإذا خلصت اضغط "التالي"');
+    setRing(el/cfg.aboutSecs);
+    $('recLabel').textContent = el<MIN_ABOUT ? 'تكلّم…' : 'التالي: الرسالة ←';
+    if (now > rec.warnUntil) $('timer').textContent = `🔴 المرحلة الأولى · ${Math.floor(el)} ث من ${cfg.aboutSecs}`;
+    if (el >= cfg.aboutSecs) toPhase2();
+  } else if (rec.phase===2){
+    const m = (now-rec.p2)/1000;
+    setRing(m/cfg.msgSecs);
+    $('recLabel').textContent = m<MIN_MSG ? 'تكلّم…' : 'إنهاء ✓';
+    if (now > rec.warnUntil) $('timer').textContent = `💌 رسالتك · باقي ${Math.max(0,Math.ceil(cfg.msgSecs-m))} ث`;
+    if (m >= cfg.msgSecs) stopRec();
+  }
+}
+function toPhase2(){ rec.phase = 2; rec.p2 = performance.now(); setPhase(2); setPrompt(MSG_PROMPT, MSG_HINT, true); setRing(0); }
+function stopRec(){
+  if (!rec.phase) return;
+  rec.phase = 0; clearInterval(rec.tick);
+  try { rec.mr.stop(); } catch(e){}
+  $('recBtn').classList.remove('live');
+}
+async function onRecStop(){
+  const end = performance.now();
+  const dur = (end-rec.t0)/1000;
+  const msgAt = rec.p2 ? (rec.p2-rec.t0)/1000 : null;
+  rec.stream && rec.stream.getTracks().forEach(t=>t.stop());
+  if (dur < 10){ resetRecordUI(); showErr('التسجيل قصير. تكلّم 20 ثانية على الأقل.'); return; }
+  const blob = new Blob(rec.chunks, {type: rec.mr.mimeType || 'audio/webm'});
+  show('work'); step(1);
+  let wav;
+  try { wav = await toWav(blob); } catch(e){ log('wav convert failed, sending raw: '+e.message); wav = blob; }
+  runTrip(wav, msgAt);
+}
 
-/* Fallback: the browser blocks the mic (e.g. file opened from Downloads on Android) -> use the device's recorder app */
+/* fallback: browser blocks the mic -> device recorder app */
 let altMode = false;
 function enableAlt(){
-  altMode = true;
-  document.querySelector('.recwrap').style.display='none';
-  $('altRec').hidden = false; $('altRec').classList.add('primary'); $('altRec').style.fontSize='20px'; $('altRec').style.padding='18px 30px';
-  $('altRec').disabled = !$('consent').checked;
-  $('timer').textContent = 'المتصفح منع المايك هنا. اضغط الزر تحت، وسجّل النص في تطبيق التسجيل، وبعدها ارجع.';
+  altMode = true; $('recwrap').hidden = true; $('altRec').hidden = false; $('altRec').disabled = !$('consent').checked;
+  document.querySelector('.phases').hidden = true;
+  setPrompt('تكلّم عن نفسك، وبعدها وجّه رسالة لشخص تحبه باسمه', 'المتصفح منع المايك هنا، فبنسجّل بتطبيق التسجيل في الجهاز');
+  $('timer').textContent = 'اضغط الزر تحت، وسجّل، وبعدها ارجع';
 }
-$('consent').addEventListener('change', ()=>{ if (altMode) $('altRec').disabled = !$('consent').checked; });
-$('altRec').addEventListener('click', ()=>{ clearErr(); if (!cfg.key){ $('settings').showModal(); return; } $('altFile').value=''; $('altFile').click(); });
+$('altRec').addEventListener('click', ()=>{ clearErr(); if (!cfg.key){ fillSettings(); $('settings').showModal(); return; } $('altFile').value=''; $('altFile').click(); });
 $('altFile').addEventListener('change', async ()=>{
-  const f = $('altFile').files && $('altFile').files[0];
-  if (!f) return;
-  show('work'); work('جاري تجهيز رحلتك…', 'نجهّز التسجيل');
-  let wav = f, dur = null;
-  try { wav = await toWav(f); dur = (wav.size-44)/2/ (await sampleRateOf(wav)); } catch(e){ log('alt convert failed, sending raw: '+e.message); }
-  if (dur !== null && dur < 10){ show('record'); resetRecordUI(); showErr('التسجيل قصير. لازم 10 ثواني على الأقل.'); return; }
-  runTrip(wav);
+  const f = $('altFile').files && $('altFile').files[0]; if (!f) return;
+  show('work'); step(1);
+  let wav = f; try { wav = await toWav(f); } catch(e){ log('alt convert failed: '+e.message); }
+  runTrip(wav, null);
 });
-async function sampleRateOf(wavBlob){ const b = await wavBlob.slice(24,28).arrayBuffer(); return new DataView(b).getUint32(0,true); }
-
-function stopRec(){
-  if (!recording) return;
-  recording = false; clearInterval(tick);
-  try { mediaRec.stop(); } catch(e){}
-  $('recBtn').classList.remove('recording');
-}
-
-async function onRecStop(){
-  const dur = (performance.now()-t0)/1000;
-  stream && stream.getTracks().forEach(t=>t.stop());
-  if (dur < 10){
-    resetRecordUI();
-    showErr('التسجيل قصير. تكلّم 20 ثانية على الأقل.');
-    return;
-  }
-  const blob = new Blob(chunks, {type: mediaRec.mimeType || 'audio/webm'});
-  show('work'); work('جاري تجهيز رحلتك…', 'نجهّز التسجيل');
-  let wav;
-  try { wav = await toWav(blob); }
-  catch(e){ log('wav convert failed, sending raw: '+e.message); wav = blob; }
-  runTrip(wav);
-}
 
 async function toWav(blob){
-  const AC = window.AudioContext || window.webkitAudioContext;
-  const ac = new AC();
+  const AC = window.AudioContext || window.webkitAudioContext; const ac = new AC();
   const buf = await ac.decodeAudioData(await blob.arrayBuffer());
-  const n = buf.length, sr = buf.sampleRate, ch = buf.numberOfChannels;
-  const mono = new Float32Array(n);
+  const n = buf.length, sr = buf.sampleRate, ch = buf.numberOfChannels, mono = new Float32Array(n);
   for (let c=0;c<ch;c++){ const d = buf.getChannelData(c); for (let i=0;i<n;i++) mono[i] += d[i]/ch; }
   ac.close && ac.close();
-  const out = new DataView(new ArrayBuffer(44 + n*2));
+  const out = new DataView(new ArrayBuffer(44+n*2));
   const w = (o,s)=>{ for(let i=0;i<s.length;i++) out.setUint8(o+i, s.charCodeAt(i)); };
-  w(0,'RIFF'); out.setUint32(4, 36+n*2, true); w(8,'WAVE'); w(12,'fmt ');
-  out.setUint32(16,16,true); out.setUint16(20,1,true); out.setUint16(22,1,true);
-  out.setUint32(24,sr,true); out.setUint32(28,sr*2,true); out.setUint16(32,2,true); out.setUint16(34,16,true);
-  w(36,'data'); out.setUint32(40,n*2,true);
+  w(0,'RIFF'); out.setUint32(4,36+n*2,true); w(8,'WAVE'); w(12,'fmt '); out.setUint32(16,16,true); out.setUint16(20,1,true); out.setUint16(22,1,true);
+  out.setUint32(24,sr,true); out.setUint32(28,sr*2,true); out.setUint16(32,2,true); out.setUint16(34,16,true); w(36,'data'); out.setUint32(40,n*2,true);
   for (let i=0;i<n;i++){ const s=Math.max(-1,Math.min(1,mono[i])); out.setInt16(44+i*2, s<0?s*0x8000:s*0x7fff, true); }
   return new Blob([out], {type:'audio/wav'});
 }
 
-/* ---------- The trip ---------- */
-let players = [];
-
-function shortenForVoice(t){
-  if (t.length <= MAX_CHARS) return t;
-  const parts = t.match(/[^.!?؟،,]+[.!?؟،,]?/g) || [t];
-  let out = '';
-  for (const p of parts){ if ((out + p).length > MAX_CHARS) break; out += p; }
-  if (out.trim().length < 40){ const cut = t.slice(0, MAX_CHARS); out = cut.slice(0, Math.max(cut.lastIndexOf(' '), 40)); }
-  return out.trim().replace(/[،,]$/, '') ;
-}
-
+/* ================= speech → text → translate → voice ================= */
 async function transcribe(sample){
   const fd = new FormData();
-  fd.append('model_id', 'scribe_v1');
-  fd.append('file', sample, sample.type==='audio/wav' ? 'sample.wav' : (sample.name || 'sample.webm'));
-  const res = await (await api('/speech-to-text', {method:'POST', body:fd})).json();
-  return {text:(res.text||'').trim(), lang:(res.language_code||'').toLowerCase()};
+  fd.append('model_id','scribe_v1');
+  fd.append('file', sample, sample.type==='audio/wav'?'sample.wav':(sample.name||'sample.webm'));
+  const r = await (await api('/speech-to-text', {method:'POST', body:fd})).json();
+  return {text:(r.text||'').trim(), lang:(r.language_code||'').toLowerCase(), words:Array.isArray(r.words)?r.words:[]};
 }
-
+function splitByTime(words, t){
+  if (t==null || !words.length) return null;
+  let a='', b='';
+  for (const w of words){ const s = typeof w.start==='number' ? w.start : 0; if (s < t-0.25) a += (w.text||''); else b += (w.text||''); }
+  a=a.trim(); b=b.trim();
+  return (a||b) ? {about:a, msg:b} : null;
+}
+function capText(t){
+  if (t.length <= cfg.maxChars) return t;
+  const cut = t.slice(0, cfg.maxChars); const i = Math.max(cut.lastIndexOf('.'), cut.lastIndexOf('؟'), cut.lastIndexOf('!'), cut.lastIndexOf('،'), cut.lastIndexOf(' '));
+  return cut.slice(0, i>cfg.maxChars*0.6 ? i : cfg.maxChars).trim();
+}
+function chunks(t, n){ const parts = t.match(/[^.!?؟،,]+[.!?؟،,]?\s*/g) || [t]; const out=[]; let cur=''; for (const p of parts){ if ((cur+p).length>n && cur){ out.push(cur); cur=''; } cur+=p; } if (cur) out.push(cur); return out.flatMap(c=>c.length>n ? c.match(new RegExp('.{1,'+n+'}','g')) : [c]); }
 async function translate(text, target, srcHint){
-  // 1) Google Translate public endpoint
   try {
-    const u = 'https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl='+target+'&dt=t&q='+encodeURIComponent(text);
-    const r = await fetch(u);
-    if (r.ok){
-      const d = await r.json();
-      const out = (d[0]||[]).map(x=>x[0]).join('').trim();
-      if (out) return out;
-    }
-    log('google translate '+target+': HTTP '+r.status);
-  } catch(e){ log('google translate '+target+' failed: '+e.message); }
-  // 2) MyMemory fallback
+    const r = await fetch('https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl='+target+'&dt=t&q='+encodeURIComponent(text));
+    if (r.ok){ const d = await r.json(); const out = (d[0]||[]).map(x=>x[0]).join('').trim(); if (out) return out; }
+    log('google '+target+': HTTP '+r.status);
+  } catch(e){ log('google '+target+' failed: '+e.message); }
   const src = (srcHint||'').startsWith('en') ? 'en' : 'ar';
-  const r2 = await fetch('https://api.mymemory.translated.net/get?q='+encodeURIComponent(text.slice(0,480))+'&langpair='+src+'|'+target);
-  if (!r2.ok) throw new Error('TRANSLATE: HTTP '+r2.status);
-  const d2 = await r2.json();
-  const out2 = (d2.responseData && d2.responseData.translatedText || '').trim();
-  if (!out2) throw new Error('TRANSLATE: empty');
-  return out2;
+  const outs = [];
+  for (const c of chunks(text, 450)){
+    const r2 = await fetch('https://api.mymemory.translated.net/get?q='+encodeURIComponent(c)+'&langpair='+src+'|'+target);
+    if (!r2.ok) throw new Error('TRANSLATE: HTTP '+r2.status);
+    const d2 = await r2.json(); const o = (d2.responseData && d2.responseData.translatedText || '').trim();
+    if (!o) throw new Error('TRANSLATE: empty'); outs.push(o);
+  }
+  return outs.join(' ');
 }
 
-async function runTrip(sample){
-  if (cfg.mode === 'dub') return runDub(sample);
-  let voiceId = null;
+let players = [], blobs = [];
+async function runTrip(sample, msgAt){
+  let voiceId = null; const before = lastCredits;
   try {
-    work('جاري تجهيز رحلتك…', 'نسمع كلامك 👂');
+    step(1);
     const heard = await transcribe(sample);
     log('heard ['+heard.lang+']: '+heard.text);
     if (!heard.text || heard.text.length < 3) throw new Error('NO_SPEECH');
-    let text = heard.text;
-    text = shortenForVoice(text);
+    const text = capText(heard.text);
+    const parts = splitByTime(heard.words, msgAt);
 
-    work('جاري تجهيز رحلتك…', 'ننسخ صوتك 🎙️');
+    step(2);
     const fd = new FormData();
     fd.append('name', PREFIX + new Date().toISOString().replace(/[:.]/g,'-'));
     fd.append('description', 'Temporary Student Day booth voice - auto deleted');
     fd.append('remove_background_noise', cfg.noise ? 'true' : 'false');
-    fd.append('files', sample, sample.type==='audio/wav' ? 'sample.wav' : (sample.name || 'sample.webm'));
-    const res = await (await api('/voices/add', {method:'POST', body:fd})).json();
-    voiceId = res.voice_id;
-    cfg.pending.push(voiceId); saveCfg();
-    log('cloned '+voiceId);
+    fd.append('files', sample, sample.type==='audio/wav'?'sample.wav':(sample.name||'sample.webm'));
+    voiceId = (await (await api('/voices/add', {method:'POST', body:fd})).json()).voice_id;
+    cfg.pending.push(voiceId); saveCfg(); log('cloned '+voiceId);
 
-    buildCards();
-    $('said').innerHTML = '<b>قلت:</b> ';
-    $('said').appendChild(document.createTextNode(text));
-    show('results');
-    $('deletedNote').textContent = '⏳ نترجم ونجهّز المحطات…';
-
-    const queue = cfg.langs.map((l,i)=>i);
-    const worker = async () => { while(queue.length){ const i = queue.shift(); await genOne(voiceId, i, text, heard.lang); } };
+    step(3);
+    renderSaid(text, parts);
+    buildPasses();
+    const queue = LANGS.map((l,i)=>i), done = [];
+    const worker = async () => { while(queue.length){ const i = queue.shift(); await genOne(voiceId, i, text, heard.lang); done.push(i); if (done.length===1){ step(4); setTimeout(()=>show('results'), 500); } } };
     await Promise.all([worker(), worker()]);
+    if ($('stageResults').hidden) show('results');
+    if (blobs.some(Boolean)){ $('saveTrip').hidden = false; $('toPhone').hidden = false; }
   } catch(e){
-    log('trip error: '+e.message);
-    show('record'); resetRecordUI();
-    showErr(friendly(e), e.message);
+    log('trip error: '+e.message); show('record'); resetRecordUI(); showErr(friendly(e), e.message);
   } finally {
-    if (voiceId){
-      const ok = await deleteVoice(voiceId);
-      $('deletedNote').textContent = ok ? '🗑️ تم حذف نسخة صوتك من النظام' : '⚠️ ما انحذف الصوت تلقائياً. احذفه من الإعدادات (زر 🧹)';
-    }
-    refreshCredits();
+    if (voiceId){ const ok = await deleteVoice(voiceId); $('deletedNote').textContent = ok ? '🗑️ تم حذف نسخة صوتك من النظام' : '⚠️ ما انحذف الصوت تلقائياً. احذفه من الإعدادات (🧹)'; }
+    const after = await refreshCredits();
+    if (before!=null && after!=null && before>after) $('usage').textContent = `استهلكت هالرحلة ≈ ${(before-after).toLocaleString('en-US')} كريدت`;
   }
 }
-
+function renderSaid(text, parts){
+  const box = $('said');
+  if (parts && parts.msg){
+    box.innerHTML = (parts.about ? `<div class="blk"><span class="lbl">عرّفت بنفسك</span>${esc(parts.about)}</div>` : '') +
+      `<div class="blk love"><span class="lbl">💌 رسالتك</span>${esc(parts.msg)}</div>`;
+  } else {
+    box.innerHTML = `<div class="blk"><span class="lbl">قلت</span>${esc(text)}</div>`;
+  }
+}
 function friendly(e){
-  const m = e.message || '';
-  if (m === 'NO_KEY') return 'ما فيه مفتاح API. افتح الإعدادات ⚙️.';
-  if (m === 'NO_SPEECH') return 'ما سمعنا كلام واضح. قرّب المايك وتكلّم بصوت أوضح، وجرّب مرة ثانية.';
-  if (m.includes('speech_to_text') || (m.includes('401') && m.includes('permission'))) return 'المفتاح ما عنده صلاحية Speech to Text. فعّلها من إعدادات المفتاح في ElevenLabs.';
-  if (m.startsWith('NETWORK')) return 'ما قدرنا نتصل بـ ElevenLabs. تأكد من الإنترنت. لو الإنترنت شغال، يمكن المتصفح يمنع الاتصال من هذا الملف (أرسل لـ Claude رسالة الخطأ تحت).';
-  if (m.includes('401')) return 'مفتاح API غير صحيح، أو ناقصه صلاحية (لازم: Text to Speech و Speech to Text و Voices و User).';
+  const m = e.message||'';
+  if (m==='NO_KEY') return 'ما فيه مفتاح API. افتح الإعدادات.';
+  if (m==='NO_SPEECH') return 'ما سمعنا كلام واضح. قرّب من المايك وتكلّم بصوت أوضح، وجرّب مرة ثانية.';
+  if (m.startsWith('NETWORK')) return 'ما قدرنا نتصل بـ ElevenLabs. تأكد من الإنترنت.';
+  if (m.includes('401')) return 'المفتاح غير صحيح، أو ناقصه صلاحية (Text to Speech، Speech to Text، Voices، User).';
   if (m.includes('quota') || m.includes('credits')) return 'الرصيد خلص أو ما يكفي.';
-  if (m.includes('voice_limit') || m.includes('maximum amount of custom voices')) return 'وصلت للحد الأعلى من الأصوات. اضغط 🧹 في الإعدادات عشان تحذف الأصوات القديمة.';
-  if (m.startsWith('DUB_TIMEOUT')) return 'الدبلجة طولت أكثر من اللازم. جرّب تسجيل أقصر.';
-  if (m.includes('429')) return 'طلبات كثيرة بنفس الوقت. انتظر ثواني وجرب مرة ثانية.';
+  if (m.includes('voice_limit') || m.includes('maximum amount of custom voices')) return 'وصلت للحد الأعلى من الأصوات. اضغط 🧹 في الإعدادات.';
+  if (m.includes('429')) return 'طلبات كثيرة بنفس الوقت. انتظر ثواني وجرّب مرة ثانية.';
   return 'صار خطأ. جرّب مرة ثانية.';
 }
 
-function buildCards(){
-  const g = $('grid'); g.innerHTML=''; players = [];
-  cfg.langs.forEach((l,i)=>{
-    const d = document.createElement('div'); d.className='dest'; d.id='dest'+i;
-    d.innerHTML = `<div class="stamp">${l.stamp||''}<br>✓</div>
-      <div class="top"><span class="flag">${l.flag}</span><div><div class="country">${l.country}</div><div class="lang">${l.lang}</div></div></div>
-      <div class="text"></div>
-      <button class="play" disabled>⏳ جاري التجهيز…</button>`;
-    d.querySelector('.text').textContent = '…جاري الترجمة';
-    d.querySelector('.play').addEventListener('click', ()=>playOne(i));
-    g.appendChild(d);
-  });
+/* ================= boarding passes ================= */
+function buildPasses(){
+  players = []; blobs = []; $('saveTrip').hidden = true; $('toPhone').hidden = true; $('saveHint').hidden = true; $('phoneBox').hidden = true;
+  const date = new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}).toUpperCase();
+  $('passes').innerHTML = LANGS.map((l,i)=>`
+    <article class="pass" id="pass${i}" style="--c1:${l.c1};--c2:${l.c2}">
+      <div class="band"></div>
+      <div class="main">
+        <div class="top"><span class="airline">VOICE AIRWAYS · BOARDING PASS</span><span class="fno">VA ${String(100+i*7)}</span></div>
+        <div class="route">
+          <div class="ap"><b>TUU</b><small>تبوك</small></div>
+          <div class="path">${PLANE}</div>
+          <div class="ap"><b>${l.ap}</b><small>${l.city}</small></div>
+        </div>
+        <div class="lang">${flagSVG(l.flag)}<span>${l.name}<small>${l.ar}</small></span></div>
+        <p class="text" dir="auto">…جاري الترجمة</p>
+      </div>
+      <div class="stub">
+        <div class="kv"><i>GATE</i><b>${l.gate}</b></div>
+        <button class="play" disabled aria-label="اسمع"><span class="spin"></span></button>
+        <div class="kv"><i>SEAT</i><b>${(i+1)*3}A</b></div>
+      </div>
+      <div class="stamp">${l.cityEn}<small>${date}</small>✓ ARRIVED</div>
+    </article>`).join('');
+  document.querySelectorAll('.pass .play').forEach((b,i)=>b.addEventListener('click', ()=>playOne(i)));
 }
-
-
-/* ---------- Dubbing mode ---------- */
-const sleep = ms => new Promise(r=>setTimeout(r,ms));
-async function apiRetry(path, opts, tries=8){
-  for (let k=0;;k++){
-    try { return await api(path, opts); }
-    catch(e){ if (k < tries && /HTTP 429/.test(e.message)){ await sleep(4000 + k*2000); continue; } throw e; }
-  }
-}
-function vttToText(vtt){
-  return vtt.split(/\r?\n/).filter(l => l.trim() && !/^WEBVTT/.test(l) && !/-->/.test(l) && !/^\d+$/.test(l.trim())).join(' ').replace(/\s+/g,' ').trim();
-}
-
-async function runDub(sample){
-  const ids = [];
+async function genOne(voiceId, i, text, srcLang){
+  const l = LANGS[i], card = $('pass'+i), b = card.querySelector('.play'), tx = card.querySelector('.text');
+  let t;
+  try { t = await translate(text, l.code, srcLang); tx.textContent = t; }
+  catch(e){ log('translate '+l.code+': '+e.message); card.classList.add('err'); tx.textContent = 'ما زبطت الترجمة'; b.innerHTML = '✕'; return; }
   try {
-    work('جاري تجهيز رحلتك…', 'نسمع كلامك 👂');
-    const heard = await transcribe(sample);
-    log('heard ['+heard.lang+']: '+heard.text);
-    if (!heard.text || heard.text.length < 3) throw new Error('NO_SPEECH');
-
-    buildCards();
-    $('said').innerHTML = '<b>قلت:</b> ';
-    $('said').appendChild(document.createTextNode(heard.text));
-    document.querySelectorAll('.dest .text').forEach(t => t.textContent = '…جاري الدبلجة');
-    show('results');
-    $('deletedNote').textContent = '⏳ ندبلج صوتك… ممكن ياخذ دقيقة أو دقيقتين';
-
-    await Promise.all(cfg.langs.map((l,i) => dubOne(i, sample, ids)));
-  } catch(e){
-    log('dub trip error: '+e.message);
-    show('record'); resetRecordUI();
-    showErr(friendly(e), e.message);
-  } finally {
-    for (const id of ids) await deleteDub(id);
-    if (ids.length) $('deletedNote').textContent = '🗑️ تم حذف تسجيلك ومشاريع الدبلجة من النظام';
-    refreshCredits();
-  }
+    const r = await api(`/text-to-speech/${voiceId}?output_format=mp3_44100_128`, {method:'POST', headers:{'Content-Type':'application/json','Accept':'audio/mpeg'},
+      body: JSON.stringify({text:t, model_id:cfg.model, voice_settings:{stability:+cfg.stab, similarity_boost:+cfg.sim, use_speaker_boost:true}})});
+    const bl = await r.blob(); blobs[i] = bl;
+    players[i] = new Audio(URL.createObjectURL(bl));
+    b.disabled = false; b.innerHTML = PLAY;
+  } catch(e){ log('tts '+l.code+': '+e.message); card.classList.add('err'); b.innerHTML = '✕'; }
 }
-
-async function dubOne(i, sample, ids){
-  const l = cfg.langs[i], d = $('dest'+i), b = d.querySelector('.play');
-  const t0 = performance.now();
-  const tick = setInterval(()=>{ b.textContent = '⏳ ندبلج… ' + Math.round((performance.now()-t0)/1000) + 'ث'; }, 1000);
-  try {
-    const fd = new FormData();
-    fd.append('file', sample, sample.type==='audio/wav' ? 'sample.wav' : (sample.name || 'sample.webm'));
-    fd.append('target_lang', l.code);
-    fd.append('source_lang', 'ar');
-    fd.append('num_speakers', '1');
-    fd.append('name', PREFIX + l.code + '-' + Date.now());
-    fd.append('drop_background_audio', 'true');
-    const job = await (await apiRetry('/dubbing', {method:'POST', body:fd})).json();
-    const id = job.dubbing_id; ids.push(id); cfg.pendingDubs.push(id); saveCfg();
-    log('dub '+l.code+' started '+id);
-
-    const deadline = Date.now() + 6*60*1000;
-    while (true){
-      await sleep(3000);
-      const st = await (await apiRetry('/dubbing/'+id, {})).json();
-      if (st.status === 'dubbed') break;
-      if (st.status === 'failed') throw new Error('DUB_FAILED: '+(st.error||''));
-      if (Date.now() > deadline) throw new Error('DUB_TIMEOUT');
-    }
-    const audio = await (await apiRetry('/dubbing/'+id+'/audio/'+l.code, {})).blob();
-    players[i] = new Audio(URL.createObjectURL(audio));
-    clearInterval(tick);
-    b.disabled = false; b.textContent = '▶ اسمع';
-    try {
-      const vtt = await (await api('/dubbing/'+id+'/transcript/'+l.code+'?format_type=webvtt', {})).text();
-      const txt = vttToText(vtt);
-      d.querySelector('.text').textContent = txt || '—';
-    } catch(e){ log('transcript '+l.code+': '+e.message); d.querySelector('.text').textContent = '—'; }
-  } catch(e){
-    clearInterval(tick);
-    log('dub '+l.code+' failed: '+e.message);
-    d.classList.add('error'); b.textContent = '✕ ما زبطت'; b.disabled = true;
-    d.querySelector('.text').textContent = /dubbing|permission|401/.test(e.message) ? 'تأكد من صلاحية Dubbing في المفتاح' : 'ما زبطت الدبلجة';
-  }
-}
-
-async function genOne(voiceId, i, srcText, srcLang){
-  const l = cfg.langs[i], d = $('dest'+i), b = d.querySelector('.play');
-  let ttext;
-  try { ttext = await translate(srcText, l.code, srcLang); d.querySelector('.text').textContent = ttext; }
-  catch(e){ log('translate '+l.code+' failed: '+e.message); d.classList.add('error'); d.querySelector('.text').textContent = 'ما زبطت الترجمة'; b.textContent = '✕ ما زبطت'; return; }
-  const call = model => api(`/text-to-speech/${voiceId}?output_format=mp3_44100_128`, {
-      method:'POST',
-      headers:{'Content-Type':'application/json','Accept':'audio/mpeg'},
-      body: JSON.stringify({text:ttext, model_id:model, voice_settings:{stability:+cfg.stab, similarity_boost:+cfg.sim, use_speaker_boost:true}})
-    });
-  try {
-    let r;
-    try { r = await call(cfg.model); }
-    catch(e){
-      if (cfg.model !== FALLBACK_MODEL && /HTTP 4(00|22|04)/.test(e.message)){ log('model '+cfg.model+' failed, falling back: '+e.message); r = await call(FALLBACK_MODEL); }
-      else throw e;
-    }
-    const url = URL.createObjectURL(await r.blob());
-    players[i] = new Audio(url);
-    b.disabled = false; b.textContent = '▶ اسمع';
-  } catch(e){
-    log('tts '+i+' failed: '+e.message);
-    d.classList.add('error'); b.textContent = '✕ ما زبطت'; b.disabled = true;
-  }
-}
-
-function stopAll(){ players.forEach(p=>{ if(p){p.pause(); p.currentTime=0;} }); document.querySelectorAll('.dest').forEach(d=>d.classList.remove('playing')); }
+function stopAll(){ players.forEach(p=>{ if(p){ p.pause(); p.currentTime=0; } }); document.querySelectorAll('.pass').forEach(c=>c.classList.remove('playing')); }
 function playOne(i){
   return new Promise(res=>{
-    const p = players[i]; if(!p) return res();
-    stopAll();
-    const d = $('dest'+i); d.classList.add('playing');
-    p.onended = ()=>{ d.classList.remove('playing'); d.classList.add('stamped'); res(); };
-    p.onerror = ()=>{ d.classList.remove('playing'); res(); };
+    const p = players[i]; if (!p) return res();
+    stopAll(); const c = $('pass'+i); c.classList.add('playing'); c.scrollIntoView({behavior:'smooth', block:'nearest'});
+    p.onended = ()=>{ c.classList.remove('playing'); c.classList.add('stamped'); res(); };
+    p.onerror = ()=>{ c.classList.remove('playing'); res(); };
     p.play().catch(()=>res());
   });
 }
-$('playAll').addEventListener('click', async ()=>{ for (let i=0;i<cfg.langs.length;i++){ await playOne(i); await new Promise(r=>setTimeout(r,350)); } });
-
+$('playAll').addEventListener('click', async ()=>{ for (let i=0;i<LANGS.length;i++){ await playOne(i); await new Promise(r=>setTimeout(r,450)); } });
+function tripFile(){
+  const parts = LANGS.map((l,i)=>blobs[i]).filter(Boolean);
+  const stamp = new Date().toISOString().slice(0,16).replace(/[-:T]/g,'');
+  return new File(parts, `voice-trip-${stamp}.mp3`, {type:'audio/mpeg'});
+}
+/* temporary link + QR: file auto-deletes after ~60 min on tmpfiles.org */
+$('toPhone').addEventListener('click', async ()=>{
+  const box = $('phoneBox'), q = $('phoneQr'), t = $('phoneTxt');
+  box.hidden = false; box.scrollIntoView({behavior:'smooth', block:'center'}); q.innerHTML = '<span class="spin" style="border-color:rgba(11,20,36,.2);border-top-color:#0b1424"></span>'; t.textContent = '…جاري تجهيز الرابط';
+  $('toPhone').disabled = true;
+  try {
+    const fd = new FormData(); fd.append('file', tripFile());
+    let r;
+    try { r = await fetch('https://tmpfiles.org/api/v1/upload', {method:'POST', body:fd}); }
+    catch(e){ throw new Error('UPLOAD_NET: '+e.message); }
+    if (!r.ok) throw new Error('UPLOAD HTTP '+r.status);
+    const d = await r.json();
+    let url = d && d.data && d.data.url; if (!url) throw new Error('UPLOAD: no url');
+    url = url.replace(/^http:/,'https:').replace('tmpfiles.org/','tmpfiles.org/dl/');
+    log('uploaded: '+url);
+    q.innerHTML = '';
+    if (window.QRCode) new QRCode(q, {text:url, width:232, height:232, colorDark:'#0b1424', colorLight:'#f3ead6', correctLevel:QRCode.CorrectLevel.M});
+    else q.textContent = 'QR';
+    box.scrollIntoView({behavior:'smooth', block:'center'});
+    t.innerHTML = 'امسح الكود بكاميرا جوالك وحمّل رحلتك 🎧<small>الرابط مؤقت وينحذف تلقائياً بعد ساعة تقريباً</small>';
+  } catch(e){
+    log('upload failed: '+e.message); q.innerHTML = '✕';
+    t.innerHTML = 'ما قدرنا نجهّز الرابط. استخدم زر "مشاركة من الجهاز" بدلها.<small>'+esc(e.message.slice(0,90))+'</small>';
+  } finally { $('toPhone').disabled = false; }
+});
+$('saveTrip').addEventListener('click', async ()=>{
+  const f = tripFile();
+  try {
+    if (navigator.canShare && navigator.canShare({files:[f]})){
+      await navigator.share({files:[f], title:'رحلتي حول العالم بصوتي', text:'صوتي بخمس لغات من يوم الطلاب العالمي 🌍'});
+      $('saveHint').hidden = false; return;
+    }
+  } catch(e){ if (e && e.name === 'AbortError') return; log('share: '+e.message); }
+  const a = document.createElement('a'); a.href = URL.createObjectURL(f); a.download = f.name;
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href), 4000);
+  $('saveHint').textContent = 'انحفظ الملف في جهاز البوث (التنزيلات). أرسله للزائر من هناك.'; $('saveHint').hidden = false;
+});
 $('newVisitor').addEventListener('click', ()=>{
-  stopAll(); players.forEach(p=>p && URL.revokeObjectURL(p.src)); players=[];
-  $('grid').innerHTML=''; $('deletedNote').textContent='';
+  stopAll(); players.forEach(p=>p && URL.revokeObjectURL(p.src)); players=[]; blobs=[]; $('saveTrip').hidden = true; $('toPhone').hidden = true; $('saveHint').hidden = true; $('phoneBox').hidden = true; $('phoneQr').innerHTML='';
+  $('passes').innerHTML=''; $('said').innerHTML=''; $('deletedNote').textContent=''; $('usage').textContent='';
   clearErr(); resetRecordUI(); show('record');
 });
-
 function resetRecordUI(){
-  setRing(0);
-  $('readText').textContent = cfg.read; delete $('readText').dataset.pi;
-  $('recBtn').textContent='اضغط وسجّل'; $('recBtn').classList.remove('recording');
-  $('consent').disabled=false; $('consent').checked=false; $('recBtn').disabled=true;
-  $('timer').textContent='علّم الموافقة أولاً';
-  if (altMode){ $('altRec').disabled = true; $('timer').textContent = 'علّم الموافقة، وبعدها سجّل بتطبيق التسجيل'; }
+  rec.phase = 0; clearInterval(rec.tick); setRing(0); setPhase(0);
+  $('recBtn').classList.remove('live'); $('recLabel').textContent = 'ابدأ الرحلة';
+  $('consent').disabled = false; $('consent').checked = false; $('recBtn').disabled = true; $('altRec').disabled = true;
+  setPrompt('اضغط الزر وجاوب على الأسئلة، وفي آخر 20 ثانية وجّه رسالة لشخص تحبه', 'كل ما تكلمت أكثر، طلع صوتك أقرب لك');
+  $('timer').textContent = 'علّم الموافقة أولاً';
+  if (altMode) enableAlt();
 }
 
-/* ---------- Settings ---------- */
-function renderLangFields(){
-  const box = $('langFields'); box.innerHTML='';
-  const f = document.createElement('div'); f.className='hint';
-  f.textContent = 'اللغات: ' + cfg.langs.map(l=>l.flag+' '+l.country).join('  ·  ') + ' — الترجمة تلقائية من كلام الزائر.';
-  box.appendChild(f);
-}
+/* ================= settings ================= */
 function fillSettings(){
-  $('sKey').value = cfg.key; $('sSecs').value = cfg.secs; $('sModel').value = cfg.model;
-  $('sSim').value = cfg.sim; $('sStab').value = cfg.stab; $('sNoise').checked = !!cfg.noise; $('sMode').value = cfg.mode;
+  $('sKey').value = cfg.key; $('sAbout').value = cfg.aboutSecs; $('sMsg').value = cfg.msgSecs; $('sModel').value = cfg.model;
+  $('sSim').value = cfg.sim; $('sStab').value = cfg.stab; $('sNoise').checked = !!cfg.noise; $('sMax').value = cfg.maxChars; $('sWa').value = cfg.wa||'';
   $('vSim').textContent = Math.round(cfg.sim*100)+'%'; $('vStab').textContent = Math.round(cfg.stab*100)+'%';
-  $('sRead').value = cfg.read; renderLangFields();
 }
 function readSettings(){
   cfg.key = $('sKey').value.trim();
-  cfg.secs = Math.min(90, Math.max(10, parseInt($('sSecs').value)||30));
+  cfg.aboutSecs = Math.min(60, Math.max(MIN_ABOUT, parseInt($('sAbout').value)||30));
+  cfg.msgSecs = Math.min(40, Math.max(MIN_MSG+2, parseInt($('sMsg').value)||20));
   cfg.model = $('sModel').value.trim() || DEFAULTS.model;
-  cfg.sim = +$('sSim').value; cfg.stab = +$('sStab').value; cfg.noise = $('sNoise').checked; cfg.mode = $('sMode').value;
-  cfg.read = $('sRead').value.trim() || DEFAULT_READ;
-  document.querySelectorAll('#langFields textarea').forEach(t=>{ cfg.langs[+t.dataset.i] = Object.assign({}, cfg.langs[+t.dataset.i], {text:t.value.trim()}); });
+  cfg.sim = +$('sSim').value; cfg.stab = +$('sStab').value; cfg.noise = $('sNoise').checked;
+  cfg.maxChars = Math.min(1500, Math.max(100, parseInt($('sMax').value)||700));
+  cfg.wa = ($('sWa').value||'').replace(/\D/g,'').replace(/^00/,'');
 }
-$('sSim').addEventListener('input', e=>$('vSim').textContent=Math.round(e.target.value*100)+'%');
-$('sStab').addEventListener('input', e=>$('vStab').textContent=Math.round(e.target.value*100)+'%');
+$('sSim').addEventListener('input', e=>$('vSim').textContent = Math.round(e.target.value*100)+'%');
+$('sStab').addEventListener('input', e=>$('vStab').textContent = Math.round(e.target.value*100)+'%');
 $('openSettings').addEventListener('click', ()=>{ fillSettings(); $('settings').showModal(); });
-$('saveSettings').addEventListener('click', ()=>{ readSettings(); saveCfg(); $('readText').textContent = cfg.read; $('settings').close(); refreshCredits(); });
-$('resetTexts').addEventListener('click', ()=>{ cfg.read = DEFAULT_READ; cfg.langs = JSON.parse(JSON.stringify(DEFAULT_LANGS)); fillSettings(); });
+$('saveSettings').addEventListener('click', ()=>{ readSettings(); saveCfg(); $('settings').close(); refreshCredits(); renderQRs(); });
 $('testKey').addEventListener('click', async ()=>{
-  readSettings(); saveCfg();
-  $('keyStatus').textContent = '…جاري الاختبار';
-  try {
-    const s = await (await api('/user/subscription')).json();
-    const left = (s.character_limit ?? 0) - (s.character_count ?? 0);
-    $('keyStatus').textContent = `✅ المفتاح شغال. الباقة: ${s.tier||'?'} · الرصيد: ${left.toLocaleString('en-US')}`;
-    refreshCredits();
-  } catch(e){ $('keyStatus').textContent = '❌ ' + friendly(e) + '  (' + e.message.slice(0,120) + ')'; }
+  readSettings(); saveCfg(); $('keyStatus').textContent = '…جاري الاختبار';
+  try { const s = await (await api('/user/subscription')).json(); const left = (s.character_limit??0)-(s.character_count??0);
+    $('keyStatus').textContent = `✅ المفتاح شغال. الباقة: ${s.tier||'?'} · الرصيد: ${left.toLocaleString('en-US')}`; refreshCredits(); }
+  catch(e){ $('keyStatus').textContent = '❌ '+friendly(e)+'  ('+e.message.slice(0,120)+')'; }
 });
 $('cleanup').addEventListener('click', async ()=>{
   readSettings(); saveCfg();
-  try {
-    const data = await (await api('/voices')).json();
-    const mine = (data.voices||[]).filter(v => (v.name||'').startsWith(PREFIX));
-    log('found '+mine.length+' visitor voices');
-    for (const v of mine) await deleteVoice(v.voice_id);
-    await retryPending();
-    log('cleanup done');
-  } catch(e){ log('cleanup failed: '+e.message); }
+  try { const d = await (await api('/voices')).json(); const mine = (d.voices||[]).filter(v=>(v.name||'').startsWith(PREFIX));
+    log('found '+mine.length+' visitor voices'); for (const v of mine) await deleteVoice(v.voice_id); await retryPending(); log('cleanup done'); }
+  catch(e){ log('cleanup failed: '+e.message); }
 });
 
-show('record');
+function renderQRs(){
+  document.querySelectorAll('[data-qr]').forEach(box=>{
+    const q = box.querySelector('.qr'); q.innerHTML = '';
+    if (!cfg.wa || !window.QRCode){ box.hidden = true; return; }
+    try {
+      new QRCode(q, {text:'https://wa.me/'+cfg.wa+'?text='+encodeURIComponent('أبي رحلتي الصوتية 🌍✈'), width:232, height:232, colorDark:'#0b1424', colorLight:'#f3ead6', correctLevel:QRCode.CorrectLevel.M});
+      box.hidden = false;
+    } catch(e){ log('qr: '+e.message); box.hidden = true; }
+  });
+}
+addEventListener('load', renderQRs);
+setPhase(0);
 refreshCredits();
 retryPending();
 </script>
