@@ -29,19 +29,18 @@ body{
     radial-gradient(900px 520px at 85% -10%, rgba(214,180,106,.13), transparent 60%),
     radial-gradient(800px 600px at 0% 110%, rgba(60,90,160,.22), transparent 60%),
     linear-gradient(180deg,var(--navy) 0%,var(--night) 100%);
-  background-attachment:fixed;
   color:var(--cream);font-family:var(--f-body);font-weight:400;
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
   overflow-x:hidden;
 }
-#guilloche{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;opacity:.55}
+#guilloche{position:fixed;inset:0;width:100%;height:100lvh;z-index:0;pointer-events:none;opacity:.55}
 .wrap{position:relative;z-index:1;max-width:1240px;margin:0 auto;padding-block:18px 48px;display:flex;flex-direction:column;align-items:center;gap:26px}
 
 /* ---------- top bar ---------- */
 .topbar{width:100%;display:flex;justify-content:space-between;align-items:center}
 .brandline{font-family:var(--f-latin);letter-spacing:.32em;font-size:12px;color:var(--gold);opacity:.85;direction:ltr}
 .tools{display:flex;gap:10px;align-items:center}
-.pill{border:1px solid var(--gold-line);background:rgba(11,20,36,.6);color:var(--muted);border-radius:999px;padding:6px 14px;font-size:13px;font-variant-numeric:tabular-nums;backdrop-filter:blur(6px)}
+.pill{border:1px solid var(--gold-line);background:rgba(11,20,36,.85);color:var(--muted);border-radius:999px;padding:6px 14px;font-size:13px;font-variant-numeric:tabular-nums}
 .iconbtn{width:40px;height:40px;border-radius:50%;border:1px solid var(--gold-line);background:rgba(11,20,36,.6);color:var(--gold);cursor:pointer;display:grid;place-items:center}
 .iconbtn:hover{border-color:var(--gold)}
 .iconbtn svg{width:18px;height:18px}
@@ -209,22 +208,50 @@ h1{
 .err{display:none;width:100%;max-width:820px;background:rgba(120,30,40,.35);border:1px solid rgba(233,120,130,.5);color:#ffd9dc;border-radius:16px;padding:14px 18px;font-size:15px;line-height:1.7}
 .err code{direction:ltr;display:block;text-align:left;margin-top:6px;opacity:.75;font-size:12px;white-space:pre-wrap;overflow-wrap:anywhere}
 
-/* ---------- settings ---------- */
-dialog{background:var(--navy-2);color:var(--cream);border:1px solid var(--gold-line);border-radius:22px;padding:0;width:min(620px,94vw);max-height:90vh}
-dialog::backdrop{background:rgba(3,6,12,.72);backdrop-filter:blur(3px)}
-.dlg{padding:22px 24px;display:flex;flex-direction:column;gap:14px;overflow:auto;max-height:90vh}
-.dlg h3{margin:0;font-family:var(--f-display);color:var(--gold-hi);font-size:22px}
+/* ---------- settings sheet ---------- */
+body.modal-open #guilloche{display:none}
+body.modal-open h1{animation-play-state:paused}
+dialog{background:var(--navy-2);color:var(--cream);border:1px solid var(--gold-line);border-radius:22px;padding:0;width:min(640px,94vw);height:min(86dvh,860px);max-height:none;overflow:hidden}
+.sheet{display:flex;flex-direction:column;height:100%;margin:0}
+.sh-head,.sh-foot{flex:none;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 20px;background:var(--navy-2)}
+.sh-head{border-bottom:1px solid var(--gold-line)}
+.sh-foot{border-top:1px solid var(--gold-line);padding-bottom:max(14px,env(safe-area-inset-bottom,0px))}
+.sh-head h3{margin:0;font-family:var(--f-display);color:var(--gold-hi);font-size:21px}
+.sh-body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding:16px 20px 24px;display:flex;flex-direction:column;gap:14px}
+.grp{border:1px solid rgba(214,180,106,.16);border-radius:16px;padding:14px 16px;display:flex;flex-direction:column;gap:14px;background:rgba(6,10,19,.35)}
+.grp h4{margin:0;font-size:13px;letter-spacing:.06em;color:var(--gold);font-weight:600}
 .field{display:flex;flex-direction:column;gap:6px;min-width:0}
 .field label{font-size:14px;color:var(--muted)}
-.field input[type=text],.field input[type=password],.field input[type=number]{background:var(--night);border:1px solid var(--gold-line);color:var(--cream);border-radius:10px;padding:10px 12px;font-family:var(--f-body);font-size:15px;width:100%}
+.field input[type=text],.field input[type=password],.field input[type=number],.field select{
+  background:var(--night);border:1px solid var(--gold-line);color:var(--cream);border-radius:12px;padding:12px 14px;
+  font-family:var(--f-body);font-size:16px;width:100%;min-height:48px;-webkit-appearance:none;appearance:none}
+.field select{background-image:linear-gradient(45deg,transparent 50%,var(--gold) 50%),linear-gradient(135deg,var(--gold) 50%,transparent 50%);background-position:18px 21px,24px 21px;background-size:6px 6px;background-repeat:no-repeat;padding-left:40px}
+.field input:focus,.field select:focus{outline:2px solid var(--gold);outline-offset:1px}
 .ltr{direction:ltr;text-align:left}
-.inline{display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap}
-.inline>.field{flex:1;min-width:150px}
-input[type=range]{accent-color:var(--gold)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.row-key{display:flex;gap:10px}
+.row-key input{flex:1;min-width:0}
+.slider{display:flex;flex-direction:column;gap:6px}
+.slider .top{display:flex;justify-content:space-between;font-size:14px;color:var(--muted)}
+.slider .top b{color:var(--gold-hi);font-variant-numeric:tabular-nums}
+.slider input[type=range]{direction:ltr;width:100%;height:32px;accent-color:var(--gold);margin:0}
+.slider .ends{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);direction:ltr}
+.toggle{display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:15px;color:var(--cream);cursor:pointer;min-height:44px}
+.toggle input{appearance:none;-webkit-appearance:none;width:52px;height:30px;border-radius:999px;background:var(--navy-3);border:1px solid var(--gold-line);position:relative;cursor:pointer;flex:none;margin:0;transition:background .2s}
+.toggle input::after{content:"";position:absolute;top:3px;right:3px;width:22px;height:22px;border-radius:50%;background:var(--muted);transition:transform .2s,background .2s}
+.toggle input:checked{background:var(--gold-lo)}
+.toggle input:checked::after{transform:translateX(-22px);background:var(--gold-hi)}
 .hint{color:var(--muted);font-size:13px;line-height:1.6}
-.sep{height:1px;background:var(--gold-line)}
-.mini{font-size:14px;padding:8px 14px}
-.log{direction:ltr;text-align:left;font-size:12px;color:var(--muted);white-space:pre-wrap;max-height:130px;overflow:auto;background:var(--night);border-radius:8px;padding:8px;font-family:var(--f-mono)}
+.mini{font-size:15px;padding:10px 16px;min-height:44px}
+details.logbox summary{cursor:pointer;color:var(--muted);font-size:14px;padding:4px 0}
+.log{direction:ltr;text-align:left;font-size:12px;color:var(--muted);white-space:pre-wrap;max-height:160px;overflow:auto;background:var(--night);border-radius:8px;padding:8px;font-family:var(--f-mono);margin-top:8px}
+.saved{color:var(--ok);font-size:14px;opacity:0;transition:opacity .3s}
+.saved.on{opacity:1}
+@media (max-width:600px){
+  dialog{width:100vw;max-width:100vw;height:100dvh;max-height:100dvh;margin:0;border-radius:0;border:0}
+  .sh-head{padding-top:max(14px,env(safe-area-inset-top,0px))}
+  .row2{grid-template-columns:1fr}
+}
 [hidden]{display:none!important}
 
 @media (max-width:560px){
@@ -342,31 +369,70 @@ input[type=range]{accent-color:var(--gold)}
 </div>
 
 <dialog id="settings">
-  <div class="dlg">
-    <h3>إعدادات المنظمين</h3>
-    <div class="field">
-      <label for="sKey">مفتاح ElevenLabs API</label>
-      <div class="inline"><input type="password" id="sKey" class="ltr" style="flex:1;min-width:200px" placeholder="sk_..."><button class="btn mini" id="testKey">اختبار</button></div>
-      <div class="hint" id="keyStatus">المفتاح يُحفظ في هذا المتصفح فقط. الصلاحيات المطلوبة: Text to Speech، Speech to Text، Voices (Write)، User.</div>
+  <div class="sheet">
+    <header class="sh-head">
+      <h3>إعدادات المنظمين</h3>
+      <button type="button" class="iconbtn" id="closeSettings" aria-label="إغلاق">✕</button>
+    </header>
+    <div class="sh-body" id="shBody">
+      <section class="grp">
+        <h4>الحساب</h4>
+        <div class="field">
+          <label for="sKey">مفتاح ElevenLabs API</label>
+          <div class="row-key"><input type="password" id="sKey" class="ltr" placeholder="sk_..." autocomplete="off" autocapitalize="off" spellcheck="false"><button type="button" class="btn mini" id="testKey">اختبار</button></div>
+          <div class="hint" id="keyStatus">الصلاحيات: Text to Speech، Speech to Text، Voices (Write)، User.</div>
+        </div>
+      </section>
+
+      <section class="grp">
+        <h4>التسجيل</h4>
+        <div class="row2">
+          <div class="field"><label for="sAbout">"عرّف بنفسك" (ثانية)</label><input type="number" id="sAbout" min="10" max="60" inputmode="numeric"></div>
+          <div class="field"><label for="sMsg">الرسالة (ثانية)</label><input type="number" id="sMsg" min="8" max="40" inputmode="numeric"></div>
+        </div>
+        <label class="toggle">إزالة الضوضاء من التسجيل<input type="checkbox" id="sNoise"></label>
+      </section>
+
+      <section class="grp">
+        <h4>جودة الصوت</h4>
+        <div class="field">
+          <label for="sModel">الموديل</label>
+          <select id="sModel" class="ltr">
+            <option value="eleven_multilingual_v2">Multilingual v2 — أعلى جودة</option>
+            <option value="eleven_flash_v2_5">Flash v2.5 — أرخص وأسرع</option>
+            <option value="eleven_v3">Eleven v3 — تجريبي</option>
+          </select>
+        </div>
+        <div class="slider">
+          <div class="top"><span>الشبه بصوت الزائر (Similarity)</span><b id="vSim"></b></div>
+          <input type="range" id="sSim" min="0" max="1" step="0.05">
+          <div class="ends"><span>أقل</span><span>أعلى</span></div>
+        </div>
+        <div class="slider">
+          <div class="top"><span>الثبات (Stability)</span><b id="vStab"></b></div>
+          <input type="range" id="sStab" min="0" max="1" step="0.05">
+          <div class="ends"><span>أكثر تعبير</span><span>أثبت</span></div>
+        </div>
+      </section>
+
+      <section class="grp">
+        <h4>الإرسال والرصيد</h4>
+        <div class="field"><label for="sWa">رقم واتساب البوث (اختياري)</label><input type="text" id="sWa" class="ltr" inputmode="numeric" placeholder="9665XXXXXXXX">
+          <div class="hint">مع رمز الدولة، بدون + أو مسافات. لو تركته فاضي ما يطلع كود الواتساب.</div></div>
+        <div class="field"><label for="sMax">أقصى عدد حروف يترجم وينطق</label><input type="number" id="sMax" min="100" max="1500" inputmode="numeric">
+          <div class="hint">كل ما قل الرقم، قل استهلاك الرصيد لكل زائر.</div></div>
+      </section>
+
+      <section class="grp">
+        <h4>صيانة</h4>
+        <button type="button" class="btn mini" id="cleanup">🧹 احذف كل أصوات الزوار المتبقية</button>
+        <details class="logbox"><summary>سجل الأخطاء</summary><div class="log" id="log"></div></details>
+      </section>
     </div>
-    <div class="inline">
-      <div class="field"><label for="sAbout">مدة "عرّف بنفسك" (أقصى، ثانية)</label><input type="number" id="sAbout" min="10" max="60"></div>
-      <div class="field"><label for="sMsg">مدة الرسالة (ثانية)</label><input type="number" id="sMsg" min="8" max="40"></div>
-    </div>
-    <div class="field"><label for="sModel">الموديل (model_id)</label><input type="text" id="sModel" class="ltr">
-      <div class="hint">eleven_multilingual_v2 = أعلى جودة. eleven_flash_v2_5 = أرخص (غالباً نص التكلفة) وجودته أقل شوي.</div></div>
-    <div class="inline">
-      <div class="field"><label for="sSim">Similarity: <b id="vSim"></b></label><input type="range" id="sSim" min="0" max="1" step="0.05"></div>
-      <div class="field"><label for="sStab">Stability: <b id="vStab"></b></label><input type="range" id="sStab" min="0" max="1" step="0.05"></div>
-    </div>
-    <label class="consent" style="justify-content:flex-start"><input type="checkbox" id="sNoise"> إزالة الضوضاء من التسجيل</label>
-    <div class="field"><label for="sWa">رقم واتساب البوث (مع رمز الدولة، بدون + أو مسافات)</label><input type="text" id="sWa" class="ltr" inputmode="numeric" placeholder="9665XXXXXXXX">
-      <div class="hint">لو كتبته، يطلع للزائر كود QR يرسل لكم فيه رسالة، فتصير محادثته أول وحدة في واتساب وترسلون له الملف بثواني.</div></div>
-    <div class="field"><label for="sMax">أقصى عدد حروف يترجم وينطق (حماية للرصيد)</label><input type="number" id="sMax" min="100" max="1500"></div>
-    <div class="sep"></div>
-    <div class="inline"><button class="btn mini" id="cleanup">🧹 احذف كل أصوات الزوار المتبقية</button></div>
-    <div class="log" id="log"></div>
-    <div class="inline" style="justify-content:flex-end"><button class="btn gold mini" id="saveSettings">حفظ وإغلاق</button></div>
+    <footer class="sh-foot">
+      <span class="saved" id="savedNote">✓ انحفظ</span>
+      <button type="button" class="btn gold" id="saveSettings">تم</button>
+    </footer>
   </div>
 </dialog>
 
@@ -449,7 +515,9 @@ function drawGuilloche(){
   g.lineWidth=.5;
   for (let k=0;k<14;k++){ g.beginPath(); g.strokeStyle='rgba(214,180,106,.035)'; g.arc(w/2, h*1.35, s*0.55 + k*9, Math.PI*1.05, Math.PI*1.95); g.stroke(); }
 }
-drawGuilloche(); addEventListener('resize', ()=>{ clearTimeout(drawGuilloche._t); drawGuilloche._t = setTimeout(drawGuilloche, 150); });
+let gW = 0;
+function maybeDraw(){ const w = innerWidth; if (Math.abs(w-gW) < 40) return; gW = w; drawGuilloche(); }
+maybeDraw(); addEventListener('resize', ()=>{ clearTimeout(drawGuilloche._t); drawGuilloche._t = setTimeout(maybeDraw, 250); });
 
 /* ================= stages & UI ================= */
 function show(stage){
@@ -524,7 +592,7 @@ $('recBtn').addEventListener('click', async ()=>{
     if (m < MIN_MSG){ warn(`كمّل رسالتك… باقي ${Math.ceil(MIN_MSG-m)} ث`); return; }
     stopRec(); return;
   }
-  if (!cfg.key){ showErr('ما فيه مفتاح API. افتح الإعدادات وحط المفتاح.'); fillSettings(); $('settings').showModal(); return; }
+  if (!cfg.key){ showErr('ما فيه مفتاح API. افتح الإعدادات وحط المفتاح.'); openSettings(); return; }
   if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){ enableAlt(); return; }
   try { rec.stream = await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false, noiseSuppression:false, autoGainControl:true, channelCount:1}}); }
   catch(e){ log('mic: '+e.message); enableAlt(); return; }
@@ -583,7 +651,7 @@ function enableAlt(){
   setPrompt('تكلّم عن نفسك، وبعدها وجّه رسالة لشخص تحبه باسمه', 'المتصفح منع المايك هنا، فبنسجّل بتطبيق التسجيل في الجهاز');
   $('timer').textContent = 'اضغط الزر تحت، وسجّل، وبعدها ارجع';
 }
-$('altRec').addEventListener('click', ()=>{ clearErr(); if (!cfg.key){ fillSettings(); $('settings').showModal(); return; } $('altFile').value=''; $('altFile').click(); });
+$('altRec').addEventListener('click', ()=>{ clearErr(); if (!cfg.key){ openSettings(); return; } $('altFile').value=''; $('altFile').click(); });
 $('altFile').addEventListener('change', async ()=>{
   const f = $('altFile').files && $('altFile').files[0]; if (!f) return;
   show('work'); step(1);
@@ -808,34 +876,52 @@ function resetRecordUI(){
 
 /* ================= settings ================= */
 function fillSettings(){
-  $('sKey').value = cfg.key; $('sAbout').value = cfg.aboutSecs; $('sMsg').value = cfg.msgSecs; $('sModel').value = cfg.model;
-  $('sSim').value = cfg.sim; $('sStab').value = cfg.stab; $('sNoise').checked = !!cfg.noise; $('sMax').value = cfg.maxChars; $('sWa').value = cfg.wa||'';
+  $('sKey').value = cfg.key; $('sAbout').value = cfg.aboutSecs; $('sMsg').value = cfg.msgSecs;
+  const sel = $('sModel');
+  if (![...sel.options].some(o=>o.value===cfg.model)){ const o = document.createElement('option'); o.value = o.textContent = cfg.model; sel.appendChild(o); }
+  sel.value = cfg.model;
+  $('sSim').value = cfg.sim; $('sStab').value = cfg.stab; $('sNoise').checked = !!cfg.noise;
+  $('sMax').value = cfg.maxChars; $('sWa').value = cfg.wa||'';
   $('vSim').textContent = Math.round(cfg.sim*100)+'%'; $('vStab').textContent = Math.round(cfg.stab*100)+'%';
 }
 function readSettings(){
   cfg.key = $('sKey').value.trim();
-  cfg.aboutSecs = Math.min(60, Math.max(MIN_ABOUT, parseInt($('sAbout').value)||30));
-  cfg.msgSecs = Math.min(40, Math.max(MIN_MSG+2, parseInt($('sMsg').value)||20));
-  cfg.model = $('sModel').value.trim() || DEFAULTS.model;
+  const a = parseInt($('sAbout').value), m = parseInt($('sMsg').value), mx = parseInt($('sMax').value);
+  if (a) cfg.aboutSecs = Math.min(60, Math.max(MIN_ABOUT, a));
+  if (m) cfg.msgSecs = Math.min(40, Math.max(MIN_MSG+2, m));
+  if (mx) cfg.maxChars = Math.min(1500, Math.max(100, mx));
+  cfg.model = $('sModel').value || DEFAULTS.model;
   cfg.sim = +$('sSim').value; cfg.stab = +$('sStab').value; cfg.noise = $('sNoise').checked;
-  cfg.maxChars = Math.min(1500, Math.max(100, parseInt($('sMax').value)||700));
   cfg.wa = ($('sWa').value||'').replace(/\D/g,'').replace(/^00/,'');
 }
-$('sSim').addEventListener('input', e=>$('vSim').textContent = Math.round(e.target.value*100)+'%');
-$('sStab').addEventListener('input', e=>$('vStab').textContent = Math.round(e.target.value*100)+'%');
-$('openSettings').addEventListener('click', ()=>{ fillSettings(); $('settings').showModal(); });
-$('saveSettings').addEventListener('click', ()=>{ readSettings(); saveCfg(); $('settings').close(); refreshCredits(); renderQRs(); });
+let savedT = 0;
+function autoSave(){
+  readSettings(); saveCfg();
+  $('vSim').textContent = Math.round(cfg.sim*100)+'%'; $('vStab').textContent = Math.round(cfg.stab*100)+'%';
+  $('savedNote').classList.add('on'); clearTimeout(savedT); savedT = setTimeout(()=>$('savedNote').classList.remove('on'), 1200);
+}
+$('shBody').addEventListener('input', e=>{ if (e.target.matches('input[type=range]')){ $('vSim').textContent = Math.round($('sSim').value*100)+'%'; $('vStab').textContent = Math.round($('sStab').value*100)+'%'; } });
+$('shBody').addEventListener('change', autoSave);
+function openSettings(){ fillSettings(); document.body.classList.add('modal-open'); $('settings').showModal(); }
+function closeSettings(){ autoSave(); $('settings').close(); }
+$('openSettings').addEventListener('click', openSettings);
+$('saveSettings').addEventListener('click', closeSettings);
+$('closeSettings').addEventListener('click', closeSettings);
+$('settings').addEventListener('click', e=>{ if (e.target === $('settings')) closeSettings(); });
+$('settings').addEventListener('close', ()=>{ document.body.classList.remove('modal-open'); refreshCredits(); renderQRs(); fillSettings(); });
 $('testKey').addEventListener('click', async ()=>{
-  readSettings(); saveCfg(); $('keyStatus').textContent = '…جاري الاختبار';
+  autoSave(); $('keyStatus').textContent = '…جاري الاختبار';
   try { const s = await (await api('/user/subscription')).json(); const left = (s.character_limit??0)-(s.character_count??0);
     $('keyStatus').textContent = `✅ المفتاح شغال. الباقة: ${s.tier||'?'} · الرصيد: ${left.toLocaleString('en-US')}`; refreshCredits(); }
   catch(e){ $('keyStatus').textContent = '❌ '+friendly(e)+'  ('+e.message.slice(0,120)+')'; }
 });
 $('cleanup').addEventListener('click', async ()=>{
-  readSettings(); saveCfg();
+  autoSave(); $('cleanup').disabled = true; $('cleanup').textContent = '…جاري الحذف';
   try { const d = await (await api('/voices')).json(); const mine = (d.voices||[]).filter(v=>(v.name||'').startsWith(PREFIX));
-    log('found '+mine.length+' visitor voices'); for (const v of mine) await deleteVoice(v.voice_id); await retryPending(); log('cleanup done'); }
-  catch(e){ log('cleanup failed: '+e.message); }
+    log('found '+mine.length+' visitor voices'); for (const v of mine) await deleteVoice(v.voice_id); await retryPending();
+    $('cleanup').textContent = `✓ انحذف ${mine.length} صوت`; }
+  catch(e){ log('cleanup failed: '+e.message); $('cleanup').textContent = '✕ ما زبط الحذف (شوف السجل)'; }
+  finally { setTimeout(()=>{ $('cleanup').disabled = false; $('cleanup').textContent = '🧹 احذف كل أصوات الزوار المتبقية'; }, 2500); }
 });
 
 function renderQRs(){
