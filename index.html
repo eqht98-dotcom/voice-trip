@@ -392,7 +392,8 @@ details.logbox summary{cursor:pointer;color:var(--muted);font-size:14px;padding:
           <div class="field"><label for="sAbout">"عرّف بنفسك" (ثانية)</label><input type="number" id="sAbout" min="10" max="60" inputmode="numeric"></div>
           <div class="field"><label for="sMsg">الرسالة (ثانية)</label><input type="number" id="sMsg" min="8" max="40" inputmode="numeric"></div>
         </div>
-        <label class="toggle">إزالة الضوضاء من التسجيل<input type="checkbox" id="sNoise"></label>
+        <label class="toggle">إزالة الضوضاء من التسجيل (ElevenLabs)<input type="checkbox" id="sNoise"></label>
+        <label class="toggle">تنظيف العينة قبل النسخ (قص السكتات وتوحيد الصوت)<input type="checkbox" id="sClean"></label>
       </section>
 
       <section class="grp">
@@ -658,8 +659,9 @@ async function onRecStop(){
   const blob = new Blob(rec.chunks, {type: rec.mr.mimeType || 'audio/webm'});
   show('work'); step(1);
   let wav;
-  try { wav = await toWav(blob); } catch(e){ log('wav convert failed, sending raw: '+e.message); wav = blob; }
-  runTrip(wav, msgAt);
+  let clean = null;
+  try { wav = await toWav(blob); clean = await cleanForClone(blob); } catch(e){ log('wav convert failed, sending raw: '+e.message); wav = wav || blob; }
+  runTrip(wav, msgAt, clean);
 }
 
 /* fallback: browser blocks the mic -> device recorder app */
@@ -674,9 +676,53 @@ $('altRec').addEventListener('click', ()=>{ clearErr(); if (!cfg.key){ openSetti
 $('altFile').addEventListener('change', async ()=>{
   const f = $('altFile').files && $('altFile').files[0]; if (!f) return;
   show('work'); step(1);
-  let wav = f; try { wav = await toWav(f); } catch(e){ log('alt convert failed: '+e.message); }
-  runTrip(wav, null);
+  let wav = f, clean = null; try { wav = await toWav(f); clean = await cleanForClone(f); } catch(e){ log('alt convert failed: '+e.message); }
+  runTrip(wav, null, clean);
 });
+
+/* Clean the sample used for cloning: high-pass (rumble/AC), trim long silences, normalize loudness.
+   The untouched recording is still used for transcription so word timings stay correct. */
+function encodeWav(mono, sr){
+  const n = mono.length, out = new DataView(new ArrayBuffer(44+n*2));
+  const w = (o,s)=>{ for(let i=0;i<s.length;i++) out.setUint8(o+i, s.charCodeAt(i)); };
+  w(0,'RIFF'); out.setUint32(4,36+n*2,true); w(8,'WAVE'); w(12,'fmt '); out.setUint32(16,16,true); out.setUint16(20,1,true); out.setUint16(22,1,true);
+  out.setUint32(24,sr,true); out.setUint32(28,sr*2,true); out.setUint16(32,2,true); out.setUint16(34,16,true); w(36,'data'); out.setUint32(40,n*2,true);
+  for (let i=0;i<n;i++){ const s=Math.max(-1,Math.min(1,mono[i])); out.setInt16(44+i*2, s<0?s*0x8000:s*0x7fff, true); }
+  return new Blob([out], {type:'audio/wav'});
+}
+async function cleanForClone(blob){
+  const AC = window.AudioContext || window.webkitAudioContext; const ac = new AC();
+  const buf = await ac.decodeAudioData(await blob.arrayBuffer()); ac.close && ac.close();
+  const sr = buf.sampleRate, n = buf.length, ch = buf.numberOfChannels;
+  let x = new Float32Array(n);
+  for (let c=0;c<ch;c++){ const d = buf.getChannelData(c); for (let i=0;i<n;i++) x[i] += d[i]/ch; }
+  // 1) high-pass ~80 Hz (removes AC hum / crowd rumble)
+  const rc = 1/(2*Math.PI*80), dt = 1/sr, a = rc/(rc+dt);
+  let py = 0, px = x[0]||0;
+  for (let i=0;i<n;i++){ const cx = x[i]; py = a*(py + cx - px); px = cx; x[i] = py; }
+  // 2) trim silences: 20 ms frames, keep speech + 200 ms padding, drop gaps > 400 ms
+  const F = Math.round(sr*0.02), frames = Math.floor(n/F), rms = new Float32Array(frames);
+  for (let f=0; f<frames; f++){ let s=0; for (let i=f*F;i<(f+1)*F;i++) s += x[i]*x[i]; rms[f] = Math.sqrt(s/F); }
+  const sorted = Array.from(rms).sort((a,b)=>a-b);
+  const floor = sorted[Math.floor(frames*0.15)] || 0, peak = sorted[Math.floor(frames*0.95)] || 0;
+  const thr = Math.max(floor*2.2, peak*0.08, 0.004);
+  const keep = new Uint8Array(frames), pad = 10;
+  for (let f=0; f<frames; f++) if (rms[f] > thr) for (let k=Math.max(0,f-pad); k<=Math.min(frames-1,f+pad); k++) keep[k] = 1;
+  const parts = []; let total = 0;
+  for (let f=0; f<frames; f++) if (keep[f]){ parts.push(f); total += F; }
+  if (total < sr*8){ log('clean: too little speech detected, using full recording'); total = 0; }
+  let y;
+  if (total){ y = new Float32Array(total); let o = 0; for (const f of parts){ y.set(x.subarray(f*F,(f+1)*F), o); o += F; } }
+  else y = x;
+  // 3) normalize: speech RMS to ~-20 dBFS, peaks limited to -1 dBFS
+  let s2 = 0, cnt = 0, pk = 0;
+  for (let i=0;i<y.length;i++){ const v = Math.abs(y[i]); if (v>pk) pk = v; if (v > thr){ s2 += y[i]*y[i]; cnt++; } }
+  const speechRms = Math.sqrt(s2/Math.max(1,cnt)) || 0.05;
+  let g = 0.1 / speechRms; g = Math.min(g, 0.89/Math.max(pk,1e-4), 12);
+  for (let i=0;i<y.length;i++){ let v = y[i]*g; if (v>0.89) v = 0.89 + (v-0.89)*0.2; else if (v<-0.89) v = -0.89 + (v+0.89)*0.2; y[i] = v; }
+  log(`clean: ${(n/sr).toFixed(1)}s -> ${(y.length/sr).toFixed(1)}s, gain x${g.toFixed(2)}`);
+  return encodeWav(y, sr);
+}
 
 async function toWav(blob){
   const AC = window.AudioContext || window.webkitAudioContext; const ac = new AC();
@@ -761,7 +807,7 @@ Return ONLY a JSON object exactly like {"en":"...","ja":"...","ko":"...","es":".
 }
 
 let players = [], blobs = [];
-async function runTrip(sample, msgAt){
+async function runTrip(sample, msgAt, clean){
   let voiceId = null; const before = lastCredits;
   try {
     step(1);
@@ -776,7 +822,8 @@ async function runTrip(sample, msgAt){
     fd.append('name', PREFIX + new Date().toISOString().replace(/[:.]/g,'-'));
     fd.append('description', 'Temporary Student Day booth voice - auto deleted');
     fd.append('remove_background_noise', cfg.noise ? 'true' : 'false');
-    fd.append('files', sample, sample.type==='audio/wav'?'sample.wav':(sample.name||'sample.webm'));
+    const cloneSrc = (cfg.cleanAudio !== false && clean) ? clean : sample;
+    fd.append('files', cloneSrc, cloneSrc.type==='audio/wav'?'sample.wav':(cloneSrc.name||'sample.webm'));
     voiceId = (await (await api('/voices/add', {method:'POST', body:fd})).json()).voice_id;
     cfg.pending.push(voiceId); saveCfg(); log('cloned '+voiceId);
 
@@ -937,7 +984,7 @@ function fillSettings(){
   const sel = $('sModel');
   if (![...sel.options].some(o=>o.value===cfg.model)){ const o = document.createElement('option'); o.value = o.textContent = cfg.model; sel.appendChild(o); }
   sel.value = cfg.model;
-  $('sSim').value = cfg.sim; $('sStab').value = cfg.stab; $('sNoise').checked = !!cfg.noise;
+  $('sSim').value = cfg.sim; $('sStab').value = cfg.stab; $('sNoise').checked = !!cfg.noise; $('sClean').checked = cfg.cleanAudio !== false;
   $('sMax').value = cfg.maxChars; $('sWa').value = cfg.wa||''; $('sCKey').value = cfg.ckey||''; $('sCModel').value = cfg.cmodel||DEFAULTS.cmodel;
   $('vSim').textContent = Math.round(cfg.sim*100)+'%'; $('vStab').textContent = Math.round(cfg.stab*100)+'%';
 }
@@ -948,7 +995,7 @@ function readSettings(){
   if (m) cfg.msgSecs = Math.min(40, Math.max(MIN_MSG+2, m));
   if (mx) cfg.maxChars = Math.min(1500, Math.max(100, mx));
   cfg.model = $('sModel').value || DEFAULTS.model;
-  cfg.sim = +$('sSim').value; cfg.stab = +$('sStab').value; cfg.noise = $('sNoise').checked;
+  cfg.sim = +$('sSim').value; cfg.stab = +$('sStab').value; cfg.noise = $('sNoise').checked; cfg.cleanAudio = $('sClean').checked;
   cfg.ckey = $('sCKey').value.trim(); cfg.cmodel = $('sCModel').value || DEFAULTS.cmodel;
   cfg.wa = ($('sWa').value||'').replace(/\D/g,'').replace(/^00/,'');
 }
