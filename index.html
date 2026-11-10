@@ -749,7 +749,7 @@ Return ONLY a JSON object exactly like {"en":"...","ja":"...","ko":"...","es":".
   try {
     r = await fetch('https://api.anthropic.com/v1/messages', {method:'POST',
       headers:{'x-api-key':cfg.ckey,'anthropic-version':'2023-06-01','content-type':'application/json','anthropic-dangerous-direct-browser-access':'true'},
-      body: JSON.stringify({model:cfg.cmodel||DEFAULTS.cmodel, max_tokens:3000, temperature:0.3, system:sys, messages:[{role:'user', content:text}]})});
+      body: JSON.stringify({model:cfg.cmodel||DEFAULTS.cmodel, max_tokens:3000, system:sys, messages:[{role:'user', content:text}]})});
   } catch(e){ throw new Error('CLAUDE_NET: '+e.message); }
   if (!r.ok){ let t=''; try{ t = await r.text(); }catch(e){} throw new Error('CLAUDE HTTP '+r.status+': '+t.slice(0,300)); }
   const d = await r.json();
