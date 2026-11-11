@@ -1,0 +1,834 @@
+[
+{
+"code": "sa",
+"sec": "culture",
+"i": 0,
+"ar": "القهوة السعودية",
+"wiki": "Arabic coffee",
+"q": "Saudi coffee dallah"
+},
+{
+"code": "sa",
+"sec": "culture",
+"i": 1,
+"ar": "العرضة السعودية",
+"wiki": "Ardah",
+"q": "Saudi ardah sword dance"
+},
+{
+"code": "sa",
+"sec": "wear",
+"i": 0,
+"ar": "الثوب",
+"wiki": "Thawb",
+"q": "Saudi thobe"
+},
+{
+"code": "sa",
+"sec": "wear",
+"i": 1,
+"ar": "البشت",
+"wiki": "Bisht (clothing)",
+"q": "bisht Saudi"
+},
+{
+"code": "sa",
+"sec": "sights",
+"i": 0,
+"ar": "المسجد النبوي",
+"wiki": "Al-Masjid an-Nabawi",
+"q": "Al-Masjid an-Nabawi"
+},
+{
+"code": "sa",
+"sec": "sights",
+"i": 1,
+"ar": "الحِجر في العُلا",
+"wiki": "Hegra (Mada'in Salih)",
+"q": "Hegra (Mada'in Salih)"
+},
+{
+"code": "sa",
+"sec": "food",
+"i": 0,
+"ar": "الكبسة",
+"wiki": "Kabsa",
+"q": "kabsa rice chicken"
+},
+{
+"code": "sa",
+"sec": "food",
+"i": 1,
+"ar": "الجريش",
+"wiki": "Jareesh",
+"q": "jareesh Saudi dish"
+},
+{
+"code": "gb",
+"sec": "culture",
+"i": 0,
+"ar": "شاي العصر",
+"wiki": "Afternoon tea",
+"q": "Afternoon tea"
+},
+{
+"code": "gb",
+"sec": "culture",
+"i": 1,
+"ar": "حافلة لندن الحمراء",
+"wiki": "Routemaster",
+"q": "London red bus Routemaster"
+},
+{
+"code": "gb",
+"sec": "wear",
+"i": 0,
+"ar": "التنورة الاسكتلندية",
+"wiki": "Kilt",
+"q": "Kilt"
+},
+{
+"code": "gb",
+"sec": "wear",
+"i": 1,
+"ar": "حرس الملك",
+"wiki": "King's Guard",
+"q": "Queen's Guard Buckingham Palace"
+},
+{
+"code": "gb",
+"sec": "sights",
+"i": 0,
+"ar": "بيغ بن",
+"wiki": "Big Ben",
+"q": "Big Ben"
+},
+{
+"code": "gb",
+"sec": "sights",
+"i": 1,
+"ar": "جسر البرج",
+"wiki": "Tower Bridge",
+"q": "Tower Bridge"
+},
+{
+"code": "gb",
+"sec": "food",
+"i": 0,
+"ar": "فيش آند تشيبس",
+"wiki": "Fish and chips",
+"q": "Fish and chips"
+},
+{
+"code": "gb",
+"sec": "food",
+"i": 1,
+"ar": "الفطور الإنجليزي",
+"wiki": "Full breakfast",
+"q": "full English breakfast"
+},
+{
+"code": "fr",
+"sec": "culture",
+"i": 0,
+"ar": "الموناليزا",
+"wiki": "Mona Lisa",
+"q": "Mona Lisa"
+},
+{
+"code": "fr",
+"sec": "culture",
+"i": 1,
+"ar": "الموناليزا في اللوفر",
+"wiki": "Louvre Pyramid",
+"q": "Louvre Pyramid"
+},
+{
+"code": "fr",
+"sec": "wear",
+"i": 0,
+"ar": "البيريه",
+"wiki": "Beret",
+"q": "Beret"
+},
+{
+"code": "fr",
+"sec": "wear",
+"i": 1,
+"ar": "القميص المخطط الفرنسي",
+"wiki": "Breton shirt",
+"q": "Breton striped shirt"
+},
+{
+"code": "fr",
+"sec": "sights",
+"i": 0,
+"ar": "برج إيفل",
+"wiki": "Eiffel Tower",
+"q": "Eiffel Tower"
+},
+{
+"code": "fr",
+"sec": "sights",
+"i": 1,
+"ar": "متحف اللوفر",
+"wiki": "Louvre",
+"q": "Louvre"
+},
+{
+"code": "fr",
+"sec": "food",
+"i": 0,
+"ar": "الكرواسون",
+"wiki": "Croissant",
+"q": "Croissant"
+},
+{
+"code": "fr",
+"sec": "food",
+"i": 1,
+"ar": "الباغيت",
+"wiki": "Baguette",
+"q": "Baguette"
+},
+{
+"code": "de",
+"sec": "culture",
+"i": 0,
+"ar": "أسواق الشتاء",
+"wiki": "Christmas market",
+"q": "Christmas market"
+},
+{
+"code": "de",
+"sec": "culture",
+"i": 1,
+"ar": "بيتهوفن",
+"wiki": "Ludwig van Beethoven",
+"q": "Ludwig van Beethoven"
+},
+{
+"code": "de",
+"sec": "wear",
+"i": 0,
+"ar": "اللِدرهوزن",
+"wiki": "Lederhosen",
+"q": "Lederhosen Bavaria"
+},
+{
+"code": "de",
+"sec": "wear",
+"i": 1,
+"ar": "الدرندل",
+"wiki": "Dirndl",
+"q": "Dirndl"
+},
+{
+"code": "de",
+"sec": "sights",
+"i": 0,
+"ar": "بوابة براندنبورغ",
+"wiki": "Brandenburg Gate",
+"q": "Brandenburg Gate"
+},
+{
+"code": "de",
+"sec": "sights",
+"i": 1,
+"ar": "قلعة نويشفانشتاين",
+"wiki": "Neuschwanstein Castle",
+"q": "Neuschwanstein Castle"
+},
+{
+"code": "de",
+"sec": "food",
+"i": 0,
+"ar": "البريتزل",
+"wiki": "Pretzel",
+"q": "Pretzel"
+},
+{
+"code": "de",
+"sec": "food",
+"i": 1,
+"ar": "كعكة الغابة السوداء",
+"wiki": "Black Forest gateau",
+"q": "Black Forest gateau"
+},
+{
+"code": "es",
+"sec": "culture",
+"i": 0,
+"ar": "الفلامنكو",
+"wiki": "Flamenco",
+"q": "Flamenco"
+},
+{
+"code": "es",
+"sec": "culture",
+"i": 1,
+"ar": "الجيتار الإسباني",
+"wiki": "Classical guitar",
+"q": "Spanish guitar"
+},
+{
+"code": "es",
+"sec": "wear",
+"i": 0,
+"ar": "فستان الفلامنكو",
+"wiki": "Traje de flamenca",
+"q": "flamenco dress"
+},
+{
+"code": "es",
+"sec": "wear",
+"i": 1,
+"ar": "المانتيلا",
+"wiki": "Mantilla",
+"q": "Spanish mantilla"
+},
+{
+"code": "es",
+"sec": "sights",
+"i": 0,
+"ar": "قصر الحمراء",
+"wiki": "Alhambra",
+"q": "Alhambra"
+},
+{
+"code": "es",
+"sec": "sights",
+"i": 1,
+"ar": "مسجد قرطبة",
+"wiki": "Mosque–Cathedral of Córdoba",
+"q": "Mosque–Cathedral of Córdoba"
+},
+{
+"code": "es",
+"sec": "food",
+"i": 0,
+"ar": "الباييا",
+"wiki": "Paella",
+"q": "Paella"
+},
+{
+"code": "es",
+"sec": "food",
+"i": 1,
+"ar": "عجة البطاطس",
+"wiki": "Spanish omelette",
+"q": "tortilla española"
+},
+{
+"code": "it",
+"sec": "culture",
+"i": 0,
+"ar": "دار أوبرا لا سكالا",
+"wiki": "La Scala",
+"q": "La Scala"
+},
+{
+"code": "it",
+"sec": "culture",
+"i": 1,
+"ar": "قوارب الجندول",
+"wiki": "Gondola",
+"q": "Venice gondola"
+},
+{
+"code": "it",
+"sec": "wear",
+"i": 0,
+"ar": "أقنعة البندقية",
+"wiki": "Venetian mask",
+"q": "Venetian carnival mask"
+},
+{
+"code": "it",
+"sec": "wear",
+"i": 1,
+"ar": "كرنفال البندقية",
+"wiki": "Carnival of Venice",
+"q": "Carnival of Venice"
+},
+{
+"code": "it",
+"sec": "sights",
+"i": 0,
+"ar": "الكولوسيوم",
+"wiki": "Colosseum",
+"q": "Colosseum"
+},
+{
+"code": "it",
+"sec": "sights",
+"i": 1,
+"ar": "البندقية",
+"wiki": "Grand Canal (Venice)",
+"q": "Grand Canal (Venice)"
+},
+{
+"code": "it",
+"sec": "food",
+"i": 0,
+"ar": "البيتزا",
+"wiki": "Pizza",
+"q": "Pizza"
+},
+{
+"code": "it",
+"sec": "food",
+"i": 1,
+"ar": "الباستا",
+"wiki": "Pasta",
+"q": "Pasta"
+},
+{
+"code": "tr",
+"sec": "culture",
+"i": 0,
+"ar": "الشاي التركي",
+"wiki": "Turkish tea",
+"q": "Turkish tea glass"
+},
+{
+"code": "tr",
+"sec": "culture",
+"i": 1,
+"ar": "القهوة التركية",
+"wiki": "Turkish coffee",
+"q": "Turkish coffee"
+},
+{
+"code": "tr",
+"sec": "wear",
+"i": 0,
+"ar": "الطربوش",
+"wiki": "Fez",
+"q": "fez hat"
+},
+{
+"code": "tr",
+"sec": "wear",
+"i": 1,
+"ar": "السجاد التركي",
+"wiki": "Turkish carpet",
+"q": "Turkish carpet"
+},
+{
+"code": "tr",
+"sec": "sights",
+"i": 0,
+"ar": "آيا صوفيا",
+"wiki": "Hagia Sophia",
+"q": "Hagia Sophia"
+},
+{
+"code": "tr",
+"sec": "sights",
+"i": 1,
+"ar": "الجامع الأزرق",
+"wiki": "Blue Mosque",
+"q": "Blue Mosque"
+},
+{
+"code": "tr",
+"sec": "food",
+"i": 0,
+"ar": "البقلاوة",
+"wiki": "Baklava",
+"q": "Baklava"
+},
+{
+"code": "tr",
+"sec": "food",
+"i": 1,
+"ar": "الحلقوم",
+"wiki": "Turkish delight",
+"q": "Turkish delight"
+},
+{
+"code": "ru",
+"sec": "culture",
+"i": 0,
+"ar": "الماتريوشكا",
+"wiki": "Matryoshka doll",
+"q": "Matryoshka doll"
+},
+{
+"code": "ru",
+"sec": "culture",
+"i": 1,
+"ar": "مسرح البولشوي",
+"wiki": "Bolshoi Theatre",
+"q": "Bolshoi Theatre"
+},
+{
+"code": "ru",
+"sec": "wear",
+"i": 0,
+"ar": "قبعة الأوشانكا",
+"wiki": "Ushanka",
+"q": "Ushanka"
+},
+{
+"code": "ru",
+"sec": "wear",
+"i": 1,
+"ar": "الكوكوشنيك",
+"wiki": "Kokoshnik",
+"q": "kokoshnik Russian"
+},
+{
+"code": "ru",
+"sec": "sights",
+"i": 0,
+"ar": "الساحة الحمراء",
+"wiki": "Red Square",
+"q": "Red Square"
+},
+{
+"code": "ru",
+"sec": "sights",
+"i": 1,
+"ar": "كاتدرائية القديس باسيل",
+"wiki": "Saint Basil's Cathedral",
+"q": "Saint Basil's Cathedral"
+},
+{
+"code": "ru",
+"sec": "food",
+"i": 0,
+"ar": "البورش",
+"wiki": "Borscht",
+"q": "Borscht"
+},
+{
+"code": "ru",
+"sec": "food",
+"i": 1,
+"ar": "البليني",
+"wiki": "Blini",
+"q": "Blini"
+},
+{
+"code": "in",
+"sec": "culture",
+"i": 0,
+"ar": "مهرجان الألوان",
+"wiki": "Holi",
+"q": "Holi"
+},
+{
+"code": "in",
+"sec": "culture",
+"i": 1,
+"ar": "رقص بهاراتاناتيام",
+"wiki": "Bharatanatyam",
+"q": "Bharatanatyam"
+},
+{
+"code": "in",
+"sec": "wear",
+"i": 0,
+"ar": "الساري",
+"wiki": "Sari",
+"q": "Sari"
+},
+{
+"code": "in",
+"sec": "wear",
+"i": 1,
+"ar": "الكورتا",
+"wiki": "Kurta",
+"q": "Kurta"
+},
+{
+"code": "in",
+"sec": "sights",
+"i": 0,
+"ar": "تاج محل",
+"wiki": "Taj Mahal",
+"q": "Taj Mahal"
+},
+{
+"code": "in",
+"sec": "sights",
+"i": 1,
+"ar": "القلعة الحمراء",
+"wiki": "Red Fort",
+"q": "Red Fort"
+},
+{
+"code": "in",
+"sec": "food",
+"i": 0,
+"ar": "البرياني",
+"wiki": "Biryani",
+"q": "Biryani"
+},
+{
+"code": "in",
+"sec": "food",
+"i": 1,
+"ar": "خبز النان",
+"wiki": "Naan",
+"q": "Naan"
+},
+{
+"code": "cn",
+"sec": "culture",
+"i": 0,
+"ar": "رأس السنة الصينية",
+"wiki": "Chinese New Year",
+"q": "Chinese New Year"
+},
+{
+"code": "cn",
+"sec": "culture",
+"i": 1,
+"ar": "الخط الصيني",
+"wiki": "Chinese calligraphy",
+"q": "Chinese calligraphy"
+},
+{
+"code": "cn",
+"sec": "wear",
+"i": 0,
+"ar": "التشيباو",
+"wiki": "Cheongsam",
+"q": "qipao cheongsam"
+},
+{
+"code": "cn",
+"sec": "wear",
+"i": 1,
+"ar": "الهانفو",
+"wiki": "Hanfu",
+"q": "Hanfu"
+},
+{
+"code": "cn",
+"sec": "sights",
+"i": 0,
+"ar": "سور الصين العظيم",
+"wiki": "Great Wall of China",
+"q": "Great Wall of China"
+},
+{
+"code": "cn",
+"sec": "sights",
+"i": 1,
+"ar": "المدينة المحرمة",
+"wiki": "Forbidden City",
+"q": "Forbidden City"
+},
+{
+"code": "cn",
+"sec": "food",
+"i": 0,
+"ar": "البط البكيني",
+"wiki": "Peking duck",
+"q": "Peking duck"
+},
+{
+"code": "cn",
+"sec": "food",
+"i": 1,
+"ar": "النودلز",
+"wiki": "Lamian",
+"q": "Chinese hand-pulled noodles"
+},
+{
+"code": "jp",
+"sec": "culture",
+"i": 0,
+"ar": "حفل الشاي",
+"wiki": "Japanese tea ceremony",
+"q": "Japanese tea ceremony"
+},
+{
+"code": "jp",
+"sec": "culture",
+"i": 1,
+"ar": "أزهار الساكورا",
+"wiki": "Cherry blossom",
+"q": "Cherry blossom"
+},
+{
+"code": "jp",
+"sec": "wear",
+"i": 0,
+"ar": "الكيمونو",
+"wiki": "Kimono",
+"q": "Kimono"
+},
+{
+"code": "jp",
+"sec": "wear",
+"i": 1,
+"ar": "اليوكاتا",
+"wiki": "Yukata",
+"q": "Yukata"
+},
+{
+"code": "jp",
+"sec": "sights",
+"i": 0,
+"ar": "جبل فوجي",
+"wiki": "Mount Fuji",
+"q": "Mount Fuji"
+},
+{
+"code": "jp",
+"sec": "sights",
+"i": 1,
+"ar": "الجناح الذهبي",
+"wiki": "Kinkaku-ji",
+"q": "Kinkaku-ji"
+},
+{
+"code": "jp",
+"sec": "food",
+"i": 0,
+"ar": "السوشي",
+"wiki": "Sushi",
+"q": "Sushi"
+},
+{
+"code": "jp",
+"sec": "food",
+"i": 1,
+"ar": "الرامن",
+"wiki": "Ramen",
+"q": "Ramen"
+},
+{
+"code": "kr",
+"sec": "culture",
+"i": 0,
+"ar": "أبجدية الهانغول",
+"wiki": "Hangul",
+"q": "Hangul"
+},
+{
+"code": "kr",
+"sec": "culture",
+"i": 1,
+"ar": "الطبول الكورية",
+"wiki": "Samulnori",
+"q": "Samulnori"
+},
+{
+"code": "kr",
+"sec": "wear",
+"i": 0,
+"ar": "الهانبوك",
+"wiki": "Hanbok",
+"q": "Hanbok"
+},
+{
+"code": "kr",
+"sec": "wear",
+"i": 1,
+"ar": "القبعة الكورية التقليدية",
+"wiki": "Gat (hat)",
+"q": "Korean gat hat hanbok"
+},
+{
+"code": "kr",
+"sec": "sights",
+"i": 0,
+"ar": "قصر غيونغبوكغونغ",
+"wiki": "Gyeongbokgung",
+"q": "Gyeongbokgung"
+},
+{
+"code": "kr",
+"sec": "sights",
+"i": 1,
+"ar": "جزيرة جيجو",
+"wiki": "Seongsan Ilchulbong",
+"q": "Seongsan Ilchulbong Jeju"
+},
+{
+"code": "kr",
+"sec": "food",
+"i": 0,
+"ar": "الكيمتشي",
+"wiki": "Kimchi",
+"q": "Kimchi"
+},
+{
+"code": "kr",
+"sec": "food",
+"i": 1,
+"ar": "البيبيمباب",
+"wiki": "Bibimbap",
+"q": "Bibimbap"
+},
+{
+"code": "id",
+"sec": "culture",
+"i": 0,
+"ar": "فن الباتيك",
+"wiki": "Batik",
+"q": "Batik"
+},
+{
+"code": "id",
+"sec": "culture",
+"i": 1,
+"ar": "موسيقى الغاميلان",
+"wiki": "Gamelan",
+"q": "Gamelan"
+},
+{
+"code": "id",
+"sec": "wear",
+"i": 0,
+"ar": "الكبايا",
+"wiki": "Kebaya",
+"q": "Kebaya"
+},
+{
+"code": "id",
+"sec": "wear",
+"i": 1,
+"ar": "السونغكيت",
+"wiki": "Songket",
+"q": "songket"
+},
+{
+"code": "id",
+"sec": "sights",
+"i": 0,
+"ar": "جامع الاستقلال",
+"wiki": "Istiqlal Mosque, Jakarta",
+"q": "Istiqlal Mosque Jakarta"
+},
+{
+"code": "id",
+"sec": "sights",
+"i": 1,
+"ar": "جزيرة بالي",
+"wiki": "Pura Ulun Danu Bratan",
+"q": "Pura Ulun Danu Bratan Bali"
+},
+{
+"code": "id",
+"sec": "food",
+"i": 0,
+"ar": "الناسي غورينغ",
+"wiki": "Nasi goreng",
+"q": "Nasi goreng"
+},
+{
+"code": "id",
+"sec": "food",
+"i": 1,
+"ar": "الساتيه",
+"wiki": "Satay",
+"q": "Satay"
+}
+]

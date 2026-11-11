@@ -1,0 +1,19 @@
+name: fetch culture photo candidates
+on:
+  push:
+    branches: [pics]
+    paths: ['tools/**', '.github/workflows/pics.yml']
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: pip install pillow
+      - run: python tools/fetch.py
+      - run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898299+github-actions[bot]@users.noreply.github.com"
+          git add cand && git commit -m "photo candidates" && git push
