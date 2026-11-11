@@ -806,9 +806,29 @@ Return ONLY a JSON object exactly like {"en":"...","ja":"...","ko":"...","es":".
   return out;
 }
 
+let ttsChars = 0, sttSecs = 0;
+/* ElevenLabs updates the account counter with a delay, so: show a local estimate now,
+   then re-read the real counter a few times and show it once it moves. */
+const MODEL_RATE = {eleven_flash_v2_5:0.5, eleven_turbo_v2_5:0.5};
+function reportUsage(before){
+  const rate = MODEL_RATE[cfg.model] ?? 1;
+  const est = Math.round(ttsChars*rate);
+  const show = real => { $('usage').textContent = (real!=null ? `استهلكت هالرحلة: ${real.toLocaleString('en-US')} كريدت` : `تقدير استهلاك هالرحلة: ≈ ${est.toLocaleString('en-US')} كريدت للنطق`) + ` · ${ttsChars.toLocaleString('en-US')} حرف بخمس لغات`; };
+  show(null);
+  if (before==null) return;
+  let tries = 0;
+  const poll = async () => {
+    tries++;
+    const after = await refreshCredits();
+    if (after!=null && before-after >= Math.max(50, est*0.3)){ show(before-after); return; }
+    if (tries < 6) setTimeout(poll, 10000);
+  };
+  setTimeout(poll, 8000);
+}
 let players = [], blobs = [];
 async function runTrip(sample, msgAt, clean){
-  let voiceId = null; const before = lastCredits;
+  let voiceId = null; ttsChars = 0; sttSecs = 0;
+  const before = await refreshCredits();
   try {
     step(1);
     const heard = await transcribe(sample);
@@ -841,8 +861,7 @@ async function runTrip(sample, msgAt, clean){
     log('trip error: '+e.message); show('record'); resetRecordUI(); showErr(friendly(e), e.message);
   } finally {
     if (voiceId){ const ok = await deleteVoice(voiceId); $('deletedNote').textContent = ok ? '🗑️ تم حذف نسخة صوتك من النظام' : '⚠️ ما انحذف الصوت تلقائياً. احذفه من الإعدادات (🧹)'; }
-    const after = await refreshCredits();
-    if (before!=null && after!=null && before>after) $('usage').textContent = `استهلكت هالرحلة ≈ ${(before-after).toLocaleString('en-US')} كريدت`;
+    reportUsage(before);
   }
 }
 function renderSaid(text, parts){
@@ -859,6 +878,7 @@ function friendly(e){
   if (m==='NO_KEY') return 'ما فيه مفتاح API. افتح الإعدادات.';
   if (m==='NO_SPEECH') return 'ما سمعنا كلام واضح. قرّب من المايك وتكلّم بصوت أوضح، وجرّب مرة ثانية.';
   if (m.startsWith('NETWORK')) return 'ما قدرنا نتصل بـ ElevenLabs. تأكد من الإنترنت.';
+  if (m.includes('payment_required') || m.includes('payment_issue')) return 'فيه مشكلة دفع في حساب ElevenLabs (فاتورة ما اندفعت). ادخل الموقع ← Subscription وكمّل الدفع.';
   if (m.includes('401')) return 'المفتاح غير صحيح، أو ناقصه صلاحية (Text to Speech، Speech to Text، Voices، User).';
   if (m.includes('quota') || m.includes('credits')) return 'الرصيد خلص أو ما يكفي.';
   if (m.includes('voice_limit') || m.includes('maximum amount of custom voices')) return 'وصلت للحد الأعلى من الأصوات. اضغط 🧹 في الإعدادات.';
@@ -895,7 +915,7 @@ function buildPasses(){
 async function genOne(voiceId, i, text, srcLang, pre){
   const l = LANGS[i], card = $('pass'+i), b = card.querySelector('.play'), tx = card.querySelector('.text');
   let t;
-  try { t = (pre && pre[l.code]) ? pre[l.code].trim() : await translate(text, l.code, srcLang); tx.textContent = t; }
+  try { t = (pre && pre[l.code]) ? pre[l.code].trim() : await translate(text, l.code, srcLang); tx.textContent = t; ttsChars += t.length; }
   catch(e){ log('translate '+l.code+': '+e.message); card.classList.add('err'); tx.textContent = 'ما زبطت الترجمة'; b.innerHTML = '✕'; return; }
   try {
     const call = model => api(`/text-to-speech/${voiceId}?output_format=mp3_44100_128`, {method:'POST', headers:{'Content-Type':'application/json','Accept':'audio/mpeg'},
