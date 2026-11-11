@@ -725,7 +725,7 @@ const sess = {voiceId:null, about:'', msg:'', lang:'', trips:{}, idle:0};
 const SESS_IDLE = 15*60*1000;
 const PAUSE = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z"/></svg>';
 const CFG_VER = 6;
-const DEFAULTS = {ver:CFG_VER, key:'', model:'eleven_v4', enAccent:'Birmingham accent', sim:1, stab:0.5, noise:false, aboutSecs:30, msgSecs:20, maxChars:700, wa:'', ckey:'', cmodel:'claude-haiku-5-5', pending:[]};
+const DEFAULTS = {ver:CFG_VER, key:'', model:'eleven_v4', enAccent:'Birmingham accent', sim:1, stab:0.5, noise:true, aboutSecs:30, msgSecs:20, maxChars:700, wa:'', ckey:'', cmodel:'claude-haiku-5-5', pending:[]};
 
 let cfg = loadCfg();
 function loadCfg(){
@@ -738,6 +738,7 @@ function loadCfg(){
   if (!m.speedFix1){ m.noise = false; m.speedFix1 = true; }
   if (!m.speedFix2){ m.speedFix2 = true; }
   if (!m.speedFix3){ m.model = 'eleven_v4'; m.speedFix3 = true; }
+  if (!m.noiseOn1){ m.noise = true; m.noiseOn1 = true; }
   return m;
 }
 function saveCfg(){ try { localStorage.setItem('voiceTripCfg', JSON.stringify(cfg)); } catch(e) {} }
