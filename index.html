@@ -619,15 +619,16 @@ details.logbox summary{cursor:pointer;color:var(--muted);font-size:14px;padding:
           <div class="field" hidden><label for="sAbout">عرّف بنفسك (ثانية)</label><input type="number" id="sAbout" min="10" max="120" inputmode="numeric"></div>
           <div class="field"><label for="sMsg">الرسالة (ثانية)</label><input type="number" id="sMsg" min="8" max="40" inputmode="numeric"></div>
         </div>
-        <label class="toggle">إزالة الضوضاء من التسجيل (ElevenLabs)<input type="checkbox" id="sNoise"></label>
-        <label class="toggle">تنظيف العينة قبل النسخ (قص السكتات وتوحيد الصوت)<input type="checkbox" id="sClean"></label>
+        <label class="toggle">إزالة الضوضاء من التسجيل (ElevenLabs)<input type="checkbox" id="sNoise" disabled></label>
+        <label class="toggle">تنظيف العينة قبل النسخ (قص السكتات وتوحيد الصوت)<input type="checkbox" id="sClean" disabled></label>
       </section>
 
       <section class="grp">
         <h4>جودة الصوت</h4>
+        <p style="opacity:.75;font-size:.85em;margin:0 0 8px">🔒 مقفلة على أعلى جودة: Eleven v4 · إزالة الضوضاء · تنظيف العينة · ترجمة Claude Sonnet.</p>
         <div class="field">
           <label for="sModel">الموديل</label>
-          <select id="sModel" class="ltr">
+          <select id="sModel" class="ltr" disabled>
             <option value="eleven_v4">Eleven v4 — الأعلى جودة ✅ موصى به</option>
             <option value="eleven_multilingual_v2">Multilingual v2 — مجرّب وثابت</option>
             <option value="eleven_flash_v2_5">Flash v2.5 — أسرع لكن جودته أقل</option>
@@ -663,7 +664,7 @@ details.logbox summary{cursor:pointer;color:var(--muted);font-size:14px;padding:
         </div>
         <div class="field">
           <label for="sCModel">موديل الترجمة</label>
-          <select id="sCModel" class="ltr">
+          <select id="sCModel" class="ltr" disabled>
             <option value="claude-haiku-5-5">Claude Haiku 5.5 — سريع ورخيص</option>
             <option value="claude-sonnet-5-5">Claude Sonnet 5.5 — أدق وأبطأ شوي</option>
           </select>
@@ -725,6 +726,8 @@ const sess = {voiceId:null, about:'', msg:'', lang:'', trips:{}, idle:0};
 const SESS_IDLE = 15*60*1000;
 const PAUSE = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z"/></svg>';
 const CFG_VER = 6;
+// أعلى جودة — ثابتة، ما تتغير من الإعدادات
+const QUALITY = {model:'eleven_v4', noise:true, cleanAudio:true, cmodel:'claude-sonnet-5-5'};
 const DEFAULTS = {ver:CFG_VER, key:'', model:'eleven_v4', enAccent:'Birmingham accent', sim:1, stab:0.5, noise:true, aboutSecs:30, msgSecs:20, maxChars:700, wa:'', ckey:'', cmodel:'claude-haiku-5-5', pending:[]};
 
 let cfg = loadCfg();
@@ -734,6 +737,7 @@ function loadCfg(){
   let m = Object.assign({}, DEFAULTS, c);
   if ((c.ver||1) < CFG_VER) m = Object.assign({}, DEFAULTS, {key:c.key||'', wa:c.wa||'', ckey:c.ckey||'', ukey:c.ukey||'', picSrc:c.picSrc||'wiki', pinHash:c.pinHash||'', pending:Array.isArray(c.pending)?c.pending:[]});
   if (!Array.isArray(m.pending)) m.pending = [];
+  Object.assign(m, QUALITY);
   m.aboutSecs = ABOUT_SECS;
   if (!m.speedFix1){ m.noise = false; m.speedFix1 = true; }
   if (!m.speedFix2){ m.speedFix2 = true; }
@@ -1484,7 +1488,7 @@ const MODEL_RATE = {eleven_flash_v2_5:0.5, eleven_turbo_v2_5:0.5};
 function reportUsage(before){
   const rate = MODEL_RATE[cfg.model] ?? 1;
   const est = Math.round(ttsChars*rate);
-  const brk = (clock.last && clock.last.length ? ' (' + clock.last.join(' ← ') + ')' : '') + (early.lastMarks ? ' · أثناء الرسالة: ' + early.lastMarks : '') + ` · الموديل: ${cfg.model}${cfg.noise ? ' · إزالة ضوضاء: مفعّلة ⚠️' : ''}`;
+  const brk = (clock.last && clock.last.length ? ' (' + clock.last.join(' ← ') + ')' : '') + (early.lastMarks ? ' · أثناء الرسالة: ' + early.lastMarks : '') + ` · الموديل: ${cfg.model}${cfg.noise ? ' · إزالة ضوضاء: مفعّلة ✅' : ''}`;
   const show = real => { $('usage').textContent = ($('usage').dataset.time ? `${$('usage').dataset.ready ? `🎧 التذكرة ظهرت بعد ${$('usage').dataset.ready} ثانية · الرسالة كملت في الخلفية بعد ${$('usage').dataset.time}` : `⏱ جهزت في ${$('usage').dataset.time}`} ثانية${brk} · ` : '') + (real!=null ? `استهلكت هالرحلة: ${real.toLocaleString('en-US')} كريدت` : `تقدير استهلاك هالرحلة: ≈ ${est.toLocaleString('en-US')} كريدت للنطق`) + ` · ${ttsChars.toLocaleString('en-US')} حرف`; };
   show(null);
   if (before==null) return;
@@ -1536,30 +1540,13 @@ function accentTag(){
 async function partAudio(voiceId, segs){
   if (!segs || !segs.length) return null;
   const tag = accentTag();
-  // split into chunks of ~1–2 sentences and voice them in parallel (same model, same quality, much less waiting)
-  const chunks = []; let cur = [], len = 0;
-  segs.forEach(x=>{ if (cur.length && len + x.t.length > 110){ chunks.push(cur); cur = []; len = 0; } cur.push(x); len += x.t.length; });
-  if (cur.length) chunks.push(cur);
-  const parts = await Promise.all(chunks.map(async c=>{
-    const {blob, starts} = await ttsSlot(()=>ttsTimed(voiceId, c, tag));
-    const dur = await blobDuration(blob);
-    return {blob, dur, starts: (starts||[]).map(x=> x < 0 ? -x*dur : x)};
-  }));
-  let off = 0; const starts = [];
-  parts.forEach(pt=>{ pt.starts.forEach(x=>starts.push(x + off)); off += pt.dur; });
-  return {blob: new Blob(parts.map(x=>x.blob), {type:'audio/mpeg'}), dur: off, starts};
+  // one request per part: the whole text voiced together keeps the most natural flow
+  const {blob, starts} = await ttsSlot(()=>ttsTimed(voiceId, segs, tag));
+  const dur = await blobDuration(blob);
+  return {blob, dur, starts: (starts||[]).map(x=> x < 0 ? -x*dur : x)};
 }
 async function translatePart(l, which, ar, srcLang){
   if (!ar) return [];
-  if (cfg.ckey && which === 'msg'){
-    // الرسالة على المسار الحرج: Claude له ٦ ثواني، وإلا نأخذ ترجمة Google الجاهزة بالتوازي
-    const gP = translateSegs(ar, l, srcLang || 'ar'); gP.catch(()=>{});
-    const cP = claudeTranslate({about:'', msg:ar}, l).then(o=>o.msg && o.msg.length ? o.msg : null).catch(e=>{ log('claude failed: '+e.message); return null; });
-    const r = await Promise.race([cP, new Promise(res=>setTimeout(()=>res('late'), 6000))]);
-    if (r && r !== 'late') return r;
-    if (r === 'late'){ log('claude slow → google'); try { return await gP; } catch(e){ const c = await cP; if (c) return c; throw e; } }
-    return await gP;
-  }
   if (cfg.ckey){ try { const o = await claudeTranslate(which==='msg' ? {about:'', msg:ar} : {about:ar, msg:''}, l); const r = which==='msg' ? o.msg : o.about; if (r.length) return r; } catch(e){ log('claude failed, using google: '+e.message); } }
   return await translateSegs(ar, l, srcLang || 'ar');
 }
@@ -1982,10 +1969,9 @@ function readSettings(){
   if (a) cfg.aboutSecs = Math.min(120, Math.max(MIN_ABOUT, a));
   if (m) cfg.msgSecs = Math.min(40, Math.max(MIN_MSG+2, m));
   if (mx) cfg.maxChars = Math.min(1500, Math.max(100, mx));
-  cfg.model = $('sModel').value || DEFAULTS.model;
   cfg.enAccent = $('sAccent').value;
-  cfg.sim = +$('sSim').value; cfg.stab = +$('sStab').value; cfg.noise = $('sNoise').checked; cfg.cleanAudio = $('sClean').checked;
-  cfg.ukey = $('sUKey').value.trim(); cfg.picSrc = $('sPicSrc').value || 'wiki'; cfg.ckey = $('sCKey').value.trim(); cfg.cmodel = $('sCModel').value || DEFAULTS.cmodel;
+  cfg.sim = +$('sSim').value; cfg.stab = +$('sStab').value; 
+  cfg.ukey = $('sUKey').value.trim(); cfg.picSrc = $('sPicSrc').value || 'wiki'; cfg.ckey = $('sCKey').value.trim(); Object.assign(cfg, QUALITY);
   cfg.wa = ($('sWa').value||'').replace(/\D/g,'').replace(/^00/,'');
 }
 let savedT = 0;
