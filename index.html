@@ -633,6 +633,15 @@ details.logbox summary{cursor:pointer;color:var(--muted);font-size:14px;padding:
             <option value="eleven_flash_v2_5">Flash v2.5 — أسرع لكن جودته أقل</option>
                       </select>
         </div>
+        <div class="field">
+          <label for="sAccent">لكنة الإنجليزي</label>
+          <select id="sAccent">
+            <option value="Birmingham accent">برمنغهام (Brummie) 🇬🇧</option>
+            <option value="British accent">بريطانية عامة</option>
+            <option value="">بدون — لكنة الزائر نفسه</option>
+          </select>
+          <small style="opacity:.7">تشتغل مع Eleven v4 فقط.</small>
+        </div>
         <div class="slider">
           <div class="top"><span>الشبه بصوت الزائر (Similarity)</span><b id="vSim"></b></div>
           <input type="range" id="sSim" min="0" max="1" step="0.05">
@@ -716,7 +725,7 @@ const sess = {voiceId:null, about:'', msg:'', lang:'', trips:{}, idle:0};
 const SESS_IDLE = 15*60*1000;
 const PAUSE = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z"/></svg>';
 const CFG_VER = 6;
-const DEFAULTS = {ver:CFG_VER, key:'', model:'eleven_v4', sim:1, stab:0.5, noise:false, aboutSecs:30, msgSecs:20, maxChars:700, wa:'', ckey:'', cmodel:'claude-haiku-5-5', pending:[]};
+const DEFAULTS = {ver:CFG_VER, key:'', model:'eleven_v4', enAccent:'Birmingham accent', sim:1, stab:0.5, noise:false, aboutSecs:30, msgSecs:20, maxChars:700, wa:'', ckey:'', cmodel:'claude-haiku-5-5', pending:[]};
 
 let cfg = loadCfg();
 function loadCfg(){
@@ -1518,14 +1527,20 @@ async function ttsSlot(fn){
   try { try { return await fn(); } catch(e){ if (/HTTP 429/.test(e.message)){ await new Promise(r=>setTimeout(r,800)); return await fn(); } throw e; } }
   finally { ttsBusy--; const n = ttsQ.shift(); n && n(); }
 }
+function accentTag(){
+  const acc = cfg.enAccent != null ? cfg.enAccent : DEFAULTS.enAccent;
+  const c = trip.code && COUNTRIES[trip.code], l = c && LANGS[c.lang];
+  return (acc && l && l.tl === 'en') ? `[${acc}] ` : '';
+}
 async function partAudio(voiceId, segs){
   if (!segs || !segs.length) return null;
+  const tag = accentTag();
   // split into chunks of ~1–2 sentences and voice them in parallel (same model, same quality, much less waiting)
   const chunks = []; let cur = [], len = 0;
   segs.forEach(x=>{ if (cur.length && len + x.t.length > 110){ chunks.push(cur); cur = []; len = 0; } cur.push(x); len += x.t.length; });
   if (cur.length) chunks.push(cur);
   const parts = await Promise.all(chunks.map(async c=>{
-    const {blob, starts} = await ttsSlot(()=>ttsTimed(voiceId, c));
+    const {blob, starts} = await ttsSlot(()=>ttsTimed(voiceId, c, tag));
     const dur = await blobDuration(blob);
     return {blob, dur, starts: (starts||[]).map(x=> x < 0 ? -x*dur : x)};
   }));
@@ -1712,7 +1727,7 @@ async function makeTrip(code, trP){
   const tr = await (trP || translateFor(l));
   step(4);
   const segs = [...tr.about.map(x=>({...x})), ...tr.msg.map(x=>({...x, love:true}))];
-  const {blob, starts} = await ttsTimed(sess.voiceId, segs);
+  const {blob, starts} = await ttsTimed(sess.voiceId, segs, accentTag());
   clockMark('voice');
   segs.forEach((x,i)=>x.start = starts ? starts[i] : null);
   sess.trips[code] = {tr, blob, segs};
@@ -1819,22 +1834,23 @@ function fillPass(tr){
   if (tr.about.length){ add('fg', tr.about.map(x=>x.t).join(' ')).dir = 'auto'; add('arline', '🇸🇦 ' + tr.about.map(x=>x.ar).join(' ')); }
   if (tr.msg.length){ add('msgline', '💌 ' + tr.msg.map(x=>x.t).join(' ')); add('arline', '🇸🇦 ' + tr.msg.map(x=>x.ar).join(' ')); }
 }
-async function ttsTimed(voiceId, segs){
+async function ttsTimed(voiceId, segs, tag=''){
   // one text, sentences separated by spaces (blank line before the message); remember where each sentence starts
   let text = '', offs = [];
   segs.forEach((x,i)=>{ if (i) text += (x.love && !segs[i-1].love) ? '\n\n' : ' '; offs.push(text.length); text += x.t; });
   ttsChars += text.length;
-  const body = model => JSON.stringify({text, model_id:model, voice_settings:{stability:+cfg.stab, similarity_boost:+cfg.sim, use_speaker_boost:true}});
+  const pre = model => (tag && /^eleven_v[34]/.test(model)) ? tag : '';
+  const body = model => JSON.stringify({text: pre(model) + text, model_id:model, voice_settings:{stability:+cfg.stab, similarity_boost:+cfg.sim, use_speaker_boost:true}});
   const timed = model => api(`/text-to-speech/${voiceId}/with-timestamps?output_format=mp3_44100_128`, {method:'POST', headers:{'Content-Type':'application/json'}, body: body(model)});
   const plain = model => api(`/text-to-speech/${voiceId}?output_format=mp3_44100_128`, {method:'POST', headers:{'Content-Type':'application/json','Accept':'audio/mpeg'}, body: body(model)});
   const withFallback = async fn => { try { return await fn(cfg.model); } catch(e){ if (cfg.model !== 'eleven_multilingual_v2' && /HTTP 4(00|04|22)/.test(e.message)){ log('model '+cfg.model+' rejected, fallback v2: '+e.message.slice(0,160)); return await fn('eleven_multilingual_v2'); } throw e; } };
   try {
-    const d = await (await withFallback(timed)).json();
+    let usedModel = cfg.model; const d = await (await withFallback(m=>{ usedModel = m; return timed(m); })).json(); d.__tag = pre(usedModel).length;
     const bin = atob(d.audio_base64), u8 = new Uint8Array(bin.length); for (let i=0;i<bin.length;i++) u8[i] = bin.charCodeAt(i);
     const blob = new Blob([u8], {type:'audio/mpeg'});
     const al = d.alignment || d.normalized_alignment, st = al && al.character_start_times_seconds;
     let starts = null;
-    if (st && st.length){ const k = st.length / Math.max(1, text.length); starts = offs.map(o=>st[Math.min(st.length-1, Math.round(o*k))]); }
+    if (st && st.length){ const P = d.__tag ? Math.min(d.__tag, Math.max(0, st.length - text.length)) : 0; const k = (st.length - P) / Math.max(1, text.length); starts = offs.map(o=>st[Math.min(st.length-1, P + Math.round(o*k))]); }
     return {blob, starts};
   } catch(e){
     log('timestamps failed, plain audio: '+e.message.slice(0,160));
@@ -1954,6 +1970,7 @@ function fillSettings(){
   const sel = $('sModel');
   if (![...sel.options].some(o=>o.value===cfg.model)){ const o = document.createElement('option'); o.value = o.textContent = cfg.model; sel.appendChild(o); }
   sel.value = cfg.model;
+  $('sAccent').value = cfg.enAccent != null ? cfg.enAccent : DEFAULTS.enAccent;
   $('sSim').value = cfg.sim; $('sStab').value = cfg.stab; $('sNoise').checked = !!cfg.noise; $('sClean').checked = cfg.cleanAudio !== false;
   $('sMax').value = cfg.maxChars; $('sWa').value = cfg.wa||''; $('sCKey').value = cfg.ckey||''; $('sUKey').value = cfg.ukey||''; $('sPicSrc').value = cfg.picSrc||'wiki'; $('sCModel').value = cfg.cmodel||DEFAULTS.cmodel;
   $('vSim').textContent = Math.round(cfg.sim*100)+'%'; $('vStab').textContent = Math.round(cfg.stab*100)+'%';
@@ -1965,6 +1982,7 @@ function readSettings(){
   if (m) cfg.msgSecs = Math.min(40, Math.max(MIN_MSG+2, m));
   if (mx) cfg.maxChars = Math.min(1500, Math.max(100, mx));
   cfg.model = $('sModel').value || DEFAULTS.model;
+  cfg.enAccent = $('sAccent').value;
   cfg.sim = +$('sSim').value; cfg.stab = +$('sStab').value; cfg.noise = $('sNoise').checked; cfg.cleanAudio = $('sClean').checked;
   cfg.ukey = $('sUKey').value.trim(); cfg.picSrc = $('sPicSrc').value || 'wiki'; cfg.ckey = $('sCKey').value.trim(); cfg.cmodel = $('sCModel').value || DEFAULTS.cmodel;
   cfg.wa = ($('sWa').value||'').replace(/\D/g,'').replace(/^00/,'');
