@@ -323,6 +323,15 @@ h1{
   .map .pin .dot{r:9}
 }
 
+.picstat{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px}
+.picstat .ps{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:10px;background:rgba(6,10,19,.45);font-size:14px}
+.picstat .ps .fl{width:30px;aspect-ratio:3/2;border-radius:3px;overflow:hidden;flex:none}
+.picstat .ps .fl svg{display:block;width:100%;height:100%}
+.picstat .ps b{margin-inline-start:auto;font-variant-numeric:tabular-nums;font-weight:600}
+.picstat .ps.full b{color:var(--ok)}
+.picstat .ps.none b{color:var(--muted)}
+.picstat .tot{grid-column:1/-1;font-size:15px;color:var(--cream)}
+
 /* ---------- settings transfer ---------- */
 #xferDlg{width:min(420px,94vw);height:fit-content;max-height:92dvh;overflow:auto;margin:auto}
 .xfer{padding:22px;display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center}
@@ -614,6 +623,7 @@ details.logbox summary{cursor:pointer;color:var(--muted);font-size:14px;padding:
         </div>
         <button type="button" class="btn mini" id="prefetchPics">📥 جهّز كل الصور مسبقاً</button>
         <div class="hint" id="prefetchStatus">سوّها على جهاز البوث قبل الفعالية. الصور تنحفظ فيه، فتفتح البطاقات بسرعة.</div>
+        <div class="picstat" id="picStat"></div>
       </section>
 
       <section class="grp">
@@ -1632,7 +1642,7 @@ function openSettings(){
   pinUI('unlock', 'أدخل الرمز السري');
   $('pinDlg').showModal();
 }
-function reallyOpenSettings(){ fillSettings(); document.body.classList.add('modal-open'); $('settings').showModal(); }
+function reallyOpenSettings(){ fillSettings(); renderPicStat(); document.body.classList.add('modal-open'); $('settings').showModal(); }
 $('pinCancel').addEventListener('click', ()=>$('pinDlg').close());
 $('pinForm').addEventListener('submit', async e=>{
   e.preventDefault();
@@ -1675,6 +1685,16 @@ $('testUKey').addEventListener('click', async ()=>{
   try { const v = await unsplashImg('Mount Fuji'); $('uKeyStatus').textContent = v ? '✅ شغال: لقينا صورة لجبل فوجي (📷 '+v.n+')' : '⚠️ المفتاح شغال بس ما رجعت صورة'; }
   catch(e){ $('uKeyStatus').textContent = e.message==='BADKEY' ? '❌ المفتاح غير صحيح (تأكد إنه Access Key مو Secret Key)' : e.message==='LIMIT' ? '⏳ وصلت لحد الطلبات بالساعة. جرّب بعد شوي' : '❌ ما زبط'; }
 });
+function renderPicStat(){
+  const box = $('picStat'); if (!box) return;
+  let all = 0, got = 0;
+  const rows = ORDER.map(code=>{
+    const items = Object.values(PICS[code]||{}).flat(); const n = items.length;
+    const k = items.filter(([,t])=>uCache[uQuery(t)]).length; all += n; got += k;
+    return `<div class="ps ${k===n?'full':k===0?'none':''}"><span class="fl">${flagSVG(code)}</span>${esc(COUNTRIES[code].name)}<b>${k===n?'✅':k+'/'+n}</b></div>`;
+  }).join('');
+  box.innerHTML = `<div class="tot">📷 الصور الجاهزة في هذا الجهاز: <b>${got} / ${all}</b></div>` + rows;
+}
 $('prefetchPics').addEventListener('click', async ()=>{
   autoSave(); const st = $('prefetchStatus'), btn = $('prefetchPics');
   if (!cfg.ukey){ st.textContent = 'حط مفتاح Unsplash أول.'; return; }
@@ -1683,7 +1703,7 @@ $('prefetchPics').addEventListener('click', async ()=>{
   for (const t of all){
     if (uCache[uQuery(t)]){ ok++; continue; }
     st.textContent = `…جاري التجهيز ${ok} / ${all.length}`;
-    try { if (await unsplashImg(t)) ok++; } catch(e){ if (e.message==='LIMIT'){ st.textContent = `⏳ جهّزنا ${ok} من ${all.length}. Unsplash يسمح بـ50 طلب بالساعة للمفاتيح الجديدة، اضغط الزر مرة ثانية بعد ساعة ويكمل من مكانه.`; btn.disabled = false; return; } if (e.message==='BADKEY'){ st.textContent = '❌ المفتاح غير صحيح'; btn.disabled = false; return; } }
+    try { if (await unsplashImg(t)){ ok++; renderPicStat(); } } catch(e){ if (e.message==='LIMIT'){ st.textContent = `⏳ جهّزنا ${ok} من ${all.length}. Unsplash يسمح بـ50 طلب بالساعة للمفاتيح الجديدة، اضغط الزر مرة ثانية بعد ساعة ويكمل من مكانه.`; btn.disabled = false; return; } if (e.message==='BADKEY'){ st.textContent = '❌ المفتاح غير صحيح'; btn.disabled = false; return; } }
     await new Promise(r=>setTimeout(r,250));
   }
   st.textContent = `✅ جاهز: ${ok} من ${all.length} صورة محفوظة في هذا الجهاز`; btn.disabled = false;
