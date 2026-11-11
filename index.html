@@ -6,7 +6,7 @@
 <title>رحلة حول العالم بصوتك</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Reem+Kufi:wght@500;700&family=IBM+Plex+Sans+Arabic:wght@300;400;600;700&family=Cinzel:wght@500;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Reem+Kufi:wght@500;700&family=IBM+Plex+Sans+Arabic:wght@300;400;600;700&family=Cinzel:wght@500;700&family=IBM+Plex+Mono:wght@500&family=Amiri:wght@700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
 /* Concept: a first-class boarding experience — deep night-sky navy, gold foil, passport guilloche.
@@ -58,9 +58,23 @@ h1{
 }
 @keyframes foil{from{background-position:0% 0}to{background-position:-220% 0}}
 .sub{color:var(--muted);font-size:clamp(15px,1.6vw,18px);margin:0}
-.flags{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;margin-top:6px}
-.flagchip{display:flex;align-items:center;gap:8px;padding:6px 12px 6px 8px;border:1px solid var(--gold-line);border-radius:999px;background:rgba(11,20,36,.55);font-size:14px;color:var(--cream)}
-.flagchip svg{width:30px;height:20px;border-radius:3px;box-shadow:0 0 0 1px rgba(255,255,255,.18)}
+.board{width:100%;max-width:980px;display:flex;flex-direction:column;align-items:center;gap:16px;margin-top:10px}
+.origin-row{display:flex;flex-direction:column;align-items:center;gap:12px}
+.dest.origin{flex:none;width:clamp(110px,17vw,165px)}
+.dest.origin .fl{box-shadow:0 0 0 2px var(--gold-hi),0 0 0 6px rgba(214,180,106,.22),0 14px 30px rgba(0,0,0,.45)}
+.board .from{display:flex;align-items:center;gap:12px;color:var(--muted);font-size:15px}
+.board .from b{font-family:var(--f-latin);color:var(--gold-hi);font-size:20px;letter-spacing:.14em;direction:ltr}
+.board .from .line{width:64px;height:0;border-top:1.5px dashed var(--gold-line)}
+.flags{width:100%;display:flex;flex-wrap:wrap;justify-content:center;gap:clamp(12px,2vw,22px)}
+.dest{flex:0 0 clamp(96px,16vw,150px);display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center}
+.dest .fl{position:relative;width:100%;aspect-ratio:3/2;border-radius:10px;overflow:hidden;
+  box-shadow:0 0 0 1.5px var(--gold),0 0 0 5px rgba(214,180,106,.14),0 14px 30px rgba(0,0,0,.45)}
+.dest .fl svg{display:block;width:100%;height:100%}
+.dest .fl::after{content:"";position:absolute;inset:0;background:linear-gradient(155deg,rgba(255,255,255,.28) 0%,rgba(255,255,255,0) 38%,rgba(0,0,0,0) 70%,rgba(0,0,0,.18) 100%);pointer-events:none}
+.dest .city{font-family:var(--f-display);font-size:clamp(16px,1.6vw,20px);color:var(--cream);line-height:1.2}
+.dest .code{font-family:var(--f-latin);font-size:12px;letter-spacing:.18em;color:var(--gold);direction:ltr;white-space:nowrap}
+.dest .lng{font-size:13px;color:var(--muted);white-space:nowrap;margin-top:-4px}
+@media (max-width:560px){.brandline{display:none}.eyebrow{letter-spacing:.24em;font-size:11px}}
 .origin{color:var(--gold);font-family:var(--f-latin);letter-spacing:.2em;font-size:13px;direction:ltr}
 
 /* ---------- panel (passport page) ---------- */
@@ -161,12 +175,13 @@ h1{
 .pass .route{display:flex;align-items:center;gap:10px}
 .pass .ap{display:flex;flex-direction:column;align-items:center;min-width:64px}
 .pass .ap b{font-family:var(--f-latin);font-size:30px;font-weight:700;letter-spacing:.06em;color:#14100a;line-height:1;direction:ltr}
+.pass .ap small .miniflag svg{width:24px;height:16px;border-radius:2px;vertical-align:-3px;margin-inline-end:5px;box-shadow:0 0 0 1px rgba(0,0,0,.2)}
 .pass .ap small{font-size:13px;color:#6b6250;margin-top:4px}
 .pass .path{flex:1;position:relative;height:22px;display:grid;place-items:center}
 .pass .path::before{content:"";position:absolute;inset:50% 0 auto;border-top:2px dotted #b39553}
 .pass .path svg{position:relative;width:24px;height:24px;background:#f5ecd6;padding:2px;border-radius:50%;color:#8f6c2b}
 .pass .lang{display:flex;align-items:center;gap:10px;font-weight:600;font-size:16px}
-.pass .lang svg{width:46px;height:30px;border-radius:4px;box-shadow:0 0 0 1px rgba(0,0,0,.18),0 3px 8px rgba(0,0,0,.18);flex:none}
+.pass .lang svg{width:72px;height:48px;border-radius:6px;box-shadow:0 0 0 1px rgba(0,0,0,.18),0 3px 8px rgba(0,0,0,.18);flex:none}
 .pass .lang span small{display:block;font-weight:400;color:#6b6250;font-size:13px}
 .pass .text{margin:0;font-size:15.5px;line-height:1.75;color:#2b261d;max-height:9.2em;overflow:auto;padding-inline-end:4px;overflow-wrap:anywhere}
 .pass .stub{
@@ -295,7 +310,7 @@ details.logbox summary{cursor:pointer;color:var(--muted);font-size:14px;padding:
     <div class="eyebrow">AROUND THE WORLD IN YOUR VOICE</div>
     <h1>رحلة حول العالم بصوتك</h1>
     <p class="sub">تكلّم بالعربي، واسمع نفسك بصوتك في خمس دول</p>
-    <div class="flags" id="flagStrip"></div>
+    <div class="board"><div class="origin-row"><div class="dest origin" id="originTile"></div><div class="from"><span class="line"></span> ✈ إلى <span class="line"></span></div></div><div class="flags" id="flagStrip"></div></div>
   </header>
 
   <!-- ===== Check-in (record) ===== -->
@@ -497,13 +512,52 @@ const esc = s => String(s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&
 
 /* ================= flags (inline SVG) ================= */
 let flagN = 0;
-function flagSVG(code){
+function flagSVG(code){ return flagRaw(code).replace('<svg ', '<svg preserveAspectRatio="xMidYMid slice" ').replace('text-anchor="middle" direction="rtl">', 'text-anchor="middle" direction="rtl" textLength="560" lengthAdjust="spacingAndGlyphs">'); }
+function flagRaw(code){
   const u = 'f'+(++flagN);
   switch(code){
     case 'gb': return `<svg viewBox="0 0 60 30" aria-label="UK"><clipPath id="${u}a"><path d="M0,0v30h60V0z"/></clipPath><clipPath id="${u}b"><path d="M30,15h30v15zv15H0zH0V0zV0h30z"/></clipPath><g clip-path="url(#${u}a)"><path d="M0,0v30h60V0z" fill="#012169"/><path d="M0,0 60,30M60,0 0,30" stroke="#fff" stroke-width="6"/><path d="M0,0 60,30M60,0 0,30" clip-path="url(#${u}b)" stroke="#C8102E" stroke-width="4"/><path d="M30,0v30M0,15h60" stroke="#fff" stroke-width="10"/><path d="M30,0v30M0,15h60" stroke="#C8102E" stroke-width="6"/></g></svg>`;
     case 'jp': return `<svg viewBox="0 0 900 600" aria-label="Japan"><rect width="900" height="600" fill="#fff"/><circle cx="450" cy="300" r="180" fill="#BC002D"/></svg>`;
     case 'kr': return `<svg viewBox="-36 -24 72 48" aria-label="Korea"><path d="M-36-24h72v48h-72z" fill="#fff"/><g transform="rotate(-56.3099325)"><g id="${u}b2"><path id="${u}b" d="M-6-25H6M-6-22H6M-6-19H6" stroke="#000" stroke-width="2"/><use href="#${u}b" y="44"/></g><path stroke="#fff" d="M0,17v10"/><circle fill="#cd2e3a" r="12"/><path fill="#0047a0" d="M0-12A6,6 0 0 0 0,0A6,6 0 0 1 0,12A12,12 0 0,1 0-12z"/></g><g transform="rotate(-123.6900675)"><use href="#${u}b2"/><path stroke="#fff" d="M0-23.5v3M0,17v3.5M0,23.5v3"/></g></svg>`;
-    case 'es': return `<svg viewBox="0 0 750 500" aria-label="Spain"><rect width="750" height="500" fill="#AA151B"/><rect y="125" width="750" height="250" fill="#F1BF00"/></svg>`;
+    case 'es': return `<svg viewBox="0 0 750 500" aria-label="Spain"><rect width="750" height="500" fill="#AA151B"/><rect y="125" width="750" height="250" fill="#F1BF00"/>
+<g transform="translate(250 252)">
+ <!-- pillars -->
+ <g fill="#d8d8d8" stroke="#8a6d1f" stroke-width="1.5">
+  <rect x="-80" y="-42" width="16" height="104"/><rect x="64" y="-42" width="16" height="104"/>
+  <rect x="-86" y="-50" width="28" height="9" fill="#c8a52c"/><rect x="58" y="-50" width="28" height="9" fill="#c8a52c"/>
+  <rect x="-88" y="62" width="32" height="9" fill="#c8a52c"/><rect x="56" y="62" width="32" height="9" fill="#c8a52c"/>
+ </g>
+ <path d="M-92 4q20-10 40 0v12q-20-10-40 0z M52 4q20-10 40 0v12q-20-10-40 0z" fill="#AA151B" stroke="#8a6d1f" stroke-width="1"/>
+ <path d="M-86-50l2-12 6 6 6-8 6 8 6-6 2 12z M58-50l2-12 6 6 6-8 6 8 6-6 2 12z" fill="#c8a52c" stroke="#8a6d1f" stroke-width="1"/>
+ <!-- crown -->
+ <g stroke="#8a6d1f" stroke-width="1.5">
+  <path d="M-42-58q42-34 84 0l-4 10h-76z" fill="#c8a52c"/>
+  <rect x="-44" y="-50" width="88" height="10" rx="2" fill="#c8a52c"/>
+  <circle cx="0" cy="-84" r="5" fill="#c8a52c"/><path d="M0-92v-8M-4-96h8" stroke="#c8a52c" stroke-width="3"/>
+  <circle cx="-22" cy="-45" r="2.5" fill="#AA151B" stroke="none"/><circle cx="0" cy="-45" r="2.5" fill="#1f5a3a" stroke="none"/><circle cx="22" cy="-45" r="2.5" fill="#AA151B" stroke="none"/>
+ </g>
+ <!-- shield -->
+ <clipPath id="${u}sh"><path d="M-46-38h92v58q0 46-46 54q-46-8-46-54z"/></clipPath>
+ <g clip-path="url(#${u}sh)">
+  <rect x="-46" y="-38" width="46" height="46" fill="#AA151B"/>
+  <path d="M-34-4h22v-14h-3v-6h-4v6h-2v-10h-4v10h-2v-6h-4v6h-3z" fill="#F1BF00"/>
+  <rect x="0" y="-38" width="46" height="46" fill="#f4f4f4"/>
+  <path d="M12-6q-2-12 6-18q2-8 8-6q6 0 6 6q4 4 0 8q4 6-2 10q-6 2-8-2q-6 6-10 2z" fill="#7b2d8b"/>
+  <rect x="-46" y="8" width="46" height="70" fill="#F1BF00"/>
+  <g fill="#AA151B"><rect x="-41" y="8" width="6" height="70"/><rect x="-29" y="8" width="6" height="70"/><rect x="-17" y="8" width="6" height="70"/><rect x="-5" y="8" width="5" height="70"/></g>
+  <rect x="0" y="8" width="46" height="70" fill="#AA151B"/>
+  <path d="M6 14l34 34M40 14L6 48M23 10v44M2 31h44" stroke="#F1BF00" stroke-width="3" fill="none"/>
+  <path d="M-12 62q12-16 24 0q0 18-12 22q-12-4-12-22z" fill="#f4f4f4"/>
+  <circle cx="0" cy="70" r="6" fill="#c0392b"/><path d="M0 64q4-6 8-4" stroke="#2e7d32" stroke-width="2.5" fill="none"/>
+ </g>
+ <path d="M-46-38h92v58q0 46-46 54q-46-8-46-54z" fill="none" stroke="#8a6d1f" stroke-width="2"/>
+ <ellipse cx="0" cy="8" rx="11" ry="13" fill="#1d4ea0" stroke="#AA151B" stroke-width="3"/>
+ <g fill="#F1BF00"><circle cx="-4" cy="3" r="2.2"/><circle cx="4" cy="3" r="2.2"/><circle cx="0" cy="13" r="2.2"/></g>
+</g></svg>`;
+    case 'sa': return `<svg viewBox="0 0 750 500" aria-label="Saudi Arabia"><rect width="750" height="500" fill="#006C35"/>
+<text x="375" y="232" fill="#fff" font-family="Amiri,'Reem Kufi',serif" font-weight="700" font-size="104" text-anchor="middle" direction="rtl">لا إله إلا الله محمد رسول الله</text>
+<g fill="#fff"><path d="M168 336q8-10 30-12h352v14H198q-22-2-30-2z"/><rect x="550" y="314" width="9" height="42" rx="3"/><rect x="559" y="324" width="62" height="18" rx="7"/><circle cx="626" cy="333" r="8"/></g>
+</svg>`;
     case 'it': return `<svg viewBox="0 0 3 2" aria-label="Italy"><rect width="1" height="2" fill="#009246"/><rect x="1" width="1" height="2" fill="#fff"/><rect x="2" width="1" height="2" fill="#CE2B37"/></svg>`;
   }
   return '';
@@ -511,8 +565,8 @@ function flagSVG(code){
 const PLANE = `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M21 15.5v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V8.5l-8 5v2l8-2.5V18l-2 1.5V21l3.5-1 3.5 1v-1.5L13 18v-5z" transform="rotate(-90 12 12)"/></svg>`;
 const PLAY = `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13l11-6.5z"/></svg>`;
 
-$('flagStrip').innerHTML = `<span class="flagchip"><span class="origin">TUU</span> تبوك</span>` +
-  LANGS.map(l=>`<span class="flagchip">${flagSVG(l.flag)}${l.city}</span>`).join('');
+$('originTile').innerHTML = `<div class="fl">${flagSVG('sa')}</div><div class="city">تبوك</div><div class="code">TUU</div><div class="lng">المملكة العربية السعودية</div>`;
+$('flagStrip').innerHTML = LANGS.map(l=>`<div class="dest"><div class="fl">${flagSVG(l.flag)}</div><div class="city">${l.city}</div><div class="code">${l.ap}</div><div class="lng">${l.name}</div></div>`).join('');
 
 /* ================= guilloche background ================= */
 function drawGuilloche(){
@@ -896,7 +950,7 @@ function buildPasses(){
       <div class="main">
         <div class="top"><span class="airline">VOICE AIRWAYS · BOARDING PASS</span><span class="fno">VA ${String(100+i*7)}</span></div>
         <div class="route">
-          <div class="ap"><b>TUU</b><small>تبوك</small></div>
+          <div class="ap"><b>TUU</b><small><span class="miniflag">${flagSVG('sa')}</span>تبوك</small></div>
           <div class="path">${PLANE}</div>
           <div class="ap"><b>${l.ap}</b><small>${l.city}</small></div>
         </div>
