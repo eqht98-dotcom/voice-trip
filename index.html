@@ -332,6 +332,35 @@ h1{
 .picstat .ps.none b{color:var(--muted)}
 .picstat .tot{grid-column:1/-1;font-size:15px;color:var(--cream)}
 
+/* ---------- photo picker ---------- */
+#pickDlg{width:min(900px,96vw);height:min(92dvh,980px);overflow:hidden;padding:0}
+@media (max-width:600px){#pickDlg{width:100vw;max-width:100vw;height:100dvh;max-height:100dvh;margin:0;border-radius:0;border:0}}
+.pk{display:flex;flex-direction:column;height:100%}
+.pk-body{flex:1;overflow:auto;padding:14px 18px;display:flex;flex-direction:column;gap:14px}
+.pk-cc{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px}
+.pk-cc button{flex:none;display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px;border-radius:12px;border:1px solid var(--gold-line);background:rgba(6,10,19,.4);color:var(--cream);font:inherit;font-size:12px;cursor:pointer;min-width:74px}
+.pk-cc button.on{border-color:var(--gold);background:rgba(214,180,106,.16)}
+.pk-cc .fl{width:48px;aspect-ratio:3/2;border-radius:4px;overflow:hidden}
+.pk-cc .fl svg{display:block;width:100%;height:100%}
+.pk-cc small{color:var(--muted)}
+.pk-items{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px}
+@media (max-width:600px){.pk-items,.pk-grid{grid-template-columns:1fr 1fr}.pk-it .row{flex-direction:column;align-items:stretch;text-align:center}}
+.pk-it{border:1px solid var(--gold-line);border-radius:14px;overflow:hidden;background:rgba(6,10,19,.4);display:flex;flex-direction:column}
+.pk-it .th{aspect-ratio:4/3;background:#0d182c center/cover no-repeat;position:relative}
+.pk-it .th .st{position:absolute;top:6px;inset-inline-start:6px;padding:2px 8px;border-radius:999px;font-size:12px;background:rgba(5,9,18,.75)}
+.pk-it .row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 10px}
+.pk-it .row b{font-size:15px}
+.pk-search{display:flex;gap:8px}
+.pk-search input{flex:1;min-width:0;min-height:46px;padding:10px 14px;border-radius:12px;border:1px solid var(--gold-line);background:var(--night);color:var(--cream);font:inherit;font-size:16px;direction:ltr}
+.pk-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px}
+.pk-grid button{position:relative;padding:0;border:2px solid transparent;border-radius:12px;overflow:hidden;cursor:pointer;background:#0d182c;aspect-ratio:4/3}
+.pk-grid button img{display:block;width:100%;height:100%;object-fit:cover}
+.pk-grid button:hover,.pk-grid button:focus-visible{border-color:var(--gold-hi)}
+.pk-grid button span{position:absolute;inset:auto 0 0 0;padding:14px 6px 4px;font-size:11px;color:#fff;background:linear-gradient(transparent,rgba(0,0,0,.75));text-align:start;direction:ltr}
+.pk-grid .wikitag{position:absolute;top:6px;inset-inline-start:6px;padding:2px 8px;border-radius:999px;font-size:11px;background:rgba(5,9,18,.75);color:#fff}
+.pk-foot{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;padding:12px 18px;border-top:1px solid var(--gold-line);padding-bottom:max(12px,env(safe-area-inset-bottom,0px))}
+.pk-foot textarea{width:100%;min-height:90px;direction:ltr;font-family:var(--f-mono);font-size:11px;background:var(--night);color:var(--cream);border:1px solid var(--gold-line);border-radius:10px;padding:8px}
+
 /* ---------- settings transfer ---------- */
 #xferDlg{width:min(420px,94vw);height:fit-content;max-height:92dvh;overflow:auto;margin:auto}
 .xfer{padding:22px;display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center}
@@ -540,6 +569,11 @@ details.logbox summary{cursor:pointer;color:var(--muted);font-size:14px;padding:
 <dialog id="countryDlg">
   <div class="cc" id="ccBox"></div>
 </dialog>
+<dialog id="pickDlg"><div class="pk">
+  <header class="sh-head"><h3>🖼️ اختيار الصور</h3><button type="button" class="iconbtn" id="pkClose" aria-label="إغلاق">✕</button></header>
+  <div class="pk-body" id="pkBody"></div>
+  <footer class="pk-foot" id="pkFoot"></footer>
+</div></dialog>
 <dialog id="xferDlg"><div class="xfer" id="xferBox"></div></dialog>
 <dialog id="pinDlg">
   <form class="pin" id="pinForm" method="dialog">
@@ -628,6 +662,7 @@ details.logbox summary{cursor:pointer;color:var(--muted);font-size:14px;padding:
           <div class="row-key"><input type="password" id="sUKey" class="ltr" placeholder="Access Key" autocomplete="off" autocapitalize="off" spellcheck="false"><button type="button" class="btn mini" id="testUKey">اختبار</button></div>
           <div class="hint" id="uKeyStatus">يُستخدم بس لو اخترت Unsplash كمصدر.</div>
         </div>
+        <button type="button" class="btn gold mini" id="openPicker">🖼️ اختر الصور بنفسك (12 خيار لكل صورة)</button>
         <button type="button" class="btn mini" id="prefetchPics">📥 جهّز كل الصور مسبقاً</button>
         <div class="hint" id="prefetchStatus">سوّها على جهاز البوث قبل الفعالية. الصور تنحفظ فيه، فتفتح البطاقات بسرعة.</div>
         <div class="picstat" id="picStat"></div>
@@ -1008,6 +1043,10 @@ async function unsplashImg(title){
   const v = {u: ph.urls.raw + '&w=640&h=480&fit=crop&q=80&auto=format', n: (ph.user && ph.user.name) || 'Unsplash', l: ((ph.user && ph.user.links && ph.user.links.html) || 'https://unsplash.com') + '?utm_source=voice_trip_booth&utm_medium=referral'};
   uCache[q] = v; saveU(); return v;
 }
+const CURATED = {};
+const UNSPLASH_UTM = '?utm_source=voice_trip_booth&utm_medium=referral';
+function pickFor(title){ return CURATED[title] || (cfg.picks && cfg.picks[title]) || null; }
+function pickUrl(p, w){ return p.r ? 'https://images.unsplash.com/' + p.r + '?w=' + (w||800) + '&h=' + Math.round((w||800)*0.75) + '&fit=crop&q=80&auto=format' : p.w; }
 function loadPics(root){
   let usedU = false, usedW = false;
   const credit = ()=>{ const c = $('picCredit'); if (c) c.innerHTML = [usedU ? 'الصور من <a href="https://unsplash.com/?utm_source=voice_trip_booth&utm_medium=referral" target="_blank" rel="noopener">Unsplash</a>' : '', usedW ? 'ويكيبيديا' : ''].filter(Boolean).join(' · '); };
@@ -1015,7 +1054,9 @@ function loadPics(root){
     const title = f.dataset.wiki, img = f.querySelector('img');
     img.onload = ()=>{ img.classList.add('ok'); f.classList.add('loaded'); };
     let u = null;
-    if (cfg.picSrc === 'unsplash'){ try { u = await unsplashImg(title); } catch(e){} }
+    const pk = pickFor(title);
+    if (pk){ u = {u: pickUrl(pk), n: pk.n, l: pk.n ? 'https://unsplash.com/@' + pk.a + UNSPLASH_UTM : ''}; if (!pk.r){ img.referrerPolicy = 'no-referrer'; img.src = u.u; usedW = true; credit(); return; } }
+    else if (cfg.picSrc === 'unsplash'){ try { u = await unsplashImg(title); } catch(e){} }
     if (u){
       img.onerror = ()=>{ delete uCache[uQuery(title)]; saveU(); };
       img.src = u.u; usedU = true; credit();
@@ -1702,6 +1743,66 @@ function renderPicStat(){
   }).join('');
   box.innerHTML = `<div class="tot">📷 الصور الجاهزة في هذا الجهاز: <b>${got} / ${all}</b></div>` + rows;
 }
+/* ================= photo picker ================= */
+const ALL_ITEMS = ORDER.flatMap(code=>Object.entries(PICS[code]||{}).flatMap(([sec,arr])=>arr.map(([ar,t])=>({code,sec,ar,t}))));
+const pk = {code:'sa', item:null};
+function pickCount(){ return ALL_ITEMS.filter(x=>pickFor(x.t)).length; }
+function pkFooter(){
+  $('pkFoot').innerHTML = `<span>اخترت <b>${pickCount()}</b> من ${ALL_ITEMS.length} صورة</span>
+    <div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="btn gold mini" id="pkExport">📋 انسخ اختياراتي وأرسلها لـ Claude</button></div>`;
+  $('pkExport').onclick = exportPicks;
+}
+function exportPicks(){
+  const out = {}; ALL_ITEMS.forEach(x=>{ const p = (cfg.picks||{})[x.t]; if (p) out[x.t] = p; });
+  const txt = 'PICKS:' + JSON.stringify(out);
+  const done = ok => { $('pkFoot').insertAdjacentHTML('beforeend', `<p style="width:100%;margin:0;color:var(--ok)">${ok ? '✅ انتسخ. الصقه في محادثة Claude.' : 'انسخ النص هذا والصقه في محادثة Claude:'}</p>` + (ok ? '' : `<textarea readonly>${esc(txt)}</textarea>`)); };
+  try { navigator.clipboard.writeText(txt).then(()=>done(true), ()=>done(false)); } catch(e){ done(false); }
+}
+function pkRenderCountry(){
+  pk.item = null;
+  const secName = {culture:'الثقافة',wear:'الأزياء',sights:'المعالم',food:'الأطباق'};
+  const items = ALL_ITEMS.filter(x=>x.code===pk.code);
+  $('pkBody').innerHTML = `<div class="pk-cc">${ORDER.map(code=>{ const its = ALL_ITEMS.filter(x=>x.code===code), n = its.filter(x=>pickFor(x.t)).length;
+      return `<button type="button" data-cc="${code}" class="${code===pk.code?'on':''}"><span class="fl">${flagSVG(code)}</span>${esc(COUNTRIES[code].city)}<small>${n===its.length?'✅':n+'/'+its.length}</small></button>`; }).join('')}</div>
+    <h3 style="margin:0;color:var(--gold-hi);font-family:var(--f-display)">${esc(COUNTRIES[pk.code].name)}</h3>
+    <div class="pk-items">${items.map((x,i)=>{ const p = pickFor(x.t);
+      return `<div class="pk-it"><div class="th" ${p?`style="background-image:url('${pickUrl(p,400)}')"`:''}><span class="st">${p?'✅ مختارة':'لم تُختر'}</span></div>
+        <div class="row"><span><b>${esc(x.ar)}</b><br><small style="color:var(--muted)">${secName[x.sec]}</small></span><button type="button" class="btn mini" data-i="${i}">${p?'تغيير':'اختيار'}</button></div></div>`; }).join('')}</div>`;
+  $('pkBody').querySelectorAll('.pk-cc button').forEach(b=>b.onclick = ()=>{ pk.code = b.dataset.cc; pkRenderCountry(); });
+  $('pkBody').querySelectorAll('.pk-it button').forEach(b=>b.onclick = ()=>pkRenderItem(items[+b.dataset.i]));
+  pkFooter(); $('pkBody').scrollTop = 0;
+}
+async function pkRenderItem(x, query){
+  pk.item = x; query = query || uQuery(x.t);
+  $('pkBody').innerHTML = `<div style="display:flex;align-items:center;gap:10px"><button type="button" class="btn mini" id="pkBack">→ رجوع</button><h3 style="margin:0;color:var(--gold-hi);font-family:var(--f-display)">${esc(x.ar)} · ${esc(COUNTRIES[x.code].name)}</h3></div>
+    <div class="pk-search"><input id="pkQ" value="${esc(query)}" aria-label="كلمة البحث"><button type="button" class="btn mini" id="pkGo">🔍 بحث</button></div>
+    <p class="hint" style="margin:0">اضغط على أجمل صورة وأدقها. لو ما عجبك شي، غيّر كلمة البحث بالإنجليزي (مثلاً: "saudi kabsa rice lamb").</p>
+    <div class="pk-grid" id="pkGrid"><p class="hint">…جاري البحث</p></div>`;
+  $('pkBack').onclick = pkRenderCountry;
+  $('pkGo').onclick = ()=>pkRenderItem(x, $('pkQ').value.trim() || uQuery(x.t));
+  $('pkQ').onkeydown = e=>{ if (e.key==='Enter') $('pkGo').click(); };
+  const grid = $('pkGrid'), cards = [];
+  const w = await wikiImg(x.t);
+  if (w) cards.push({w: picCandidates(w)[0], thumb: picCandidates(w).slice(-1)[0], label:'Wikipedia', wiki:true});
+  if (cfg.ukey){
+    try {
+      const r = await fetch('https://api.unsplash.com/search/photos?per_page=12&content_filter=high&query=' + encodeURIComponent(query), {headers:{'Authorization':'Client-ID '+cfg.ukey,'Accept-Version':'v1'}});
+      if (r.status===403 || r.status===429) grid.insertAdjacentHTML('beforebegin','<p class="hint" style="color:#ffc4c9">⏳ وصلت لحد Unsplash بالساعة (50 بحث). كمّل بعد ساعة، أو اختر صورة ويكيبيديا.</p>');
+      else if (r.ok){ const d = await r.json(); (d.results||[]).forEach(ph=>cards.push({r: ph.urls.raw.split('?')[0].replace('https://images.unsplash.com/',''), thumb: ph.urls.small, n: ph.user && ph.user.name, a: ph.user && ph.user.username, label: (ph.user && ph.user.name) || ''})); }
+    } catch(e){ log('picker: '+e.message); }
+  } else grid.insertAdjacentHTML('beforebegin','<p class="hint">حط مفتاح Unsplash في الإعدادات عشان تطلع لك 12 صورة لكل شي.</p>');
+  if (!cards.length){ grid.innerHTML = '<p class="hint">ما لقينا صور. جرّب كلمة بحث ثانية.</p>'; return; }
+  grid.innerHTML = cards.map((c,i)=>`<button type="button" data-i="${i}"><img src="${esc(c.thumb)}" alt="" referrerpolicy="no-referrer" loading="lazy">${c.wiki?'<b class="wikitag">ويكيبيديا</b>':''}<span>${esc(c.label)}</span></button>`).join('');
+  grid.querySelectorAll('button').forEach(b=>b.onclick = ()=>{
+    const c = cards[+b.dataset.i];
+    cfg.picks = cfg.picks || {};
+    cfg.picks[x.t] = c.wiki ? {w: c.w} : {r: c.r, n: c.n, a: c.a};
+    saveCfg(); pkRenderCountry();
+  });
+}
+$('openPicker').addEventListener('click', ()=>{ autoSave(); $('settings').close(); pkRenderCountry(); $('pickDlg').showModal(); });
+$('pkClose').addEventListener('click', ()=>$('pickDlg').close());
+
 $('prefetchPics').addEventListener('click', async ()=>{
   autoSave(); const st = $('prefetchStatus'), btn = $('prefetchPics');
   const all = [...new Set(Object.values(PICS).flatMap(P=>Object.values(P).flat().map(x=>x[1])))];
