@@ -269,6 +269,32 @@ h1{
 .map .arc{fill:none;stroke:var(--gold);stroke-width:1.5;stroke-dasharray:5 7;opacity:.4;animation:dash 1.3s linear infinite;vector-effect:non-scaling-stroke}
 .map .arc.on{stroke:var(--gold-hi);stroke-width:3.2;opacity:1;stroke-dasharray:none}
 @keyframes dash{to{stroke-dashoffset:-14}}
+/* ---------- flight simulation (while the voice is prepared) ---------- */
+.fsim[hidden]{display:none}
+.fsim{width:100%;max-width:760px;display:flex;flex-direction:column;gap:12px}
+.fhead{display:flex;align-items:center;justify-content:space-between;gap:10px;direction:ltr}
+.fhead .ap{display:flex;flex-direction:column;align-items:center;min-width:70px}
+.fhead .ap b{font-family:var(--f-latin);font-size:30px;color:var(--gold-hi);letter-spacing:2px;line-height:1}
+.fhead .ap small{color:var(--muted);font-size:13px;margin-top:4px}
+.fhead .fno{flex:1;text-align:center;font-family:var(--f-mono);font-size:12px;color:var(--gold);letter-spacing:3px;border-top:1px dashed var(--gold-line);padding-top:6px}
+.fmap{position:relative;border-radius:20px;overflow:hidden;border:1px solid var(--gold-line);background:radial-gradient(120% 90% at 50% 40%,#132546 0%,#0a1426 70%);box-shadow:0 20px 50px rgba(0,0,0,.45)}
+.fmap svg{display:block;width:100%;height:auto}
+.fmap .c{fill:#1b2c4a;stroke:rgba(214,180,106,.22);stroke-width:.7;vector-effect:non-scaling-stroke}
+.fmap .c.dest{fill:var(--cf);fill-opacity:.85;stroke:var(--gold-hi);stroke-width:1.6}
+.fmap .c.home{fill:#0b7a43;fill-opacity:.7}
+.fmap .route{fill:none;stroke:var(--gold);stroke-width:1.6;stroke-dasharray:5 7;opacity:.45;vector-effect:non-scaling-stroke}
+.fmap .trail{fill:none;stroke:var(--gold-hi);stroke-width:3;stroke-linecap:round;vector-effect:non-scaling-stroke;filter:drop-shadow(0 0 4px rgba(246,227,168,.6))}
+.fmap .pt{fill:var(--gold-hi);stroke:#0b1424;stroke-width:2;vector-effect:non-scaling-stroke}
+.fmap .pt.home{fill:#3ddc84}
+.fmap .lbl{font-family:var(--f-body);font-weight:700;fill:var(--cream);paint-order:stroke;stroke:#0a1426;stroke-linejoin:round}
+.fmap .plane path{fill:url(#fpg);stroke:#0b1424;stroke-width:.6;vector-effect:non-scaling-stroke}
+.fstats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.fstats div{background:rgba(17,29,51,.7);border:1px solid var(--gold-line);border-radius:14px;padding:8px 6px;text-align:center}
+.fstats i{display:block;font-style:normal;color:var(--muted);font-size:12px}
+.fstats b{display:block;font-family:var(--f-mono);color:var(--gold-hi);font-size:clamp(15px,3.6vw,20px);margin-top:2px;direction:ltr}
+.fann{min-height:2.6em;margin:0;text-align:center;color:var(--cream);font-size:clamp(15px,3.8vw,18px);transition:opacity .35s}
+.fann.out{opacity:0}
+.flight.sim .globe{display:none}
 .map .pin{cursor:pointer}
 .map .pin .dot{fill:var(--gold-hi);stroke:#0b1424;stroke-width:2}
 .map .pin .halo{fill:none;stroke:var(--gold);stroke-width:2;opacity:.7;transform-box:fill-box;transform-origin:center;animation:halo 2.2s ease-out infinite}
@@ -529,7 +555,17 @@ details.logbox summary{cursor:pointer;color:var(--muted);font-size:14px;padding:
 
   <!-- ===== Flight (processing) ===== -->
   <section class="panel flight" id="stageWork" hidden>
-    <svg class="globe" viewBox="0 0 300 300" aria-hidden="true">
+    <div class="fsim" id="fsim" hidden>
+      <div class="fhead"><span class="ap"><b>TUU</b><small>تبوك</small></span><span class="fno" id="fNo">VA 100</span><span class="ap"><b id="fToAp">—</b><small id="fToCity">—</small></span></div>
+      <div class="fmap"><svg id="flightSvg" aria-hidden="true"></svg></div>
+      <div class="fstats">
+        <div><i>المسافة المتبقية</i><b id="fDist">—</b></div>
+        <div><i>الارتفاع</i><b id="fAlt">0</b></div>
+        <div><i>السرعة</i><b id="fSpd">0</b></div>
+      </div>
+      <p class="fann" id="fAnn"></p>
+    </div>
+    <svg class="globe" id="workGlobe" viewBox="0 0 300 300" aria-hidden="true">
       <defs>
         <radialGradient id="gg" cx=".38" cy=".32"><stop offset="0" stop-color="#22385f"/><stop offset="1" stop-color="#0a1322"/></radialGradient>
         <linearGradient id="gl" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f6e3a8"/><stop offset="1" stop-color="#8f6c2b"/></linearGradient>
@@ -546,7 +582,7 @@ details.logbox summary{cursor:pointer;color:var(--muted);font-size:14px;padding:
         </g>
       </g>
     </svg>
-    <div class="timer" id="workClock" style="font-size:22px;color:var(--gold-hi)">0.0 ث</div>
+    <div class="timer" id="workClock" style="font-size:13px;color:var(--muted);opacity:.7">0.0 ث</div>
     <ul class="steps" id="steps">
       <li data-s="1"><span class="dot">1</span>نسمع كلامك وننسخ صوتك</li>
       <li data-s="2"><span class="dot">2</span>نجهّز صوتك</li>
@@ -975,6 +1011,7 @@ function arcPath(a, b){
   const cx = mx + (-dy/len)*len*0.22*(dx<0?-1:1), cy = my - Math.abs(dx/len)*len*0.22 - 10;
   return `M${x0.toFixed(1)} ${y0.toFixed(1)}Q${cx.toFixed(1)} ${cy.toFixed(1)} ${x1.toFixed(1)} ${y1.toFixed(1)}`;
 }
+let FLAND = null;
 function drawMap(features){
   const svg = $('mapSvg');
   svg.setAttribute('viewBox', `${MB.x.toFixed(0)} ${MB.y.toFixed(0)} ${MB.w.toFixed(0)} ${MB.h.toFixed(0)}`);
@@ -996,7 +1033,56 @@ function drawMap(features){
     const below = code==='sa' || code==='id';
     return `<g class="pin${code==='sa'?' home':''}" data-cc="${code}" transform="translate(${x.toFixed(1)} ${y.toFixed(1)})" role="button" tabindex="0" aria-label="${c.name}"><circle class="halo" r="9"/><circle class="dot" r="7"/><text y="${below?28:-14}" text-anchor="middle">${c.city}<tspan class="tick" dx="4"></tspan></text></g>`; }).join('');
   svg.innerHTML = `<path class="grat" d="${grat}"/>${land}${feat}${arcs}${pins}`;
+  FLAND = features.filter(f=>f.id!=='010').map(f=>({id:f.id, d:ringsPath(f.rings)})).filter(f=>f.d);
 }
+/* ================= flight simulation while the voice is prepared ================= */
+const flight = {raf:0, ann:0};
+function kmBetween(a, b){ const r = D2R, dLa = (b.lat-a.lat)*r, dLo = (b.lon-a.lon)*r; const h = Math.sin(dLa/2)**2 + Math.cos(a.lat*r)*Math.cos(b.lat*r)*Math.sin(dLo/2)**2; return 2*6371*Math.asin(Math.sqrt(h)); }
+function startFlight(code){
+  stopFlight();
+  const c = code && COUNTRIES[code], l = c && LANGS[c.lang];
+  if (!c || !l || !FLAND){ $('fsim').hidden = true; $('stageWork').classList.remove('sim'); return; }
+  const home = COUNTRIES.sa, [x0,y0] = proj(home.lon, home.lat), [x1,y1] = proj(c.lon, c.lat);
+  // frame the route with room around it (16:10)
+  let bx0 = Math.min(x0,x1), bx1 = Math.max(x0,x1), by0 = Math.min(y0,y1), by1 = Math.max(y0,y1);
+  let w = Math.max(bx1-bx0, 120), h = Math.max(by1-by0, 80);
+  w *= 1.5; h *= 1.9; if (w/h < 1.6) w = h*1.6; else h = w/1.6;
+  const cx = (bx0+bx1)/2, cy = (by0+by1)/2 - h*0.06, vx = cx-w/2, vy = cy-h/2;
+  const k = w/600;   // size unit so labels/plane look the same on any route
+  const svg = $('flightSvg');
+  svg.setAttribute('viewBox', `${vx.toFixed(1)} ${vy.toFixed(1)} ${w.toFixed(1)} ${h.toFixed(1)}`);
+  const land = FLAND.map(f=> f.id===c.id ? `<path class="c dest" style="--cf:${c.color||l.map}" d="${f.d}"/>` : f.id===home.id ? `<path class="c home" d="${f.d}"/>` : `<path class="c" d="${f.d}"/>`).join('');
+  const route = arcPath(home, c);
+  const lbl = (x,y,t,dy) => `<text class="lbl" x="${x.toFixed(1)}" y="${(y+dy*k).toFixed(1)}" text-anchor="middle" style="font-size:${(15*k).toFixed(2)}px;stroke-width:${(4*k).toFixed(2)}px">${t}</text>`;
+  svg.innerHTML = `<defs><linearGradient id="fpg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff4cf"/><stop offset="1" stop-color="#c9a24f"/></linearGradient></defs>${land}
+    <path class="route" d="${route}"/><path class="trail" id="fTrail" d="${route}"/>
+    <circle class="pt home" cx="${x0}" cy="${y0}" r="${(5*k).toFixed(2)}"/><circle class="pt" cx="${x1}" cy="${y1}" r="${(5*k).toFixed(2)}"/>
+    ${lbl(x0,y0,'تبوك',24)}${lbl(x1,y1,l.city,-14)}
+    <g class="plane" id="fPlane"><path transform="scale(${(1.25*k).toFixed(3)}) rotate(90)" d="M0-12 2 -3 12 2v3L2 2l-1 7 3 2v2l-4-1-4 1v-2l3-2-1-7-10 3v-3l10-5z"/></g>`;
+  $('fToAp').textContent = l.ap; $('fToCity').textContent = l.city; $('fNo').textContent = `VA ${100+c.lang*7} · TUU → ${l.ap}`;
+  $('fsim').hidden = false; $('stageWork').classList.add('sim');
+  const trail = $('fTrail'), plane = $('fPlane'), L = trail.getTotalLength(), D = kmBetween(home, c);
+  trail.style.strokeDasharray = `${L} ${L}`;
+  const anns = [`مرحباً بكم على متن Voice Airways المتجهة إلى ${l.city} 🛫`, 'نرجو ربط الأحزمة… نسمع صوتك الحين 🎧', 'نحلّق فوق السحاب ونتعلّم نبرة صوتك ☁️', `طاقم الضيافة يترجم كلامك إلى ${l.ar} ✍️`, `بدأنا الاقتراب من ${l.city}… تذكرتك تنطبع 🎫`];
+  let ai = 0; const fa = $('fAnn'); fa.textContent = anns[0]; fa.classList.remove('out');
+  flight.ann = setInterval(()=>{ ai = Math.min(ai+1, anns.length-1); fa.classList.add('out'); setTimeout(()=>{ fa.textContent = anns[ai]; fa.classList.remove('out'); }, 350); }, 3600);
+  const t0 = performance.now();
+  const tick = () => {
+    const t = (performance.now()-t0)/1000;
+    const p = 0.94*(1 - Math.exp(-t/8));            // keeps flying; lands when the ticket is ready
+    const a = trail.getPointAtLength(p*L), b = trail.getPointAtLength(Math.min(L, p*L+1));
+    const ang = Math.atan2(b.y-a.y, b.x-a.x)*180/Math.PI;
+    plane.setAttribute('transform', `translate(${a.x.toFixed(2)} ${a.y.toFixed(2)}) rotate(${ang.toFixed(1)})`);
+    trail.style.strokeDashoffset = (L*(1-p)).toFixed(2);
+    const climb = Math.min(1, t/6), cruise = 1 - Math.max(0, (p-0.82)/0.12)*0.55;
+    $('fDist').textContent = Math.round(D*(1-p)).toLocaleString('en-US') + ' km';
+    $('fAlt').textContent = (Math.round(35000*climb*cruise/100)*100).toLocaleString('en-US') + ' ft';
+    $('fSpd').textContent = Math.round(880*Math.min(1, t/4) + Math.sin(t*1.7)*6).toLocaleString('en-US') + ' km/h';
+    flight.raf = requestAnimationFrame(tick);
+  };
+  tick();
+}
+function stopFlight(){ cancelAnimationFrame(flight.raf); clearInterval(flight.ann); flight.raf = 0; }
 function markMap(code, on){ document.querySelectorAll(`#mapSvg [data-cc="${code}"].c, #mapSvg .pin[data-cc="${code}"], #mapSvg [data-arc="${code}"]`).forEach(el=>el.classList.toggle('on', on)); }
 function markVisited(code){
   const el = document.querySelector(`#mapSvg path[data-cc="${code}"]`); if (el) el.classList.add('visited');
@@ -1209,6 +1295,7 @@ function show(stage){
   $('stageRecord').hidden = stage!=='record';
   $('stageWork').hidden = stage!=='work';
   $('stageResults').hidden = stage!=='results';
+  if (stage==='work') startFlight(trip.code); else stopFlight();
   const el = $(stage==='record'?'stageRecord':stage==='work'?'stageWork':'stageResults');
   setTimeout(()=>el.scrollIntoView({behavior:'smooth', block:'start'}), 40);
 }
