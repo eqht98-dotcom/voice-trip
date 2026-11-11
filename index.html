@@ -294,8 +294,18 @@ h1{
 .cc-head h3{margin:0;font-family:var(--f-display);font-size:clamp(24px,3.2vw,32px);color:var(--gold-hi);line-height:1.2}
 .cc-head .greet{margin-top:4px;color:var(--cream);font-size:16px}
 .cc-head .greet span{color:var(--muted);font-size:14px}
-.cc-body{display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:18px 22px}
-.cc-sec{border:1px solid rgba(214,180,106,.18);border-radius:16px;padding:14px 16px;background:rgba(6,10,19,.35);min-width:0}
+.cc-body{display:flex;flex-direction:column;gap:18px;padding:18px 22px}
+.cc-sec h4{margin:0 0 10px}
+.pics{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.pic{position:relative;margin:0;aspect-ratio:4/3;border-radius:14px;overflow:hidden;background:linear-gradient(135deg,#1b2c4a,#0d182c);box-shadow:0 0 0 1px rgba(214,180,106,.25)}
+.pic img{display:block;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .4s,transform .4s}
+.pic img.ok{opacity:1}
+.pic:hover img.ok{transform:scale(1.05)}
+.pic .ph{position:absolute;inset:0;display:grid;place-items:center;font-size:30px;opacity:.35}
+.pic.loaded .ph{display:none}
+.pic figcaption{position:absolute;inset:auto 0 0 0;padding:20px 10px 8px;font-size:15px;font-weight:600;color:#fff;background:linear-gradient(transparent,rgba(5,9,18,.88));text-shadow:0 1px 3px rgba(0,0,0,.6)}
+.credit{color:var(--muted);font-size:12px;text-align:center;padding:0 22px 4px}
+.cc-sec{min-width:0}
 .cc-sec h4{margin:0 0 8px;font-size:15px;color:var(--gold);display:flex;align-items:center;gap:8px}
 .cc-sec ul{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:6px}
 .cc-sec li{font-size:15px;line-height:1.6;color:var(--cream)}
@@ -306,7 +316,8 @@ h1{
   .cc-head{grid-template-columns:auto 1fr;padding:16px}
   .cc-head .x{position:absolute;top:12px;left:12px}
   .cc-head .fl{width:88px}
-  .cc-body{grid-template-columns:1fr;padding:14px 16px}
+  .cc-body{padding:14px 16px}
+  .pics{grid-template-columns:1fr 1fr}
   .map .pin text{font-size:30px;stroke-width:7px}
   .map .pin .dot{r:9}
 }
@@ -432,7 +443,7 @@ details.logbox summary{cursor:pointer;color:var(--muted);font-size:14px;padding:
     <div id="tripBox" hidden>
     <div class="desthead" id="destHead"></div>
     <div class="phases">
-      <div class="phase" id="ph1"><b>I</b> <span id="ph1Label">اقرأ عن الدولة</span></div>
+      <div class="phase" id="ph1"><b>I</b> <span id="ph1Label">عرّف بنفسك (30 ثانية)</span></div>
       <div class="phase msg" id="ph2"><b>II</b> رسالة لشخص تحبه 💌</div>
     </div>
     <div class="prompt" id="prompt">
@@ -534,7 +545,7 @@ details.logbox summary{cursor:pointer;color:var(--muted);font-size:14px;padding:
       <section class="grp">
         <h4>التسجيل</h4>
         <div class="row2">
-          <div class="field"><label for="sAbout">قراءة النص (أقصى، ثانية)</label><input type="number" id="sAbout" min="10" max="120" inputmode="numeric"></div>
+          <div class="field" hidden><label for="sAbout">عرّف بنفسك (ثانية)</label><input type="number" id="sAbout" min="10" max="120" inputmode="numeric"></div>
           <div class="field"><label for="sMsg">الرسالة (ثانية)</label><input type="number" id="sMsg" min="8" max="40" inputmode="numeric"></div>
         </div>
         <label class="toggle">إزالة الضوضاء من التسجيل (ElevenLabs)<input type="checkbox" id="sNoise"></label>
@@ -606,10 +617,11 @@ const API = 'https://api.elevenlabs.io/v1';
 const PREFIX = 'StudentDay-';
 const MSG_PROMPT = '💌 الحين وجّه رسالة لشخص تحبه… ابدأ باسمه';
 const MSG_HINT = 'مثلاً: «يا أمي، شكراً على كل شي… أحبك»';
-const MIN_ABOUT = 10, MIN_MSG = 6;
+const MIN_ABOUT = 10, MIN_MSG = 6, ABOUT_SECS = 30;
+const PROMPTS = c => ['عرّف بنفسك: وش اسمك؟ ووش تدرس؟', `ليش اخترت ${c.name}؟`, 'وش هوايتك؟ ومن متى بديت فيها؟', 'وش أكلتك المفضلة؟', 'لو تقدر تسافر بكرة، وين بتروح ومع مين؟'];
 const trip = {code:null};
 const CFG_VER = 6;
-const DEFAULTS = {ver:CFG_VER, key:'', model:'eleven_multilingual_v2', sim:1, stab:0.5, noise:true, aboutSecs:80, msgSecs:20, maxChars:700, wa:'', ckey:'', cmodel:'claude-haiku-5-5', pending:[]};
+const DEFAULTS = {ver:CFG_VER, key:'', model:'eleven_multilingual_v2', sim:1, stab:0.5, noise:true, aboutSecs:30, msgSecs:20, maxChars:700, wa:'', ckey:'', cmodel:'claude-haiku-5-5', pending:[]};
 
 let cfg = loadCfg();
 function loadCfg(){
@@ -618,7 +630,7 @@ function loadCfg(){
   let m = Object.assign({}, DEFAULTS, c);
   if ((c.ver||1) < CFG_VER) m = Object.assign({}, DEFAULTS, {key:c.key||'', wa:c.wa||'', ckey:c.ckey||'', pinHash:c.pinHash||'', pending:Array.isArray(c.pending)?c.pending:[]});
   if (!Array.isArray(m.pending)) m.pending = [];
-  if (!(m.aboutSecs >= 80)) m.aboutSecs = 80;
+  m.aboutSecs = ABOUT_SECS;
   return m;
 }
 function saveCfg(){ try { localStorage.setItem('voiceTripCfg', JSON.stringify(cfg)); } catch(e) {} }
@@ -743,77 +755,66 @@ const COUNTRIES = {
       culture:[['شاي العصر','Afternoon Tea مع الحلويات الصغيرة'],['مهد كرة القدم الحديثة','الدوري الإنجليزي من أشهر دوريات العالم'],['شكسبير والمسرح','أشهر كاتب مسرحي في التاريخ']],
       wear:[['التنورة الاسكتلندية (Kilt)','بنقوش التارتان المربعة'],['زي حرس الملك','السترة الحمراء والقبعة الطويلة']],
       sights:[['ساعة بيغ بن','بجانب مبنى البرلمان'],['جسر البرج','على نهر التايمز'],['ستونهنج','دائرة حجرية عمرها آلاف السنين'],['قلعة إدنبرة','في اسكتلندا']],
-      food:[['فيش آند تشيبس','سمك مقلي مع بطاطس'],['الفطور الإنجليزي','بيض وفاصوليا وخبز محمص'],['السكونز','مع القشطة والمربى']],
-      script:'مرحباً من لندن! في بريطانيا تدق ساعة بيغ بن الشهيرة بجانب مبنى البرلمان على نهر التايمز، ويقف جسر البرج شامخاً منذ أكثر من مئة عام. وفي الريف الإنجليزي توجد صخور ستونهنج الغامضة التي عمرها آلاف السنين. البريطانيون يحبون شرب الشاي في العصر مع الحلويات الصغيرة، ومن أشهر أكلاتهم السمك المقلي مع البطاطس. ومن هنا انطلقت قواعد كرة القدم الحديثة، وفيها واحد من أشهر الدوريات في العالم. وفي اسكتلندا يلبس الرجال التنورة التقليدية بنقوشها المربعة الملونة، ويعزفون على مزمار القربة في الاحتفالات.'},
+      food:[['فيش آند تشيبس','سمك مقلي مع بطاطس'],['الفطور الإنجليزي','بيض وفاصوليا وخبز محمص'],['السكونز','مع القشطة والمربى']]},
   fr:{id:'250', name:'فرنسا', lat:48.86, lon:2.35, greet:'Bonjour', greetRo:'بونجور',
       culture:[['فن الطبخ الفرنسي','مسجّل في قائمة التراث غير المادي لليونسكو'],['الفن والمتاحف','باريس مدينة الرسامين والفنانين'],['اللغة الفرنسية','لغة رسمية في أكثر من 25 دولة']],
       wear:[['البيريه','القبعة الفرنسية الشهيرة'],['باريس عاصمة الموضة','أسابيع الموضة العالمية']],
       sights:[['برج إيفل','رمز باريس منذ 1889'],['متحف اللوفر','فيه لوحة الموناليزا'],['قوس النصر','في شارع الشانزليزيه'],['قصر فرساي','قصر الملوك الفاخر']],
-      food:[['الكرواسون','مخبوز الفطور الشهير'],['الباغيت','الخبز الفرنسي الطويل'],['الكريب','فطائر رقيقة حلوة ومالحة']],
-      script:'مرحباً من باريس! في فرنسا يرتفع برج إيفل الحديدي منذ عام ألف وثمانمئة وتسعة وثمانين، ومن فوقه تشاهد المدينة كلها. ويضم متحف اللوفر آلاف التحف الفنية، وأشهرها لوحة الموناليزا. وفي آخر شارع الشانزليزيه يقف قوس النصر الضخم، وخارج باريس يوجد قصر فرساي بحدائقه الواسعة. الفرنسيون يفطرون بالكرواسون والخبز الطويل الطازج، ومطبخهم مسجّل في قائمة تراث اليونسكو. وتعتبر باريس من أهم عواصم الموضة والفن في العالم، واللغة الفرنسية لغة رسمية في أكثر من خمس وعشرين دولة.'},
+      food:[['الكرواسون','مخبوز الفطور الشهير'],['الباغيت','الخبز الفرنسي الطويل'],['الكريب','فطائر رقيقة حلوة ومالحة']]},
   de:{id:'276', name:'ألمانيا', lat:52.52, lon:13.40, greet:'Hallo', greetRo:'هالو',
       culture:[['الدقة والنظام','الالتزام بالمواعيد قيمة مهمة'],['صناعة السيارات','بلد أشهر شركات السيارات'],['الموسيقى الكلاسيكية','بلد بيتهوفن وباخ']],
       wear:[['اللِدرهوزن','سروال جلدي تقليدي في بافاريا'],['الدرندل','فستان تقليدي للنساء']],
       sights:[['بوابة براندنبورغ','رمز برلين'],['قلعة نويشفانشتاين','قلعة القصص الخيالية'],['كاتدرائية كولونيا','من أكبر كاتدرائيات أوروبا'],['جدار برلين','بقايا تحكي تاريخ المدينة']],
-      food:[['البريتزل','خبز معقود مملّح'],['النقانق','بأنواع كثيرة'],['كعكة الغابة السوداء','بالشوكولاتة والكرز']],
-      script:'مرحباً من برلين! في ألمانيا تقف بوابة براندنبورغ رمزاً لوحدة البلاد، وما زالت بقايا جدار برلين تحكي قصة المدينة التي كانت مقسومة نصفين. وفي الجنوب ترتفع قلعة نويشفانشتاين فوق الجبال، وتشبه قلاع القصص الخيالية. الألمان مشهورون بالدقة والالتزام بالمواعيد، وبصناعة السيارات القوية التي تسير في كل مكان. وهي بلد الموسيقار بيتهوفن والموسيقار باخ. ومن أشهر أكلاتها خبز البريتزل المعقود، وكعكة الغابة السوداء بالشوكولاتة والكرز. وفي منطقة بافاريا يلبس الناس الأزياء التقليدية في المهرجانات الشعبية.'},
+      food:[['البريتزل','خبز معقود مملّح'],['النقانق','بأنواع كثيرة'],['كعكة الغابة السوداء','بالشوكولاتة والكرز']]},
   es:{id:'724', name:'إسبانيا', lat:40.42, lon:-3.70, greet:'¡Hola!', greetRo:'أولا',
       culture:[['الفلامنكو','غناء ورقص وعزف جيتار من الأندلس'],['الإرث الأندلسي','قرون من الحضارة الإسلامية'],['كرة القدم','ريال مدريد وبرشلونة']],
       wear:[['فستان الفلامنكو','بالكشكشة والألوان الزاهية'],['المانتيلا','شال دانتيل تقليدي']],
       sights:[['قصر الحمراء','في غرناطة، من روائع العمارة الأندلسية'],['مسجد قرطبة','الجامع الكبير بأقواسه الشهيرة'],['ساغرادا فاميليا','كنيسة غاودي في برشلونة'],['القصر الملكي','في مدريد']],
-      food:[['الباييا','رز بالزعفران والمأكولات البحرية'],['التورتيا الإسبانية','عجة البطاطس'],['التشوروس','حلى مقلي مع الشوكولاتة']],
-      script:'مرحباً من مدريد! في إسبانيا يقف قصر الحمراء في غرناطة شاهداً على الحضارة الأندلسية التي استمرت قروناً طويلة، ويحتضن مسجد قرطبة الكبير أقواسه الحمراء والبيضاء الشهيرة. وفي برشلونة ترتفع كنيسة ساغرادا فاميليا التي ما زال بناؤها مستمراً منذ أكثر من مئة عام. الإسبان يحبون رقص الفلامنكو بفساتينه الملونة وأنغام الجيتار، ويعشقون كرة القدم، ففيها ناديا ريال مدريد وبرشلونة. ومن أشهر أطباقهم الباييا بالزعفران، وعجة البطاطس، وحلى التشوروس مع الشوكولاتة الساخنة.'},
+      food:[['الباييا','رز بالزعفران والمأكولات البحرية'],['التورتيا الإسبانية','عجة البطاطس'],['التشوروس','حلى مقلي مع الشوكولاتة']]},
   it:{id:'380', name:'إيطاليا', lat:41.9, lon:12.5, greet:'Ciao!', greetRo:'تشاو',
       culture:[['عصر النهضة','دافنشي ومايكل أنجلو'],['الأوبرا','وُلدت في إيطاليا'],['العائلة والأكل','وجبات طويلة تجمع الأهل']],
       wear:[['ميلانو عاصمة الموضة','من أهم مدن الأزياء في العالم'],['الأزياء الشعبية','تختلف من منطقة لمنطقة']],
       sights:[['الكولوسيوم','مدرج روماني عمره ألفي سنة'],['برج بيزا المائل','أشهر برج مائل في العالم'],['قنوات البندقية','مدينة على الماء'],['نافورة تريفي','في روما']],
-      food:[['البيتزا','أصلها من نابولي'],['الباستا','بمئات الأشكال'],['الجيلاتو','الآيسكريم الإيطالي']],
-      script:'مرحباً من روما! في إيطاليا يقف الكولوسيوم الروماني منذ ما يقارب ألفي سنة، وكان يتسع لعشرات الآلاف من الناس. وفي مدينة بيزا برج مائل يزوره الملايين ويلتقطون الصور معه. أما البندقية فهي مدينة مبنية على الماء، يتنقل الناس فيها بالقوارب بين القنوات. والإيطاليون يفتخرون بالبيتزا التي بدأت في مدينة نابولي، وبالمكرونة بأشكالها الكثيرة، وبالآيسكريم الإيطالي اللذيذ. وهي بلد فناني عصر النهضة مثل دافنشي ومايكل أنجلو، وتعتبر مدينة ميلانو من أهم عواصم الموضة في العالم.'},
+      food:[['البيتزا','أصلها من نابولي'],['الباستا','بمئات الأشكال'],['الجيلاتو','الآيسكريم الإيطالي']]},
   tr:{id:'792', name:'تركيا', lat:41.01, lon:28.98, greet:'Merhaba', greetRo:'مرحبا',
       culture:[['الضيافة والشاي','الشاي التركي في كاسات صغيرة طوال اليوم'],['مدينة بين قارتين','إسطنبول تقع في أوروبا وآسيا'],['الحمّام التركي','تقليد عمره قرون']],
       wear:[['الطربوش','قبعة تقليدية من العهد العثماني'],['المطرزات الأناضولية','نقوش وألوان زاهية']],
       sights:[['آيا صوفيا','تحفة معمارية عمرها 1500 سنة'],['الجامع الأزرق','بقبابه ومآذنه الست'],['كابادوكيا','المناطيد فوق الصخور العجيبة'],['البازار الكبير','من أقدم الأسواق المسقوفة']],
-      food:[['الكباب والدونر','أشهر المشويات'],['البقلاوة','حلى بالفستق'],['الحلقوم التركي','حلوى ملونة طرية']],
-      script:'مرحباً من إسطنبول! في تركيا مدينة فريدة تقع بين قارتي آسيا وأوروبا، ويفصل بينهما مضيق البوسفور. وفيها مسجد آيا صوفيا الذي عمره ألف وخمسمئة سنة، والجامع الأزرق بقبابه ومآذنه الست، والسوق الكبير المسقوف الذي يعد من أقدم أسواق العالم. الأتراك يشربون الشاي في كاسات صغيرة طوال اليوم، ويكرمون ضيوفهم بالبقلاوة بالفستق والحلقوم الملون. وفي منطقة كابادوكيا تطير المناطيد الملونة فوق الصخور العجيبة عند شروق الشمس، في منظر لا يُنسى.'},
+      food:[['الكباب والدونر','أشهر المشويات'],['البقلاوة','حلى بالفستق'],['الحلقوم التركي','حلوى ملونة طرية']]},
   ru:{id:'643', name:'روسيا', lat:55.76, lon:37.62, greet:'Здравствуйте', greetRo:'زدراستفويتي',
       culture:[['أكبر دولة في العالم','تمتد عبر 11 منطقة زمنية'],['الباليه','من أشهر مدارس الباليه عالمياً'],['الأدب','تولستوي ودوستويفسكي']],
       wear:[['الأوشانكا','قبعة الفرو للشتاء البارد'],['الماتريوشكا','دمى خشبية متداخلة بزي تقليدي']],
       sights:[['الساحة الحمراء','قلب موسكو'],['كاتدرائية القديس باسيل','بقبابها الملونة'],['الكرملين','مقر الحكم التاريخي'],['بحيرة بايكال','أعمق بحيرة في العالم']],
-      food:[['البورش','شوربة الشمندر الحمراء'],['البليني','فطائر رقيقة'],['البيلميني','زلابية محشوة باللحم']],
-      script:'مرحباً من موسكو! روسيا أكبر دولة في العالم من حيث المساحة، وتمتد عبر إحدى عشرة منطقة زمنية، فحين تشرق الشمس في شرقها يكون الليل في غربها. في الساحة الحمراء تقف كاتدرائية القديس باسيل بقبابها الملونة بجانب أسوار الكرملين التاريخية. الروس يلبسون قبعات الفرو في الشتاء القارس، ويحبون فن الباليه وروايات الأدباء مثل تولستوي ودوستويفسكي. ومن أشهر أكلاتهم شوربة الشمندر الحمراء والفطائر الرقيقة. وفي سيبيريا توجد بحيرة بايكال، أعمق بحيرة على وجه الأرض.'},
+      food:[['البورش','شوربة الشمندر الحمراء'],['البليني','فطائر رقيقة'],['البيلميني','زلابية محشوة باللحم']]},
   in:{id:'356', name:'الهند', lat:28.61, lon:77.21, greet:'नमस्ते', greetRo:'ناماستي',
       culture:[['تنوّع هائل','مئات اللغات وثقافات متعددة'],['مهرجان الألوان','احتفالات بالألوان والأضواء'],['السينما','بوليوود من أكبر صناعات الأفلام']],
       wear:[['الساري','قطعة قماش طويلة ملونة للنساء'],['الكورتا','قميص طويل للرجال']],
       sights:[['تاج محل','من عجائب الدنيا السبع الجديدة'],['البوابة الهندية','في نيودلهي'],['القلعة الحمراء','من العهد المغولي'],['جبال الهيمالايا','أعلى قمم العالم']],
-      food:[['البرياني','رز بالبهارات واللحم'],['الكاري','صلصات بالتوابل'],['خبز النان','يُخبز في التنور']],
-      script:'مرحباً من نيودلهي! في الهند يقف تاج محل الأبيض، أحد عجائب الدنيا السبع الجديدة، وقد بناه إمبراطور مغولي تخليداً لذكرى زوجته. وفي دلهي تقع القلعة الحمراء الضخمة من عهد المغول. الهند بلد التنوع، فيها مئات اللغات والألوان والمهرجانات، وفي الشمال ترتفع جبال الهيمالايا بأعلى قمم العالم. النساء يلبسن الساري الملون، والرجال يلبسون الكورتا الطويلة. والهنود يحبون البرياني والكاري وخبز النان المخبوز في التنور، وتنتج مدينة بومباي آلاف الأفلام كل سنة.'},
+      food:[['البرياني','رز بالبهارات واللحم'],['الكاري','صلصات بالتوابل'],['خبز النان','يُخبز في التنور']]},
   cn:{id:'156', name:'الصين', lat:39.90, lon:116.40, greet:'你好', greetRo:'ني هاو',
       culture:[['رأس السنة القمرية','الفوانيس الحمراء والألعاب النارية'],['الخط الصيني','فن الكتابة بالفرشاة'],['حضارة عمرها آلاف السنين','من أقدم حضارات العالم']],
       wear:[['التشيباو','فستان صيني أنيق بياقة عالية'],['الهانفو','الزي التقليدي القديم']],
       sights:[['سور الصين العظيم','يمتد آلاف الكيلومترات'],['المدينة المحرمة','قصر الأباطرة في بكين'],['جيش التيراكوتا','آلاف التماثيل الطينية'],['معبد السماء','في بكين']],
-      food:[['البط البكيني','أشهر أطباق بكين'],['الدمبلنغ','زلابية محشوة'],['النودلز','بأشكال وطرق كثيرة']],
-      script:'مرحباً من بكين! في الصين يمتد سور الصين العظيم آلاف الكيلومترات فوق الجبال والوديان، وقد بُني على مدى مئات السنين لحماية البلاد. وفي قلب بكين تقع المدينة المحرمة، قصر الأباطرة القديم الذي يضم مئات المباني. وفي مدينة شيآن يقف جيش التيراكوتا، آلاف التماثيل الطينية لجنود بأحجام حقيقية. الصينيون يحتفلون برأس السنة القمرية بالفوانيس الحمراء والألعاب النارية، ويكتبون بفن الخط بالفرشاة. وحضارتهم من أقدم حضارات العالم، ومن أشهر أطباقهم البط البكيني والزلابية المحشوة والنودلز.'},
+      food:[['البط البكيني','أشهر أطباق بكين'],['الدمبلنغ','زلابية محشوة'],['النودلز','بأشكال وطرق كثيرة']]},
   jp:{id:'392', name:'اليابان', lat:35.68, lon:139.69, greet:'こんにちは', greetRo:'كونيتشيوا',
       culture:[['الانحناء للتحية','تعبير عن الاحترام'],['حفل الشاي','طقس هادئ لتحضير شاي الماتشا'],['تفتّح الساكورا','موسم أزهار الكرز في الربيع'],['الأنمي والمانغا','فن ياباني منتشر عالمياً']],
       wear:[['الكيمونو','الزي التقليدي للمناسبات'],['اليوكاتا','كيمونو قطني خفيف للصيف']],
       sights:[['جبل فوجي','أعلى جبل في اليابان'],['الجناح الذهبي','معبد كينكاكوجي في كيوتو'],['بوابات فوشيمي إيناري','آلاف البوابات البرتقالية'],['برج طوكيو سكاي تري','من أطول الأبراج في العالم']],
-      food:[['السوشي','رز مع سمك وخضار'],['الرامن','شوربة نودلز'],['التمبورا','خضار وروبيان مقلي بخفة']],
-      script:'مرحباً من طوكيو! في اليابان يرتفع جبل فوجي بقمته البيضاء، وهو أعلى جبل في البلاد. وفي الربيع يتجمع الناس تحت أشجار الكرز الوردية للاحتفال بتفتح أزهار الساكورا. وفي مدينة كيوتو يلمع المعبد الذهبي فوق البحيرة، وتصطف آلاف البوابات البرتقالية في طريق الجبل. اليابانيون ينحنون عند التحية احتراماً للآخرين، ويحتفظون بحفل الشاي التقليدي ولبس الكيمونو في المناسبات. ومن أشهر أطباقهم السوشي والرامن والتمبورا، ومن اليابان انتشر الأنمي والمانغا إلى كل العالم، وفيها قطارات سريعة جداً تسمى الطلقة.'},
+      food:[['السوشي','رز مع سمك وخضار'],['الرامن','شوربة نودلز'],['التمبورا','خضار وروبيان مقلي بخفة']]},
   kr:{id:'410', name:'كوريا الجنوبية', lat:37.57, lon:126.98, greet:'안녕하세요', greetRo:'أنيونغ هاسيو',
       culture:[['الكيبوب والدراما الكورية','موجة ثقافية منتشرة عالمياً'],['الهانغول','أبجدية اخترعها الملك سيجونغ في القرن 15'],['احترام الكبار','قيمة أساسية في المجتمع']],
       wear:[['الهانبوك','زي تقليدي ملوّن بخطوط ناعمة، يُلبس في الأعياد']],
       sights:[['قصر غيونغبوكغونغ','أكبر القصور الملكية في سيول'],['برج سيول (نامسان)','إطلالة على المدينة كاملة'],['جزيرة جيجو','جزيرة بركانية طبيعية'],['قرية بوكتشون هانوك','بيوت كورية تقليدية']],
-      food:[['الكيمتشي','خضار مخللة حارة'],['البيبيمباب','رز مع خضار ولحم وبيض'],['البولغوجي','لحم مشوي متبّل']],
-      script:'مرحباً من سيول! في كوريا الجنوبية يقف قصر غيونغبوكغونغ الملكي، أكبر القصور التاريخية في العاصمة، ويطل برج سيول على المدينة كلها من فوق الجبل. وفي جزيرة جيجو البركانية شواطئ وشلالات وطبيعة ساحرة. الكوريون يكتبون بأبجدية الهانغول التي اخترعها الملك سيجونغ قبل ستمئة سنة تقريباً، ويلبسون الهانبوك الملون في الأعياد، ويحترمون كبار السن احتراماً كبيراً. وانتشرت موسيقى الكيبوب والدراما الكورية في كل العالم، ومن أشهر أكلاتهم الكيمتشي الحار، والبيبيمباب، واللحم المشوي.'},
+      food:[['الكيمتشي','خضار مخللة حارة'],['البيبيمباب','رز مع خضار ولحم وبيض'],['البولغوجي','لحم مشوي متبّل']]},
   id:{id:'360', name:'إندونيسيا', lat:-6.2, lon:106.85, greet:'Halo', greetRo:'هالو',
       culture:[['أكبر دولة إسلامية سكاناً','أكثر من 200 مليون مسلم'],['أرخبيل الجزر','أكثر من 17 ألف جزيرة'],['فن الباتيك','قماش مرسوم بالشمع، مسجّل في اليونسكو']],
       wear:[['الباتيك','قمصان وأقمشة بنقوش يدوية'],['الكبايا','بلوزة تقليدية مطرزة للنساء']],
       sights:[['جزيرة بالي','شواطئ ومزارع أرز مدرّجة'],['معبد بوروبودور','من أكبر المعابد البوذية في العالم'],['جامع الاستقلال','أكبر مسجد في جنوب شرق آسيا'],['جزيرة كومودو','موطن تنين كومودو']],
-      food:[['الناسي غورينغ','رز مقلي بالصلصة'],['الساتيه','أسياخ لحم مشوي بصلصة الفول السوداني'],['الرندانغ','لحم مطبوخ بجوز الهند والبهارات']],
-      script:'مرحباً من جاكرتا! إندونيسيا بلد يتكون من أكثر من سبعة عشر ألف جزيرة، وهي أكبر دولة إسلامية من حيث عدد السكان. وفي العاصمة جاكرتا يقف جامع الاستقلال، أكبر مسجد في جنوب شرق آسيا. أما جزيرة بالي فمشهورة بشواطئها الجميلة ومزارع الأرز المدرجة على سفوح الجبال، وفي جزيرة كومودو تعيش أكبر سحلية في العالم. الإندونيسيون يلبسون قماش الباتيك المرسوم يدوياً بالشمع، وهو مسجّل في تراث اليونسكو. ويحبون الرز المقلي، وأسياخ الساتيه بصلصة الفول السوداني، ولحم الرندانغ بجوز الهند.'},
+      food:[['الناسي غورينغ','رز مقلي بالصلصة'],['الساتيه','أسياخ لحم مشوي بصلصة الفول السوداني'],['الرندانغ','لحم مطبوخ بجوز الهند والبهارات']]},
 };
 LANGS.forEach((l,i)=>{ const c = COUNTRIES[l.flag]; c.lang = i; c.city = l.city; c.color = l.map; });
 const ORDER = ['sa', ...LANGS.map(l=>l.flag)];
+const PICS = {"sa": {"culture": [["القهوة السعودية", "Arabic coffee"], ["العرضة السعودية", "Ardah"], ["الصقور", "Falconry"]], "wear": [["الثوب", "Thawb"], ["البشت", "Bisht (clothing)"]], "sights": [["المسجد النبوي", "Al-Masjid an-Nabawi"], ["الحِجر في العُلا", "Hegra (Mada'in Salih)"], ["الدرعية", "Diriyah"], ["قلعة تبوك", "Tabuk Castle"]], "food": [["الكبسة", "Kabsa"], ["الجريش", "Jareesh"], ["التمر", "Date palm"]]}, "gb": {"culture": [["شاي العصر", "Afternoon tea"], ["حافلة لندن الحمراء", "Routemaster"]], "wear": [["التنورة الاسكتلندية", "Kilt"], ["حرس الملك", "King's Guard"]], "sights": [["بيغ بن", "Big Ben"], ["جسر البرج", "Tower Bridge"], ["ستونهنج", "Stonehenge"], ["قلعة إدنبرة", "Edinburgh Castle"]], "food": [["فيش آند تشيبس", "Fish and chips"], ["الفطور الإنجليزي", "Full breakfast"], ["السكونز", "Scone"]]}, "fr": {"culture": [["الموناليزا", "Mona Lisa"], ["المطبخ الفرنسي", "French cuisine"]], "wear": [["البيريه", "Beret"], ["الأزياء الراقية", "Haute couture"]], "sights": [["برج إيفل", "Eiffel Tower"], ["متحف اللوفر", "Louvre"], ["قوس النصر", "Arc de Triomphe"], ["قصر فرساي", "Palace of Versailles"]], "food": [["الكرواسون", "Croissant"], ["الباغيت", "Baguette"], ["الكريب", "Crêpe"]]}, "de": {"culture": [["أسواق الشتاء", "Christmas market"], ["بيتهوفن", "Ludwig van Beethoven"]], "wear": [["اللِدرهوزن", "Lederhosen"], ["الدرندل", "Dirndl"]], "sights": [["بوابة براندنبورغ", "Brandenburg Gate"], ["قلعة نويشفانشتاين", "Neuschwanstein Castle"], ["كاتدرائية كولونيا", "Cologne Cathedral"]], "food": [["البريتزل", "Pretzel"], ["كعكة الغابة السوداء", "Black Forest gateau"]]}, "es": {"culture": [["الفلامنكو", "Flamenco"], ["الجيتار الإسباني", "Classical guitar"]], "wear": [["فستان الفلامنكو", "Traje de flamenca"], ["المانتيلا", "Mantilla"]], "sights": [["قصر الحمراء", "Alhambra"], ["مسجد قرطبة", "Mosque–Cathedral of Córdoba"], ["ساغرادا فاميليا", "Sagrada Família"]], "food": [["الباييا", "Paella"], ["عجة البطاطس", "Spanish omelette"], ["التشوروس", "Churro"]]}, "it": {"culture": [["دار أوبرا لا سكالا", "La Scala"], ["قوارب الجندول", "Gondola"]], "wear": [["أقنعة البندقية", "Venetian mask"], ["أسبوع ميلانو للموضة", "Milan Fashion Week"]], "sights": [["الكولوسيوم", "Colosseum"], ["برج بيزا المائل", "Leaning Tower of Pisa"], ["البندقية", "Venice"], ["نافورة تريفي", "Trevi Fountain"]], "food": [["البيتزا", "Pizza"], ["الباستا", "Pasta"], ["الجيلاتو", "Gelato"]]}, "tr": {"culture": [["الشاي التركي", "Turkish tea"], ["القهوة التركية", "Turkish coffee"]], "wear": [["الطربوش", "Fez"], ["السجاد التركي", "Turkish carpet"]], "sights": [["آيا صوفيا", "Hagia Sophia"], ["الجامع الأزرق", "Blue Mosque"], ["كابادوكيا", "Cappadocia"], ["البازار الكبير", "Grand Bazaar, Istanbul"]], "food": [["البقلاوة", "Baklava"], ["الحلقوم", "Turkish delight"], ["الدونر", "Doner kebab"]]}, "ru": {"culture": [["الماتريوشكا", "Matryoshka doll"], ["مسرح البولشوي", "Bolshoi Theatre"]], "wear": [["قبعة الأوشانكا", "Ushanka"], ["الكوكوشنيك", "Kokoshnik"]], "sights": [["الساحة الحمراء", "Red Square"], ["كاتدرائية القديس باسيل", "Saint Basil's Cathedral"], ["الكرملين", "Moscow Kremlin"], ["بحيرة بايكال", "Lake Baikal"]], "food": [["البورش", "Borscht"], ["البليني", "Blini"], ["البيلميني", "Pelmeni"]]}, "in": {"culture": [["مهرجان الألوان", "Holi"], ["رقص بهاراتاناتيام", "Bharatanatyam"]], "wear": [["الساري", "Sari"], ["الكورتا", "Kurta"]], "sights": [["تاج محل", "Taj Mahal"], ["القلعة الحمراء", "Red Fort"], ["بوابة الهند", "India Gate"], ["جبال الهيمالايا", "Himalayas"]], "food": [["البرياني", "Biryani"], ["خبز النان", "Naan"], ["الكاري", "Curry"]]}, "cn": {"culture": [["رأس السنة الصينية", "Chinese New Year"], ["الخط الصيني", "Chinese calligraphy"]], "wear": [["التشيباو", "Cheongsam"], ["الهانفو", "Hanfu"]], "sights": [["سور الصين العظيم", "Great Wall of China"], ["المدينة المحرمة", "Forbidden City"], ["جيش التيراكوتا", "Terracotta Army"], ["معبد السماء", "Temple of Heaven"]], "food": [["البط البكيني", "Peking duck"], ["الدمبلنغ", "Jiaozi"], ["النودلز", "Chinese noodles"]]}, "jp": {"culture": [["حفل الشاي", "Japanese tea ceremony"], ["أزهار الساكورا", "Cherry blossom"]], "wear": [["الكيمونو", "Kimono"], ["اليوكاتا", "Yukata"]], "sights": [["جبل فوجي", "Mount Fuji"], ["الجناح الذهبي", "Kinkaku-ji"], ["فوشيمي إيناري", "Fushimi Inari-taisha"], ["طوكيو سكاي تري", "Tokyo Skytree"]], "food": [["السوشي", "Sushi"], ["الرامن", "Ramen"], ["التمبورا", "Tempura"]]}, "kr": {"culture": [["أبجدية الهانغول", "Hangul"], ["الطبول الكورية", "Samulnori"]], "wear": [["الهانبوك", "Hanbok"]], "sights": [["قصر غيونغبوكغونغ", "Gyeongbokgung"], ["برج سيول", "N Seoul Tower"], ["جزيرة جيجو", "Jeju Island"], ["قرية بوكتشون", "Bukchon Hanok Village"]], "food": [["الكيمتشي", "Kimchi"], ["البيبيمباب", "Bibimbap"], ["البولغوجي", "Bulgogi"]]}, "id": {"culture": [["فن الباتيك", "Batik"], ["موسيقى الغاميلان", "Gamelan"]], "wear": [["الكبايا", "Kebaya"], ["السونغكيت", "Songket"]], "sights": [["جامع الاستقلال", "Istiqlal Mosque, Jakarta"], ["معبد بوروبودور", "Borobudur"], ["جزيرة بالي", "Bali"], ["تنين كومودو", "Komodo dragon"]], "food": [["الناسي غورينغ", "Nasi goreng"], ["الساتيه", "Satay"], ["الرندانغ", "Rendang"]]}};
 
 $('flagStrip').innerHTML = ORDER.map(code=>{
   const c = COUNTRIES[code], l = c.lang!=null ? LANGS[c.lang] : null;
@@ -906,10 +907,35 @@ async function loadWorld(){
   else $('mapLoading').textContent = 'ما قدرنا نحمّل الخريطة (تأكد من الإنترنت)، بس الأعلام تحت شغالة';
 }
 
+/* --- culture photos from Wikipedia (cached per device) --- */
+let picCache = {}; try { picCache = JSON.parse(localStorage.getItem('wikiPics')||'{}'); } catch(e){}
+function savePics(){ try { localStorage.setItem('wikiPics', JSON.stringify(picCache)); } catch(e){} }
+async function wikiImg(title){
+  if (picCache[title] !== undefined) return picCache[title];
+  try {
+    const r = await fetch('https://en.wikipedia.org/api/rest_v1/page/summary/' + encodeURIComponent(title.replace(/ /g,'_')));
+    if (!r.ok) throw new Error('HTTP '+r.status);
+    const d = await r.json();
+    let u = (d.thumbnail && d.thumbnail.source) || (d.originalimage && d.originalimage.source) || '';
+    if (u) u = u.replace(/\/(\d+)px-/, '/480px-');
+    picCache[title] = u; savePics(); return u;
+  } catch(e){ log('pic '+title+': '+e.message); return ''; }
+}
+function loadPics(root){
+  root.querySelectorAll('.pic[data-wiki]').forEach(async f=>{
+    const u = await wikiImg(f.dataset.wiki); if (!u) return;
+    const img = f.querySelector('img');
+    img.onload = ()=>{ img.classList.add('ok'); f.classList.add('loaded'); };
+    img.onerror = ()=>{ delete picCache[f.dataset.wiki]; savePics(); };
+    img.src = u;
+  });
+}
+
 /* --- culture card --- */
 function openCountry(code){
   const c = COUNTRIES[code]; if (!c) return;
-  const li = arr => arr.map(([t,d])=>`<li>${esc(t)}<small>${esc(d)}</small></li>`).join('');
+  const P = PICS[code] || {}, ICON = {culture:'🎭',wear:'👘',sights:'🏛️',food:'🍽️'};
+  const grid = k => `<div class="pics">${(P[k]||[]).map(([t,w])=>`<figure class="pic" data-wiki="${esc(w)}"><span class="ph">${ICON[k]}</span><img alt="${esc(t)}" loading="lazy"><figcaption>${esc(t)}</figcaption></figure>`).join('')}</div>`;
   const i = c.lang, l = i!=null ? LANGS[i] : null, has = trip.code===code && players[0];
   $('ccBox').innerHTML = `
     <div class="cc-head">
@@ -918,17 +944,19 @@ function openCountry(code){
       <button type="button" class="iconbtn x" id="ccClose" aria-label="إغلاق">✕</button>
     </div>
     <div class="cc-body">
-      <section class="cc-sec"><h4>🎭 الثقافة</h4><ul>${li(c.culture)}</ul></section>
-      <section class="cc-sec"><h4>👘 الأزياء التقليدية</h4><ul>${li(c.wear)}</ul></section>
-      <section class="cc-sec"><h4>🏛️ أشهر المعالم</h4><ul>${li(c.sights)}</ul></section>
-      <section class="cc-sec"><h4>🍽️ أشهر الأطباق</h4><ul>${li(c.food)}</ul></section>
+      <section class="cc-sec"><h4>🎭 الثقافة</h4>${grid('culture')}</section>
+      <section class="cc-sec"><h4>👘 الأزياء التقليدية</h4>${grid('wear')}</section>
+      <section class="cc-sec"><h4>🏛️ أشهر المعالم</h4>${grid('sights')}</section>
+      <section class="cc-sec"><h4>🍽️ أشهر الأطباق</h4>${grid('food')}</section>
     </div>
+    <div class="credit">الصور من ويكيبيديا (Wikimedia Commons)</div>
     <div class="cc-foot">
       ${l ? `<button type="button" class="btn gold" id="ccGo">✈ سافر إلى ${esc(c.name)} بصوتك</button>${has ? `<button type="button" class="btn" id="ccPlay">▶ اسمع صوتك بـ${l.ar}</button>` : ''}` : `<span class="hint">✈ من هنا تنطلق الرحلة إلى ${LANGS.length} دولة. اختر وجهتك من الخريطة</span>`}
       <button type="button" class="btn" id="ccDone">رجوع</button>
     </div>`;
   ORDER.forEach(k=>markMap(k, k===code));
-  const d = $('countryDlg'); if (!d.open) d.showModal();
+  const d = $('countryDlg'); if (!d.open) d.showModal(); d.scrollTop = 0;
+  loadPics($('ccBox'));
   $('ccClose').onclick = $('ccDone').onclick = ()=>d.close();
   if (has) $('ccPlay').onclick = ()=>{ d.close(); playOne(0); };
   if (l) $('ccGo').onclick = ()=>{ d.close(); chooseCountry(code); };
@@ -965,7 +993,7 @@ $('countrySearch').addEventListener('keydown', e=>{
 $('searchList').addEventListener('mousedown', e=>{ const li = e.target.closest('li[data-cc]'); if (li){ e.preventDefault(); pickSearch(li.dataset.cc); } });
 document.addEventListener('click', e=>{ if (!e.target.closest('#searchBox')) $('searchList').hidden = true; });
 
-/* --- choose destination → reading script + message --- */
+/* --- choose destination → 30s self-intro + message --- */
 function chooseCountry(code){
   if (rec.phase) return;
   const c = COUNTRIES[code], l = LANGS[c.lang];
@@ -973,7 +1001,6 @@ function chooseCountry(code){
   $('pickBox').hidden = true; $('tripBox').hidden = false;
   $('destHead').innerHTML = `<div class="fl">${flagSVG(code)}</div><div><h3>رحلتك إلى ${esc(c.name)}</h3><small>بتسمع صوتك بـ${l.ar} · ${esc(l.name)}</small></div><button type="button" class="btn mini" id="changeDest">تغيير الدولة</button>`;
   $('changeDest').onclick = ()=>{ if (!rec.phase) $('map').scrollIntoView({behavior:'smooth', block:'start'}); };
-  $('ph1Label').textContent = 'اقرأ عن ' + c.name;
   ORDER.forEach(k=>markMap(k, k===code));
   resetRecordUI();
   show('record');
@@ -1071,8 +1098,7 @@ $('recBtn').addEventListener('click', async ()=>{
   const now = performance.now();
   if (rec.phase===1){
     const el = (now-rec.t0)/1000;
-    if (el < MIN_ABOUT){ warn(`كمّل كلام شوي… باقي ${Math.ceil(MIN_ABOUT-el)} ث`); return; }
-    toPhase2(); return;
+    warn(`كمّل كلام عن نفسك… باقي ${Math.ceil(ABOUT_SECS-el)} ث، وبعدها تنتقل للرسالة تلقائياً`); return;
   }
   if (rec.phase===2){
     const m = (now-rec.p2)/1000;
@@ -1098,11 +1124,12 @@ function onTick(){
   const now = performance.now();
   if (rec.phase===1){
     const el = (now-rec.t0)/1000;
-    setPrompt(COUNTRIES[trip.code].script, 'اقرأ النص بصوت واضح… ولما تخلص اضغط "التالي"', false, true);
-    setRing(el/cfg.aboutSecs);
-    $('recLabel').textContent = el<MIN_ABOUT ? 'اقرأ…' : 'التالي: الرسالة ←';
-    if (now > rec.warnUntil) $('timer').textContent = `🔴 المرحلة الأولى · ${Math.floor(el)} ث من ${cfg.aboutSecs}`;
-    if (el >= cfg.aboutSecs) toPhase2();
+    const pr = PROMPTS(COUNTRIES[trip.code]);
+    setPrompt('💬 ' + pr[Math.floor(el/7) % pr.length], 'تكلّم براحتك بأي كلام عن نفسك… وبعد 30 ثانية تطلع لك الرسالة تلقائياً');
+    setRing(el/ABOUT_SECS);
+    $('recLabel').textContent = `عرّف بنفسك · ${Math.max(0,Math.ceil(ABOUT_SECS-el))}`;
+    if (now > rec.warnUntil) $('timer').textContent = `🔴 عرّف بنفسك · باقي ${Math.max(0,Math.ceil(ABOUT_SECS-el))} ث`;
+    if (el >= ABOUT_SECS) toPhase2();
   } else if (rec.phase===2){
     const m = (now-rec.p2)/1000;
     setRing(m/cfg.msgSecs);
@@ -1250,7 +1277,7 @@ async function translate(text, target, srcHint){
 /* ---- Claude translation: one target language, two parts (reading + message) ---- */
 async function claudeTranslate(parts, l){
   const sys = `You translate short spoken texts recorded by visitors at a university "World Students Day" booth in Tabuk, Saudi Arabia.
-The visitor read a short Arabic passage about a country ("about"), then spoke a personal message to someone they love ("msg"), usually in Saudi colloquial Arabic, possibly with small speech-to-text errors.
+The visitor first introduced themselves freely ("about"), then spoke a personal message to someone they love ("msg"), usually in Saudi colloquial Arabic, possibly with small speech-to-text errors.
 Translate BOTH into ${l.tn}. Translate the MEANING naturally (not word-for-word).
 Rules:
 - It will be read aloud by a text-to-speech voice, so write natural spoken sentences; keep the message warm and personal.
@@ -1317,10 +1344,8 @@ async function runTrip(sample, msgAt, clean){
 
     step(3);
     const code = trip.code, c = COUNTRIES[code], l = LANGS[c.lang];
-    // reading part: use the known script (more accurate than speech-to-text) when they read most of it
-    const heardAbout = parts ? parts.about : (msgAt==null ? '' : heard.text);
-    const aboutAr = heardAbout && heardAbout.length >= c.script.length*0.55 ? c.script : (heardAbout || (msgAt==null ? '' : c.script));
-    const msgAr = capText(parts ? parts.msg : (msgAt==null ? heard.text : ''));
+    const aboutAr = capText(parts ? parts.about : heard.text);
+    const msgAr = capText(parts ? parts.msg : '');
     let tr = null;
     if (cfg.ckey){ try { tr = await claudeTranslate({about:aboutAr, msg:msgAr}, l); log('claude translated'); } catch(e){ log('claude failed, using google: '+e.message); } }
     if (!tr){ tr = {about: aboutAr ? await translate(aboutAr, l.tl, 'ar') : '', msg: msgAr ? await translate(msgAr, l.tl, heard.lang) : ''}; }
@@ -1339,7 +1364,7 @@ async function runTrip(sample, msgAt, clean){
 }
 function renderSaid(about, msg){
   const c = COUNTRIES[trip.code];
-  $('said').innerHTML = (about ? `<div class="blk"><span class="lbl">قرأت عن ${esc(c.name)}</span>${esc(about)}</div>` : '') +
+  $('said').innerHTML = (about ? `<div class="blk"><span class="lbl">عرّفت بنفسك</span>${esc(about)}</div>` : '') +
     (msg ? `<div class="blk love"><span class="lbl">💌 رسالتك</span>${esc(msg)}</div>` : '');
 }
 function friendly(e){
@@ -1473,7 +1498,7 @@ function resetRecordUI(){
   rec.phase = 0; clearInterval(rec.tick); setRing(0); setPhase(0);
   $('recBtn').classList.remove('live'); $('recLabel').textContent = 'ابدأ الرحلة';
   $('consent').disabled = false; $('consent').checked = false; $('recBtn').disabled = true; $('altRec').disabled = true;
-  if (trip.code) setPrompt(COUNTRIES[trip.code].script, 'لما تضغط الزر اقرأ هذا النص، وبعده وجّه رسالة لشخص تحبه 💌', false, true);
+  if (trip.code) setPrompt('اضغط الزر وتكلّم 30 ثانية عن نفسك بالكلام اللي تبيه', 'وبعدها تطلع لك تلقائياً: 💌 وجّه رسالة لشخص تحبه باسمه');
   $('timer').textContent = 'علّم الموافقة أولاً';
   if (altMode) enableAlt();
 }
