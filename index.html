@@ -1294,7 +1294,7 @@ function onTick(){
     if (m >= cfg.msgSecs) stopRec();
   }
 }
-function toPhase2(){ rec.phase = 2; rec.p2 = performance.now(); setPhase(2); setPrompt(MSG_PROMPT, MSG_HINT, true); setRing(0); }
+function toPhase2(){ rec.phase = 2; rec.p2 = performance.now(); setPhase(2); setPrompt(MSG_PROMPT, MSG_HINT, true); setRing(0); startEarly(); }
 function stopRec(){
   if (!rec.phase) return;
   rec.phase = 0; clearInterval(rec.tick);
@@ -1308,6 +1308,7 @@ async function onRecStop(){
   rec.stream && rec.stream.getTracks().forEach(t=>t.stop());
   if (dur < 10){ resetRecordUI(); showErr('التسجيل قصير. تكلّم 20 ثانية على الأقل.'); return; }
   const blob = new Blob(rec.chunks, {type: rec.mr.mimeType || 'audio/webm'});
+  if (early.done && msgAt != null){ fastTrip(blob, msgAt); return; }
   show('work'); step(1);
   let wav;
   let clean = null;
@@ -1481,6 +1482,105 @@ function reportUsage(before){
   setTimeout(poll, 8000);
 }
 let players = [], blobs = [];
+/* ================= fast pipeline: work starts while the visitor is still talking =================
+   At the switch to the message (after the 30s intro) we already have enough audio to:
+   clone the voice + transcribe the intro + translate it + voice it. When they press stop,
+   only the short message is left: transcribe → translate → voice (in parallel where possible). */
+const early = {done:null};
+async function cloneVoice(file){
+  const fd = new FormData();
+  fd.append('name', PREFIX + new Date().toISOString().replace(/[:.]/g,'-'));
+  fd.append('description', 'Temporary Student Day booth voice - auto deleted');
+  fd.append('remove_background_noise', cfg.noise ? 'true' : 'false');
+  fd.append('files', file, file.type==='audio/wav'?'sample.wav':(file.name||'sample.webm'));
+  const id = (await (await api('/voices/add', {method:'POST', body:fd})).json()).voice_id;
+  cfg.pending.push(id); saveCfg(); return id;
+}
+async function sliceWav(blob, fromSec){
+  const AC = window.AudioContext || window.webkitAudioContext; const ac = new AC();
+  const buf = await ac.decodeAudioData(await blob.arrayBuffer()); ac.close && ac.close();
+  const sr = buf.sampleRate, from = Math.max(0, Math.floor(fromSec*sr)), n = buf.length - from, ch = buf.numberOfChannels;
+  const mono = new Float32Array(Math.max(0,n));
+  for (let c=0;c<ch;c++){ const d = buf.getChannelData(c); for (let i=0;i<n;i++) mono[i] += d[from+i]/ch; }
+  return encodeWav(mono, sr);
+}
+function blobDuration(blob){ return new Promise(res=>{ const a = new Audio(); a.preload = 'metadata'; a.onloadedmetadata = ()=>{ res(isFinite(a.duration) ? a.duration : 0); URL.revokeObjectURL(a.src); }; a.onerror = ()=>res(0); a.src = URL.createObjectURL(blob); }); }
+async function partAudio(voiceId, segs){
+  if (!segs || !segs.length) return null;
+  const {blob, starts} = await ttsTimed(voiceId, segs);
+  const dur = await blobDuration(blob);
+  return {blob, dur, starts: (starts||[]).map(x=> x < 0 ? -x*dur : x)};
+}
+async function translatePart(l, which, ar, srcLang){
+  if (!ar) return [];
+  if (cfg.ckey){ try { const o = await claudeTranslate(which==='msg' ? {about:'', msg:ar} : {about:ar, msg:''}, l); const r = which==='msg' ? o.msg : o.about; if (r.length) return r; } catch(e){ log('claude failed, using google: '+e.message); } }
+  return await translateSegs(ar, l, srcLang || 'ar');
+}
+function finishTrip(code, aSegs, mSegs, aA, mA){
+  const segs = [...aSegs.map(x=>({...x})), ...mSegs.map(x=>({...x, love:true}))];
+  const st = [...(aA ? aA.starts : []), ...(mA ? mA.starts.map(x=>x + (aA ? aA.dur : 0)) : [])];
+  segs.forEach((x,i)=>x.start = st[i] != null ? st[i] : null);
+  const blob = new Blob([aA && aA.blob, mA && mA.blob].filter(Boolean), {type:'audio/mpeg'});
+  sess.trips[code] = {tr:{about:aSegs, msg:mSegs}, blob, segs};
+}
+function startEarly(){
+  if (altMode || !rec.mr) return;
+  const code = trip.code, l = LANGS[COUNTRIES[code].lang];
+  early.done = (async ()=>{
+    try { rec.mr.requestData(); } catch(e){}
+    await new Promise(r=>setTimeout(r,150));
+    const b1 = new Blob(rec.chunks.slice(), {type: rec.mr.mimeType || 'audio/webm'});
+    const wav1 = await toWav(b1);
+    let cl1 = null; if (cfg.cleanAudio !== false){ try { cl1 = await cleanForClone(b1); } catch(e){} }
+    const cloneP = cloneVoice(cl1 || wav1); cloneP.catch(()=>{});
+    const heard = await transcribe(wav1);
+    const aboutAr = capText(heard.text || '');
+    const aSegsP = translatePart(l, 'about', aboutAr, 'ar'); aSegsP.catch(()=>{});
+    let voiceId;
+    try { voiceId = await cloneP; } catch(e){ throw e; }
+    const aSegs = await aSegsP;
+    const aA = await partAudio(voiceId, aSegs);
+    log('early part ready');
+    return {voiceId, aboutAr, lang: heard.lang, aSegs, aA, code};
+  })();
+  early.done.catch(e=>log('early failed: '+e.message));
+}
+async function fastTrip(full, msgAt){
+  const code = trip.code, l = LANGS[COUNTRIES[code].lang];
+  const before = lastCredits; ttsChars = 0; $('usage').dataset.time = ''; clockStart();
+  show('work'); step(1);
+  let E = null;
+  try {
+    // message part: its own short audio → transcribe while the intro work finishes
+    const msgWav = await sliceWav(full, Math.max(0, msgAt - 0.3));
+    const heardM = await transcribe(msgWav);
+    clockMark('stt msg');
+    const msgAr = capText(heardM.text || '');
+    step(2);
+    const mSegsP = translatePart(l, 'msg', msgAr, heardM.lang); mSegsP.catch(()=>{});
+    try { E = await early.done; } catch(e){ E = null; }
+    if (!E){ log('early part failed, doing it now'); early.done = null; const wav = await toWav(full); let cl = null; try { cl = await cleanForClone(full); } catch(e){} return runTrip(wav, msgAt, cl); }
+    clockMark('intro ready');
+    if (!E.aboutAr && !msgAr) throw new Error('NO_SPEECH');
+    step(3);
+    const mSegs = await mSegsP; clockMark('translate msg');
+    step(4);
+    const mA = await partAudio(E.voiceId, mSegs.map(x=>({...x, love:true})));
+    clockMark('voice msg');
+    sess.voiceId = E.voiceId; sess.about = E.aboutAr; sess.msg = msgAr; sess.lang = E.lang || heardM.lang; sess.trips = {};
+    finishTrip(code, E.aSegs, mSegs, E.aA, mA);
+    E = null; touchSess();
+    showTrip(code);
+  } catch(e){
+    log('trip error: '+e.message); show('record'); resetRecordUI(); showErr(friendly(e), e.message);
+    if (E && E.voiceId) deleteVoice(E.voiceId);
+  } finally {
+    early.done = null;
+    const t = clockStop(); if (sess.trips[code]) $('usage').dataset.time = t.toFixed(1);
+    reportUsage(before);
+  }
+}
+
 /* stopwatch for each step (shown on the work screen + in the log) */
 const clock = {t0:0, marks:[], tick:0};
 function clockStart(){ clock.t0 = performance.now(); clock.marks = []; clearInterval(clock.tick); clock.tick = setInterval(()=>{ const el = $('workClock'); if (el) el.textContent = ((performance.now()-clock.t0)/1000).toFixed(1) + ' ث'; }, 100); }
@@ -1543,6 +1643,15 @@ async function translateFor(l){
 }
 async function makeTrip(code, trP){
   const c = COUNTRIES[code], l = LANGS[c.lang];
+  if (!trP){
+    trip.code = code; show('work'); step(3);
+    const [aSegs, mSegs] = await Promise.all([translatePart(l,'about',sess.about,'ar'), translatePart(l,'msg',sess.msg,sess.lang)]);
+    clockMark('translate'); step(4);
+    const [aA, mA] = await Promise.all([partAudio(sess.voiceId, aSegs), partAudio(sess.voiceId, mSegs.map(x=>({...x, love:true})))]);
+    clockMark('voice');
+    finishTrip(code, aSegs, mSegs, aA, mA);
+    return showTrip(code);
+  }
   trip.code = code; show('work'); step(3);
   const tr = await (trP || translateFor(l));
   step(4);
@@ -1748,6 +1857,7 @@ $('otherCountry').addEventListener('click', ()=>{
   $('map').scrollIntoView({behavior:'smooth', block:'start'});
 });
 function resetRecordUI(){
+  if (early.done){ const d = early.done; early.done = null; d.then(E=>{ if (E && E.voiceId && E.voiceId !== sess.voiceId) deleteVoice(E.voiceId); }).catch(()=>{}); }
   rec.phase = 0; clearInterval(rec.tick); setRing(0); setPhase(0);
   $('recBtn').classList.remove('live'); $('recLabel').textContent = 'ابدأ الرحلة';
   $('consent').disabled = false; $('consent').checked = false; $('recBtn').disabled = true; $('altRec').disabled = true;
