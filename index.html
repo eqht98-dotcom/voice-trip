@@ -223,6 +223,19 @@ h1{
 .err{display:none;width:100%;max-width:820px;background:rgba(120,30,40,.35);border:1px solid rgba(233,120,130,.5);color:#ffd9dc;border-radius:16px;padding:14px 18px;font-size:15px;line-height:1.7}
 .err code{direction:ltr;display:block;text-align:left;margin-top:6px;opacity:.75;font-size:12px;white-space:pre-wrap;overflow-wrap:anywhere}
 
+.search{position:relative;width:100%;max-width:560px;z-index:5}
+.search input{width:100%;min-height:52px;padding:12px 48px 12px 16px;border-radius:999px;border:1px solid var(--gold-line);background:rgba(6,10,19,.75);color:var(--cream);font-family:var(--f-body);font-size:17px;-webkit-appearance:none;appearance:none}
+.search input::placeholder{color:var(--muted)}
+.search input:focus{outline:2px solid var(--gold);outline-offset:1px}
+.search .s-ic{position:absolute;right:18px;top:50%;transform:translateY(-50%);font-size:18px;pointer-events:none}
+.s-list{position:absolute;inset-inline:0;top:calc(100% + 6px);margin:0;padding:6px;list-style:none;background:var(--navy-2);border:1px solid var(--gold-line);border-radius:18px;box-shadow:0 18px 40px rgba(0,0,0,.5);max-height:320px;overflow:auto}
+.s-list li{display:flex;align-items:center;gap:12px;padding:8px 10px;border-radius:12px;cursor:pointer;font-size:16px}
+.s-list li[aria-selected="true"],.s-list li:hover{background:rgba(214,180,106,.14)}
+.s-list li .fl{width:42px;aspect-ratio:3/2;border-radius:5px;overflow:hidden;flex:none;box-shadow:0 0 0 1px var(--gold-line)}
+.s-list li .fl svg{display:block;width:100%;height:100%}
+.s-list li small{display:block;color:var(--muted);font-size:13px}
+.s-list li.none{cursor:default;color:var(--muted);justify-content:center}
+
 /* ---------- trip picker ---------- */
 .pick{display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;padding:18px 0}
 .pick-ic{font-size:44px}
@@ -398,6 +411,11 @@ details.logbox summary{cursor:pointer;color:var(--muted);font-size:14px;padding:
     <p class="sub">اختر دولة على الخريطة، اكتشف ثقافتها، واقرأ عنها بالعربي… واسمع نفسك تتكلم لغتها بصوتك</p>
     <section class="mapwrap" aria-label="خريطة العالم التفاعلية">
       <div class="maphint">🗺️ <b>خريطة العالم التفاعلية</b> · اضغط على أي دولة ملوّنة واكتشف ثقافتها وأزياءها ومعالمها وأطباقها، وسافر إليها بصوتك</div>
+      <div class="search" id="searchBox">
+        <span class="s-ic" aria-hidden="true">🔍</span>
+        <input type="search" id="countrySearch" placeholder="ابحث عن دولة… (مثلاً: اليابان، Japan، طوكيو)" autocomplete="off" aria-label="ابحث عن دولة" aria-controls="searchList">
+        <ul class="s-list" id="searchList" role="listbox" hidden></ul>
+      </div>
       <div class="map" id="map"><svg id="mapSvg" role="img" aria-label="خريطة الرحلة من تبوك إلى خمس دول"></svg><div class="loading" id="mapLoading">…جاري تحميل الخريطة</div></div>
       <div class="flags" id="flagStrip"></div>
     </section>
@@ -916,6 +934,34 @@ function openCountry(code){
 $('countryDlg').addEventListener('close', ()=>ORDER.forEach(k=>markMap(k,false)));
 $('countryDlg').addEventListener('click', e=>{ if (e.target === $('countryDlg')) $('countryDlg').close(); });
 loadWorld();
+
+/* --- country search --- */
+const ALIASES = {sa:'saudi arabia ksa السعوديه المملكه',gb:'united kingdom uk britain england بريطانيا انجلترا انقلترا',fr:'france فرنسا',de:'germany المانيا',es:'spain اسبانيا',it:'italy ايطاليا',tr:'turkey turkiye تركيا',ru:'russia روسيا',in:'india الهند هند',cn:'china الصين صين',jp:'japan اليابان يابان',kr:'korea south korea كوريا',id:'indonesia اندونيسيا'};
+const norm = t => String(t||'').toLowerCase().replace(/[\u064B-\u0652\u0640]/g,'').replace(/[أإآ]/g,'ا').replace(/ة/g,'ه').replace(/ى/g,'ي').replace(/^ال/,'').replace(/\s+ال/g,' ').trim();
+const SEARCH = ORDER.map(code=>{ const c = COUNTRIES[code], l = c.lang!=null ? LANGS[c.lang] : null;
+  return {code, hay: norm([c.name, c.city, ALIASES[code]||'', l?l.name:'', l?l.cityEn:'', l?l.ar:'', l?l.ap:''].join(' '))}; });
+let sIdx = -1, sRes = [];
+function renderSearch(){
+  const q = norm($('countrySearch').value), list = $('searchList');
+  if (!q){ list.hidden = true; sRes = []; return; }
+  sRes = SEARCH.filter(x=>x.hay.includes(q)).map(x=>x.code);
+  sIdx = sRes.length ? 0 : -1;
+  list.innerHTML = sRes.length ? sRes.map((code,k)=>{ const c = COUNTRIES[code], l = c.lang!=null ? LANGS[c.lang] : null;
+      return `<li role="option" data-cc="${code}" aria-selected="${k===sIdx}"><span class="fl">${flagSVG(code)}</span><span>${esc(c.name)}<small>${esc(c.city)}${l?' · '+l.ar:' · نقطة الانطلاق'}</small></span></li>`; }).join('')
+    : `<li class="none">ما لقينا الدولة 😕 · الدول المتاحة ${LANGS.length} دولة، شوفها تحت الخريطة</li>`;
+  list.hidden = false;
+}
+function pickSearch(code){ $('countrySearch').value = ''; $('searchList').hidden = true; $('countrySearch').blur(); openCountry(code); }
+$('countrySearch').addEventListener('input', renderSearch);
+$('countrySearch').addEventListener('focus', renderSearch);
+$('countrySearch').addEventListener('keydown', e=>{
+  const items = [...$('searchList').querySelectorAll('li[data-cc]')];
+  if (e.key==='ArrowDown' || e.key==='ArrowUp'){ if (!items.length) return; e.preventDefault(); sIdx = (sIdx + (e.key==='ArrowDown'?1:-1) + items.length) % items.length; items.forEach((li,k)=>li.setAttribute('aria-selected', k===sIdx)); items[sIdx].scrollIntoView({block:'nearest'}); }
+  else if (e.key==='Enter'){ e.preventDefault(); if (sRes[sIdx]) pickSearch(sRes[sIdx]); }
+  else if (e.key==='Escape'){ $('searchList').hidden = true; }
+});
+$('searchList').addEventListener('mousedown', e=>{ const li = e.target.closest('li[data-cc]'); if (li){ e.preventDefault(); pickSearch(li.dataset.cc); } });
+document.addEventListener('click', e=>{ if (!e.target.closest('#searchBox')) $('searchList').hidden = true; });
 
 /* --- choose destination → reading script + message --- */
 function chooseCountry(code){
