@@ -323,6 +323,19 @@ h1{
   .map .pin .dot{r:9}
 }
 
+/* ---------- settings transfer ---------- */
+#xferDlg{width:min(420px,94vw);height:fit-content;max-height:92dvh;overflow:auto;margin:auto}
+.xfer{padding:22px;display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center}
+.xfer h3{margin:0;font-family:var(--f-display);color:var(--gold-hi);font-size:21px}
+.xfer p{margin:0;color:var(--muted);font-size:14px;line-height:1.7}
+.xfer .qrbig{background:#fff;padding:14px;border-radius:16px;line-height:0}
+.xfer .qrbig img,.xfer .qrbig canvas{width:min(300px,70vw)!important;height:auto!important}
+.xfer .warn{color:#ffc4c9;font-size:13px}
+.xfer .timer{color:var(--gold);font-variant-numeric:tabular-nums}
+.xfer ul{margin:0;padding:0;list-style:none;color:var(--cream);font-size:15px;line-height:1.9}
+.xfer .row{display:flex;gap:10px;width:100%}
+.xfer .row .btn{flex:1}
+
 /* ---------- PIN lock ---------- */
 #pinDlg{width:min(360px,92vw);height:fit-content;max-height:none;margin:auto;border:1px solid var(--gold-line);border-radius:22px;overflow:visible}
 .pin{padding:24px 22px 20px;display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center}
@@ -518,6 +531,7 @@ details.logbox summary{cursor:pointer;color:var(--muted);font-size:14px;padding:
 <dialog id="countryDlg">
   <div class="cc" id="ccBox"></div>
 </dialog>
+<dialog id="xferDlg"><div class="xfer" id="xferBox"></div></dialog>
 <dialog id="pinDlg">
   <form class="pin" id="pinForm" method="dialog">
     <div class="lock">🔒</div>
@@ -612,6 +626,7 @@ details.logbox summary{cursor:pointer;color:var(--muted);font-size:14px;padding:
 
       <section class="grp">
         <h4>صيانة</h4>
+        <button type="button" class="btn mini" id="xferBtn">📲 نقل الإعدادات لجهاز ثاني (QR)</button>
         <button type="button" class="btn mini" id="cleanup">🧹 احذف كل أصوات الزوار المتبقية</button>
         <details class="logbox"><summary>سجل الأخطاء</summary><div class="log" id="log"></div></details>
       </section>
@@ -1709,6 +1724,57 @@ function renderQRs(){
   });
 }
 addEventListener('load', renderQRs);
+/* ================= transfer settings to another device ================= */
+const XFER_FIELDS = ['key','ckey','cmodel','ukey','model','sim','stab','noise','cleanAudio','msgSecs','maxChars','wa'];
+const XFER_TTL = 10*60*1000;
+const b64e = str => btoa(unescape(encodeURIComponent(str))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+const b64d = str => decodeURIComponent(escape(atob(str.replace(/-/g,'+').replace(/_/g,'/'))));
+let xferTimer = 0;
+function closeXfer(){ clearInterval(xferTimer); $('xferBox').innerHTML = ''; if ($('xferDlg').open) $('xferDlg').close(); }
+$('xferDlg').addEventListener('close', ()=>{ clearInterval(xferTimer); $('xferBox').innerHTML = ''; });
+$('xferBtn').addEventListener('click', ()=>{
+  autoSave();
+  const data = {t: Date.now()}; XFER_FIELDS.forEach(k=>{ if (cfg[k]!==undefined && cfg[k]!=='') data[k] = cfg[k]; });
+  const url = location.origin + location.pathname + '#cfg=' + b64e(JSON.stringify(data));
+  const keys = [['key','ElevenLabs'],['ckey','Claude'],['ukey','Unsplash']].filter(([k])=>cfg[k]).map(([,n])=>n);
+  $('xferBox').innerHTML = `<h3>📲 نقل الإعدادات</h3>
+    <p>افتح كاميرا التابلت وامسح الكود، وافتح الرابط اللي يطلع</p>
+    <div class="qrbig" id="xferQr"></div>
+    <div class="timer" id="xferLeft"></div>
+    <p>ينقل: ${keys.length ? 'مفاتيح '+keys.join(' و') : 'بدون مفاتيح'} + إعدادات الصوت والترجمة</p>
+    <p class="warn">⚠️ الكود فيه مفاتيحك. لا تخلي أحد يصوّره، ويوقف بعد 10 دقايق.</p>
+    <button type="button" class="btn" id="xferClose">إغلاق</button>`;
+  try { new QRCode($('xferQr'), {text:url, width:600, height:600, colorDark:'#000000', colorLight:'#ffffff', correctLevel:QRCode.CorrectLevel.L}); }
+  catch(e){ $('xferQr').textContent = 'ما قدرنا نرسم الكود (تأكد من الإنترنت)'; log('xfer qr: '+e.message); }
+  $('xferClose').onclick = closeXfer;
+  const end = data.t + XFER_TTL;
+  const tick = ()=>{ const left = end - Date.now(); if (left <= 0){ $('xferQr').innerHTML = '<p style="color:#333;padding:40px">انتهت صلاحية الكود</p>'; $('xferLeft').textContent = ''; clearInterval(xferTimer); return; } $('xferLeft').textContent = `صالح لمدة ${Math.floor(left/60000)}:${String(Math.floor(left/1000)%60).padStart(2,'0')}`; };
+  tick(); clearInterval(xferTimer); xferTimer = setInterval(tick, 1000);
+  $('settings').close(); $('xferDlg').showModal();
+});
+(function importFromHash(){
+  const m = location.hash.match(/^#cfg=([A-Za-z0-9_-]+)/); if (!m) return;
+  history.replaceState(null, '', location.pathname + location.search);
+  let data = null; try { data = JSON.parse(b64d(m[1])); } catch(e){}
+  const box = $('xferBox');
+  if (!data || typeof data !== 'object'){ box.innerHTML = '<h3>الكود غير صالح</h3><p>جرّب تسوي كود جديد من الجهاز الثاني.</p><button type="button" class="btn" id="xferClose">إغلاق</button>'; }
+  else if (!data.t || Date.now() - data.t > XFER_TTL){ box.innerHTML = '<h3>⏳ انتهت صلاحية الكود</h3><p>الكود يشتغل 10 دقايق بس. سوّ كود جديد من الإعدادات في الجهاز الثاني.</p><button type="button" class="btn" id="xferClose">إغلاق</button>'; }
+  else {
+    const has = [['key','مفتاح ElevenLabs'],['ckey','مفتاح Claude'],['ukey','مفتاح Unsplash']].map(([k,n])=>`<li>${data[k]?'✅':'—'} ${n}</li>`).join('');
+    box.innerHTML = `<h3>📥 استيراد الإعدادات</h3><p>وصلت إعدادات من جهاز ثاني:</p><ul>${has}<li>✅ إعدادات الصوت والترجمة</li></ul>
+      <p>لو فيه إعدادات في هذا الجهاز بتنستبدل.</p>
+      <div class="row"><button type="button" class="btn" id="xferNo">إلغاء</button><button type="button" class="btn gold" id="xferYes">استيراد</button></div>`;
+    $('xferNo').onclick = closeXfer;
+    $('xferYes').onclick = ()=>{
+      XFER_FIELDS.forEach(k=>{ if (data[k]!==undefined) cfg[k] = data[k]; }); saveCfg(); refreshCredits();
+      box.innerHTML = '<h3>✅ تم الاستيراد</h3><p>الإعدادات والمفاتيح صارت محفوظة في هذا الجهاز.</p><p class="warn">للأمان: امسح سجل التصفح في هذا الجهاز، لأن الرابط كان فيه المفاتيح.</p><button type="button" class="btn gold" id="xferClose">تمام</button>';
+      $('xferClose').onclick = closeXfer;
+    };
+  }
+  const c = $('xferClose'); if (c) c.onclick = closeXfer;
+  $('xferDlg').showModal();
+})();
+
 setPhase(0);
 refreshCredits();
 retryPending();
