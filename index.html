@@ -546,9 +546,10 @@ details.logbox summary{cursor:pointer;color:var(--muted);font-size:14px;padding:
         </g>
       </g>
     </svg>
+    <div class="timer" id="workClock" style="font-size:22px;color:var(--gold-hi)">0.0 ث</div>
     <ul class="steps" id="steps">
-      <li data-s="1"><span class="dot">1</span>نسمع كلامك</li>
-      <li data-s="2"><span class="dot">2</span>ننسخ صوتك</li>
+      <li data-s="1"><span class="dot">1</span>نسمع كلامك وننسخ صوتك</li>
+      <li data-s="2"><span class="dot">2</span>نجهّز صوتك</li>
       <li data-s="3"><span class="dot">3</span>نترجم للغة الدولة</li>
       <li data-s="4"><span class="dot">4</span>نطبع تذكرتك</li>
     </ul>
@@ -715,7 +716,7 @@ const sess = {voiceId:null, about:'', msg:'', lang:'', trips:{}, idle:0};
 const SESS_IDLE = 15*60*1000;
 const PAUSE = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z"/></svg>';
 const CFG_VER = 6;
-const DEFAULTS = {ver:CFG_VER, key:'', model:'eleven_multilingual_v2', sim:1, stab:0.5, noise:true, aboutSecs:30, msgSecs:20, maxChars:700, wa:'', ckey:'', cmodel:'claude-haiku-5-5', pending:[]};
+const DEFAULTS = {ver:CFG_VER, key:'', model:'eleven_multilingual_v2', sim:1, stab:0.5, noise:false, aboutSecs:30, msgSecs:20, maxChars:700, wa:'', ckey:'', cmodel:'claude-haiku-5-5', pending:[]};
 
 let cfg = loadCfg();
 function loadCfg(){
@@ -1467,7 +1468,7 @@ const MODEL_RATE = {eleven_flash_v2_5:0.5, eleven_turbo_v2_5:0.5};
 function reportUsage(before){
   const rate = MODEL_RATE[cfg.model] ?? 1;
   const est = Math.round(ttsChars*rate);
-  const show = real => { $('usage').textContent = (real!=null ? `استهلكت هالرحلة: ${real.toLocaleString('en-US')} كريدت` : `تقدير استهلاك هالرحلة: ≈ ${est.toLocaleString('en-US')} كريدت للنطق`) + ` · ${ttsChars.toLocaleString('en-US')} حرف`; };
+  const show = real => { $('usage').textContent = ($('usage').dataset.time ? `⏱ جهزت في ${$('usage').dataset.time} ثانية · ` : '') + (real!=null ? `استهلكت هالرحلة: ${real.toLocaleString('en-US')} كريدت` : `تقدير استهلاك هالرحلة: ≈ ${est.toLocaleString('en-US')} كريدت للنطق`) + ` · ${ttsChars.toLocaleString('en-US')} حرف`; };
   show(null);
   if (before==null) return;
   let tries = 0;
@@ -1480,34 +1481,48 @@ function reportUsage(before){
   setTimeout(poll, 8000);
 }
 let players = [], blobs = [];
+/* stopwatch for each step (shown on the work screen + in the log) */
+const clock = {t0:0, marks:[], tick:0};
+function clockStart(){ clock.t0 = performance.now(); clock.marks = []; clearInterval(clock.tick); clock.tick = setInterval(()=>{ const el = $('workClock'); if (el) el.textContent = ((performance.now()-clock.t0)/1000).toFixed(1) + ' ث'; }, 100); }
+function clockMark(name){ const t = (performance.now()-clock.t0)/1000; clock.marks.push(name+' '+t.toFixed(1)+'ث'); log('⏱ '+name+' @ '+t.toFixed(1)+'s'); }
+function clockStop(){ clearInterval(clock.tick); const t = (performance.now()-clock.t0)/1000; log('⏱ total '+t.toFixed(1)+'s · '+clock.marks.join(' · ')); return t; }
+
 async function runTrip(sample, msgAt, clean){
   let voiceId = null; ttsChars = 0; sttSecs = 0;
-  const before = await refreshCredits();
+  const before = lastCredits; $('usage').dataset.time = '';
+  clockStart();
   try {
     step(1);
-    const heard = await transcribe(sample);
-    log('heard ['+heard.lang+']: '+heard.text);
-    if (!heard.text || heard.text.length < 3) throw new Error('NO_SPEECH');
-    const parts = splitByTime(heard.words, msgAt);
-
-    step(2);
+    // speech-to-text and voice cloning both only need the recording → run them at the same time
     const fd = new FormData();
     fd.append('name', PREFIX + new Date().toISOString().replace(/[:.]/g,'-'));
     fd.append('description', 'Temporary Student Day booth voice - auto deleted');
     fd.append('remove_background_noise', cfg.noise ? 'true' : 'false');
     const cloneSrc = (cfg.cleanAudio !== false && clean) ? clean : sample;
     fd.append('files', cloneSrc, cloneSrc.type==='audio/wav'?'sample.wav':(cloneSrc.name||'sample.webm'));
-    voiceId = (await (await api('/voices/add', {method:'POST', body:fd})).json()).voice_id;
-    cfg.pending.push(voiceId); saveCfg(); log('cloned '+voiceId);
+    const cloneP = api('/voices/add', {method:'POST', body:fd}).then(r=>r.json()).then(d=>{ voiceId = d.voice_id; cfg.pending.push(voiceId); saveCfg(); clockMark('clone'); return voiceId; });
+    cloneP.catch(()=>{});
 
-    sess.voiceId = voiceId; sess.about = capText(parts ? parts.about : heard.text); sess.msg = capText(parts ? parts.msg : ''); sess.lang = heard.lang; sess.trips = {};
-    voiceId = null;
+    const heard = await transcribe(sample);
+    clockMark('stt');
+    log('heard ['+heard.lang+']: '+heard.text);
+    if (!heard.text || heard.text.length < 3){ await cloneP.catch(()=>{}); throw new Error('NO_SPEECH'); }
+    const parts = splitByTime(heard.words, msgAt);
+    sess.about = capText(parts ? parts.about : heard.text); sess.msg = capText(parts ? parts.msg : ''); sess.lang = heard.lang; sess.trips = {};
+
+    // translation starts now, while the clone may still be finishing
+    step(2);
+    const trP = translateFor(LANGS[COUNTRIES[trip.code].lang]);
+    trP.catch(()=>{});
+    await cloneP;
+    sess.voiceId = voiceId; voiceId = null;
     touchSess();
-    await makeTrip(trip.code);
+    await makeTrip(trip.code, trP);
   } catch(e){
     log('trip error: '+e.message); show('record'); resetRecordUI(); showErr(friendly(e), e.message);
   } finally {
     if (voiceId){ await deleteVoice(voiceId); }
+    const t = clockStop(); if (sess.trips[trip.code]) $('usage').dataset.time = t.toFixed(1);
     reportUsage(before);
   }
 }
@@ -1519,15 +1534,21 @@ function splitAr(t){
   return out;
 }
 async function translateSegs(ar, l, src){ const out = []; for (const x of splitAr(ar)) out.push({ar:x, t: await translate(x, l.tl, src)}); return out; }
-async function makeTrip(code){
+async function translateFor(l){
+  let tr = null;
+  if (cfg.ckey){ try { tr = await claudeTranslate({about:sess.about, msg:sess.msg}, l); } catch(e){ log('claude failed, using google: '+e.message); } }
+  if (!tr){ tr = {about: sess.about ? await translateSegs(sess.about, l, 'ar') : [], msg: sess.msg ? await translateSegs(sess.msg, l, sess.lang) : []}; }
+  clockMark('translate');
+  return tr;
+}
+async function makeTrip(code, trP){
   const c = COUNTRIES[code], l = LANGS[c.lang];
   trip.code = code; show('work'); step(3);
-  let tr = null;
-  if (cfg.ckey){ try { tr = await claudeTranslate({about:sess.about, msg:sess.msg}, l); log('claude translated'); } catch(e){ log('claude failed, using google: '+e.message); } }
-  if (!tr){ tr = {about: sess.about ? await translateSegs(sess.about, l, 'ar') : [], msg: sess.msg ? await translateSegs(sess.msg, l, sess.lang) : []}; }
+  const tr = await (trP || translateFor(l));
   step(4);
   const segs = [...tr.about.map(x=>({...x})), ...tr.msg.map(x=>({...x, love:true}))];
   const {blob, starts} = await ttsTimed(sess.voiceId, segs);
+  clockMark('voice');
   segs.forEach((x,i)=>x.start = starts ? starts[i] : null);
   sess.trips[code] = {tr, blob, segs};
   showTrip(code);
@@ -1549,10 +1570,10 @@ function showTrip(code){
 }
 async function goCountry(code){
   if (sess.trips[code]) return showTrip(code);
-  const before = await refreshCredits(); ttsChars = 0;
+  const before = lastCredits; ttsChars = 0; $('usage').dataset.time = ''; clockStart();
   try { await makeTrip(code); }
   catch(e){ log('trip error: '+e.message); show('results'); showErr(friendly(e), e.message); }
-  finally { reportUsage(before); }
+  finally { const t = clockStop(); if (sess.trips[code]) $('usage').dataset.time = t.toFixed(1); reportUsage(before); }
 }
 function touchSess(){
   clearTimeout(sess.idle);
