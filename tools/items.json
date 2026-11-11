@@ -139,9 +139,10 @@
 "code": "fr",
 "sec": "culture",
 "i": 1,
-"ar": "الموناليزا في اللوفر",
-"wiki": "Louvre Pyramid",
-"q": "Louvre Pyramid"
+"ar": "المقاهي الباريسية",
+"wiki": "Café",
+"q": "Paris café terrace",
+"force": 1
 },
 {
 "code": "fr",
@@ -347,9 +348,10 @@
 "code": "it",
 "sec": "wear",
 "i": 1,
-"ar": "كرنفال البندقية",
+"ar": "أزياء كرنفال البندقية",
 "wiki": "Carnival of Venice",
-"q": "Carnival of Venice"
+"q": "Venice carnival costume",
+"force": 1
 },
 {
 "code": "it",
@@ -411,9 +413,10 @@
 "code": "tr",
 "sec": "wear",
 "i": 1,
-"ar": "السجاد التركي",
-"wiki": "Turkish carpet",
-"q": "Turkish carpet"
+"ar": "القفطان العثماني",
+"wiki": "Kaftan",
+"q": "Ottoman kaftan costume",
+"force": 1
 },
 {
 "code": "tr",

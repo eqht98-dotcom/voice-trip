@@ -11,7 +11,9 @@ def get(url, raw=False, tries=3):
                 if raw and len(b) >= 12_000_000: print('  too big', url[:100]); return None
                 return b if raw else json.loads(b)
         except Exception as e:
-            err = e; time.sleep(2*(k+1))
+            err = e
+            if getattr(e, 'code', 0) in (424, 404, 403): break
+            time.sleep(6*(k+1) if getattr(e, 'code', 0) == 429 else 2)
     print('  fail', url[:120], err); return None
 def commons(q, n=5):
     u = 'https://commons.wikimedia.org/w/api.php?' + urllib.parse.urlencode({'action':'query','generator':'search','gsrsearch':q+' filetype:bitmap','gsrnamespace':6,'gsrlimit':12,'prop':'imageinfo','iiprop':'url|size|extmetadata','iiurlwidth':960,'format':'json'})
@@ -37,7 +39,7 @@ def openverse(q, n=4):
     for r in d.get('results', []):
         u = r.get('url') or ''
         if 'staticflickr.com' in u and u.endswith('.jpg') and not u[-6:-4].startswith('_'): u = u[:-4] + '_b.jpg'
-        elif 'staticflickr.com' not in u: u = r.get('thumbnail') or u
+        elif 'staticflickr.com' not in u: continue
         out.append({'src':'openverse:'+(r.get('source') or ''),'thumb':u,'page':r.get('foreign_landing_url'),'author':r.get('creator') or '','license':(r.get('license') or '')+' '+(r.get('license_version') or '')})
         if len(out) >= n: break
     return out
@@ -45,11 +47,16 @@ def cover(b, W=800, H=600):
     im = Image.open(io.BytesIO(b)); im = ImageOps.exif_transpose(im).convert('RGB')
     return ImageOps.fit(im, (W, H), Image.LANCZOS)
 items = json.load(open('tools/items.json'))
-os.makedirs('cand', exist_ok=True); meta = {}
+os.makedirs('cand', exist_ok=True)
+meta = json.load(open('cand/meta.json')) if os.path.exists('cand/meta.json') else {}
 def work(it):
     key = f"{it['code']}_{it['sec']}_{it['i']}"
+    old = meta.get(key, {}).get('cands', [])
+    if not it.get('force') and len(old) >= 3: return key, meta[key]
+    if it.get('force'): old = []
+    time.sleep(1)
     cands = wikilead(it['wiki']) + commons(it['q']) + openverse(it['q'])
-    seen = set(); kept = []
+    kept = list(old); seen = set(c['thumb'] for c in kept)
     for c in cands:
         if not c.get('thumb') or c['thumb'] in seen: continue
         seen.add(c['thumb'])
@@ -62,7 +69,7 @@ def work(it):
         if len(kept) >= 8: break
     print(key, it['q'], len(kept), flush=True)
     return key, {'item': it, 'cands': kept}
-with ThreadPoolExecutor(6) as ex:
+with ThreadPoolExecutor(2) as ex:
     for key, v in ex.map(work, items): meta[key] = v
 json.dump(meta, open('cand/meta.json','w'), ensure_ascii=False, indent=1)
 # contact sheets per country: rows = items, columns = candidates
