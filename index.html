@@ -249,6 +249,8 @@ h1{
 .prompt .q.script{font-size:clamp(19px,2.2vw,25px);line-height:2;font-weight:500;text-align:center;max-width:720px}
 @media (max-width:600px){.prompt .q.script{font-size:18px;line-height:1.9}}
 .passes>.pass.solo{flex:1 1 100%;max-width:620px}
+.pass.solo .text{max-height:none;overflow:visible}
+.pass .text .arline{display:block;margin-top:6px;color:#6b5a35;font-size:14.5px;line-height:1.7;direction:rtl;text-align:right;font-family:var(--f-body)}
 .pass .text .msgline{display:block;margin-top:8px;padding-top:8px;border-top:1px dashed rgba(143,108,43,.4);color:#7a2f3a}
 
 /* ---------- world map ---------- */
@@ -490,7 +492,7 @@ details.logbox summary{cursor:pointer;color:var(--muted);font-size:14px;padding:
     <div class="pick" id="pickBox">
       <div class="pick-ic">🗺️</div>
       <h3>اختر دولة من الخريطة أو الأعلام فوق</h3>
-      <p>اضغط على الدولة، تعرّف على ثقافتها، وبعدها اضغط <b>"سافر إليها"</b> وابدأ التسجيل</p>
+      <p id="pickHint">اضغط على الدولة، تعرّف على ثقافتها، وبعدها اضغط <b>"سافر إليها"</b> وابدأ التسجيل</p>
     </div>
     <div id="tripBox" hidden>
     <div class="desthead" id="destHead"></div>
@@ -699,6 +701,9 @@ const MSG_HINT = 'مثلاً: «يا أمي، شكراً على كل شي… أ�
 const MIN_ABOUT = 10, MIN_MSG = 6, ABOUT_SECS = 30;
 const PROMPTS = c => ['عرّف بنفسك: وش اسمك؟ ووش تدرس؟', `ليش اخترت ${c.name}؟`, 'وش هوايتك؟ ومن متى بديت فيها؟', 'وش أكلتك المفضلة؟', 'لو تقدر تسافر بكرة، وين بتروح ومع مين؟'];
 const trip = {code:null};
+const sess = {voiceId:null, about:'', msg:'', lang:'', trips:{}, idle:0};
+const SESS_IDLE = 15*60*1000;
+const PAUSE = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z"/></svg>';
 const CFG_VER = 6;
 const DEFAULTS = {ver:CFG_VER, key:'', model:'eleven_multilingual_v2', sim:1, stab:0.5, noise:true, aboutSecs:30, msgSecs:20, maxChars:700, wa:'', ckey:'', cmodel:'claude-haiku-5-5', pending:[]};
 
@@ -1075,7 +1080,7 @@ function openCountry(code){
   const c = COUNTRIES[code]; if (!c) return;
   const P = PICS[code] || {}, ICON = {culture:'🎭',wear:'👘',sights:'🏛️',food:'🍽️'};
   const grid = k => `<div class="pics">${(P[k]||[]).map(([t,w])=>`<figure class="pic" data-wiki="${esc(w)}"><span class="ph">${ICON[k]}</span><img alt="${esc(t)}"><figcaption>${esc(t)}</figcaption></figure>`).join('')}</div>`;
-  const i = c.lang, l = i!=null ? LANGS[i] : null, has = trip.code===code && players[0];
+  const i = c.lang, l = i!=null ? LANGS[i] : null, has = !!sess.trips[code];
   $('ccBox').innerHTML = `
     <div class="cc-head">
       <div class="fl">${flagSVG(code)}</div>
@@ -1090,14 +1095,14 @@ function openCountry(code){
     </div>
     <div class="credit" id="picCredit"></div>
     <div class="cc-foot">
-      ${l ? `<button type="button" class="btn gold" id="ccGo">✈ سافر إلى ${esc(c.name)} بصوتك</button>${has ? `<button type="button" class="btn" id="ccPlay">▶ اسمع صوتك بـ${l.ar}</button>` : ''}` : `<span class="hint">✈ من هنا تنطلق الرحلة إلى ${LANGS.length} دولة. اختر وجهتك من الخريطة</span>`}
+      ${l ? `<button type="button" class="btn gold" id="ccGo">${sess.voiceId ? (has ? `🎫 افتح تذكرتك إلى ${esc(c.name)}` : `✈ اسمع صوتك بـ${l.ar} (بدون تسجيل)`) : `✈ سافر إلى ${esc(c.name)} بصوتك`}</button>${has ? `<button type="button" class="btn" id="ccPlay">▶ اسمع صوتك بـ${l.ar}</button>` : ''}` : `<span class="hint">✈ من هنا تنطلق الرحلة إلى ${LANGS.length} دولة. اختر وجهتك من الخريطة</span>`}
       <button type="button" class="btn" id="ccDone">رجوع</button>
     </div>`;
   ORDER.forEach(k=>markMap(k, k===code));
   const d = $('countryDlg'); if (!d.open) d.showModal(); d.scrollTop = 0;
   loadPics($('ccBox'));
   $('ccClose').onclick = $('ccDone').onclick = ()=>d.close();
-  if (has) $('ccPlay').onclick = ()=>{ d.close(); playOne(0); };
+  if (has) $('ccPlay').onclick = ()=>{ d.close(); showTrip(code); playOne(0); };
   if (l) $('ccGo').onclick = ()=>{ d.close(); chooseCountry(code); };
 }
 $('countryDlg').addEventListener('close', ()=>ORDER.forEach(k=>markMap(k,false)));
@@ -1135,6 +1140,7 @@ document.addEventListener('click', e=>{ if (!e.target.closest('#searchBox')) $('
 /* --- choose destination → 30s self-intro + message --- */
 function chooseCountry(code){
   if (rec.phase) return;
+  if (sess.voiceId){ clearErr(); return goCountry(code); }
   const c = COUNTRIES[code], l = LANGS[c.lang];
   trip.code = code;
   $('pickBox').hidden = true; $('tripBox').hidden = false;
@@ -1481,25 +1487,60 @@ async function runTrip(sample, msgAt, clean){
     voiceId = (await (await api('/voices/add', {method:'POST', body:fd})).json()).voice_id;
     cfg.pending.push(voiceId); saveCfg(); log('cloned '+voiceId);
 
-    step(3);
-    const code = trip.code, c = COUNTRIES[code], l = LANGS[c.lang];
-    const aboutAr = capText(parts ? parts.about : heard.text);
-    const msgAr = capText(parts ? parts.msg : '');
-    let tr = null;
-    if (cfg.ckey){ try { tr = await claudeTranslate({about:aboutAr, msg:msgAr}, l); log('claude translated'); } catch(e){ log('claude failed, using google: '+e.message); } }
-    if (!tr){ tr = {about: aboutAr ? await translate(aboutAr, l.tl, 'ar') : '', msg: msgAr ? await translate(msgAr, l.tl, heard.lang) : ''}; }
-    renderSaid(aboutAr, msgAr);
-    buildPasses();
-    step(4);
-    await genTrip(voiceId, tr);
-    show('results');
-    if (blobs.some(Boolean)){ $('saveTrip').hidden = false; $('toPhone').hidden = false; }
+    sess.voiceId = voiceId; sess.about = capText(parts ? parts.about : heard.text); sess.msg = capText(parts ? parts.msg : ''); sess.lang = heard.lang; sess.trips = {};
+    voiceId = null;
+    touchSess();
+    await makeTrip(trip.code);
   } catch(e){
     log('trip error: '+e.message); show('record'); resetRecordUI(); showErr(friendly(e), e.message);
   } finally {
-    if (voiceId){ const ok = await deleteVoice(voiceId); $('deletedNote').textContent = ok ? '🗑️ تم حذف نسخة صوتك من النظام' : '⚠️ ما انحذف الصوت تلقائياً. احذفه من الإعدادات (🧹)'; }
+    if (voiceId){ await deleteVoice(voiceId); }
     reportUsage(before);
   }
+}
+/* translate + voice for one country, reusing the visitor's saved voice */
+async function makeTrip(code){
+  const c = COUNTRIES[code], l = LANGS[c.lang];
+  trip.code = code; show('work'); step(3);
+  let tr = null;
+  if (cfg.ckey){ try { tr = await claudeTranslate({about:sess.about, msg:sess.msg}, l); log('claude translated'); } catch(e){ log('claude failed, using google: '+e.message); } }
+  if (!tr){ tr = {about: sess.about ? await translate(sess.about, l.tl, 'ar') : '', msg: sess.msg ? await translate(sess.msg, l.tl, sess.lang) : ''}; }
+  step(4);
+  const blob = await ttsBlob(sess.voiceId, tr);
+  sess.trips[code] = {tr, blob};
+  showTrip(code);
+}
+function showTrip(code){
+  trip.code = code; touchSess();
+  const t = sess.trips[code];
+  stopAll(); players.forEach(p=>p && URL.revokeObjectURL(p.src)); players = []; blobs = [];
+  renderSaid(sess.about, sess.msg);
+  buildPasses();
+  fillPass(t.tr);
+  blobs[0] = t.blob; players[0] = new Audio(URL.createObjectURL(t.blob));
+  const b = $('pass0').querySelector('.play'); b.disabled = false; b.innerHTML = PLAY;
+  $('saveTrip').hidden = false; $('toPhone').hidden = false;
+  const n = Object.keys(sess.trips).length;
+  $('deletedNote').textContent = `🔒 صوتك محفوظ مؤقتاً (سافرت لـ${n} ${n===1?'دولة':'دول'})، فتقدر تختار دولة ثانية بدون تسجيل. ينحذف لما تضغط «مسافر جديد» أو بعد 15 دقيقة.`;
+  ORDER.forEach(k=>markMap(k, k===code));
+  show('results');
+}
+async function goCountry(code){
+  if (sess.trips[code]) return showTrip(code);
+  const before = await refreshCredits(); ttsChars = 0;
+  try { await makeTrip(code); }
+  catch(e){ log('trip error: '+e.message); show('results'); showErr(friendly(e), e.message); }
+  finally { reportUsage(before); }
+}
+function touchSess(){
+  clearTimeout(sess.idle);
+  sess.idle = setTimeout(()=>{ if (sess.voiceId){ log('session idle: ending'); endSession(true); } }, SESS_IDLE);
+}
+async function endSession(resetUI){
+  clearTimeout(sess.idle);
+  const id = sess.voiceId; sess.voiceId = null; sess.about = sess.msg = ''; sess.trips = {};
+  if (id) await deleteVoice(id);
+  if (resetUI) $('newVisitor').click();
 }
 function renderSaid(about, msg){
   const c = COUNTRIES[trip.code];
@@ -1547,36 +1588,39 @@ function buildPasses(){
     </article>`;
   $('pass0').querySelector('.play').addEventListener('click', ()=>playOne(0));
 }
-async function genTrip(voiceId, tr){
-  const l = LANGS[COUNTRIES[trip.code].lang], card = $('pass0'), b = card.querySelector('.play'), tx = card.querySelector('.text');
-  const t = [tr.about, tr.msg].filter(x=>x && x.trim()).join('\n\n');
-  tx.textContent = tr.about || '';
-  if (tr.msg){ const m = document.createElement('span'); m.className = 'msgline'; m.textContent = '💌 ' + tr.msg; tx.appendChild(m); }
-  ttsChars += t.length;
-  try {
-    const call = model => api(`/text-to-speech/${voiceId}?output_format=mp3_44100_128`, {method:'POST', headers:{'Content-Type':'application/json','Accept':'audio/mpeg'},
-      body: JSON.stringify({text:t, model_id:model, voice_settings:{stability:+cfg.stab, similarity_boost:+cfg.sim, use_speaker_boost:true}})});
-    let r;
-    try { r = await call(cfg.model); }
-    catch(e){
-      if (cfg.model !== 'eleven_multilingual_v2' && /HTTP 4(00|04|22)/.test(e.message)){ log('model '+cfg.model+' rejected, fallback v2: '+e.message.slice(0,160)); r = await call('eleven_multilingual_v2'); }
-      else throw e;
-    }
-    const bl = await r.blob(); blobs[0] = bl;
-    players[0] = new Audio(URL.createObjectURL(bl));
-    b.disabled = false; b.innerHTML = PLAY;
-  } catch(e){ log('tts '+l.code+': '+e.message); card.classList.add('err'); b.innerHTML = '✕'; throw e; }
+function fillPass(tr){
+  const tx = $('pass0').querySelector('.text'); tx.textContent = '';
+  const add = (cls, text) => { const s = document.createElement('span'); s.className = cls; s.textContent = text; tx.appendChild(s); return s; };
+  if (tr.about){ const a = add('fg', tr.about); a.dir = 'auto'; if (sess.about) add('arline', '🇸🇦 ' + sess.about); }
+  if (tr.msg){ add('msgline', '💌 ' + tr.msg); if (sess.msg) add('arline', '🇸🇦 ' + sess.msg); }
 }
-function stopAll(){ players.forEach(p=>{ if(p){ p.pause(); p.currentTime=0; } }); document.querySelectorAll('.pass').forEach(c=>c.classList.remove('playing')); }
+async function ttsBlob(voiceId, tr){
+  const t = [tr.about, tr.msg].filter(x=>x && x.trim()).join('\n\n');
+  ttsChars += t.length;
+  const call = model => api(`/text-to-speech/${voiceId}?output_format=mp3_44100_128`, {method:'POST', headers:{'Content-Type':'application/json','Accept':'audio/mpeg'},
+    body: JSON.stringify({text:t, model_id:model, voice_settings:{stability:+cfg.stab, similarity_boost:+cfg.sim, use_speaker_boost:true}})});
+  let r;
+  try { r = await call(cfg.model); }
+  catch(e){
+    if (cfg.model !== 'eleven_multilingual_v2' && /HTTP 4(00|04|22)/.test(e.message)){ log('model '+cfg.model+' rejected, fallback v2: '+e.message.slice(0,160)); r = await call('eleven_multilingual_v2'); }
+    else throw e;
+  }
+  return await r.blob();
+}
+function setPlayUI(on){
+  const b = $('pass0') && $('pass0').querySelector('.play'); if (b && !b.disabled) b.innerHTML = on ? PAUSE : PLAY;
+  $('playAll').textContent = on ? '⏸ إيقاف' : '▶ اسمع رحلتك';
+  if ($('pass0')) $('pass0').classList.toggle('playing', on);
+}
+function stopAll(){ players.forEach(p=>{ if(p){ p.pause(); p.currentTime=0; } }); document.querySelectorAll('.pass').forEach(c=>c.classList.remove('playing')); setPlayUI(false); }
 function playOne(i){
-  return new Promise(res=>{
-    const p = players[i]; if (!p) return res();
-    stopAll(); const c = $('pass'+i), code = trip.code; c.classList.add('playing'); c.scrollIntoView({behavior:'smooth', block:'nearest'});
-    markMap(code, true);
-    p.onended = ()=>{ c.classList.remove('playing'); c.classList.add('stamped'); markVisited(code); res(); };
-    p.onerror = ()=>{ c.classList.remove('playing'); res(); };
-    p.play().catch(()=>res());
-  });
+  const p = players[i]; if (!p) return;
+  if (!p.paused){ p.pause(); setPlayUI(false); return; }
+  const c = $('pass'+i), code = trip.code; touchSess();
+  c.scrollIntoView({behavior:'smooth', block:'nearest'}); markMap(code, true);
+  p.onended = ()=>{ p.currentTime = 0; setPlayUI(false); c.classList.add('stamped'); markVisited(code); };
+  p.onerror = ()=>setPlayUI(false);
+  p.play().then(()=>setPlayUI(true)).catch(()=>setPlayUI(false));
 }
 $('playAll').addEventListener('click', ()=>playOne(0));
 function tripFile(){
@@ -1622,15 +1666,18 @@ $('saveTrip').addEventListener('click', async ()=>{
   $('saveHint').textContent = 'انحفظ الملف في جهاز البوث (التنزيلات). أرسله للزائر من هناك.'; $('saveHint').hidden = false;
 });
 $('newVisitor').addEventListener('click', ()=>{
+  if (sess.voiceId) endSession(false);
   stopAll(); clearVisited(); players.forEach(p=>p && URL.revokeObjectURL(p.src)); players=[]; blobs=[]; $('saveTrip').hidden = true; $('toPhone').hidden = true; $('saveHint').hidden = true; $('phoneBox').hidden = true; $('phoneQr').innerHTML='';
   $('passes').innerHTML=''; $('said').innerHTML=''; $('deletedNote').textContent=''; $('usage').textContent='';
+  $('pickHint').innerHTML = 'اضغط على الدولة، تعرّف على ثقافتها، وبعدها اضغط <b>"سافر إليها"</b> وابدأ التسجيل';
   clearErr(); trip.code = null; ORDER.forEach(k=>markMap(k,false)); $('tripBox').hidden = true; $('pickBox').hidden = false; resetRecordUI(); show('record');
   $('map').scrollIntoView({behavior:'smooth', block:'start'});
 });
 $('otherCountry').addEventListener('click', ()=>{
-  stopAll(); players.forEach(p=>p && URL.revokeObjectURL(p.src)); players=[]; blobs=[];
+  stopAll(); touchSess(); players.forEach(p=>p && URL.revokeObjectURL(p.src)); players=[]; blobs=[];
   $('passes').innerHTML=''; $('said').innerHTML=''; $('deletedNote').textContent=''; $('usage').textContent=''; $('phoneBox').hidden = true;
   clearErr(); trip.code = null; $('tripBox').hidden = true; $('pickBox').hidden = false; resetRecordUI(); show('record');
+  $('pickHint').innerHTML = '🔒 صوتك محفوظ: اختر أي دولة ثانية واسمع نفسك بلغتها على طول، <b>بدون تسجيل</b>';
   $('map').scrollIntoView({behavior:'smooth', block:'start'});
 });
 function resetRecordUI(){
