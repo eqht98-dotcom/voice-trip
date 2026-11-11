@@ -726,6 +726,7 @@ function loadCfg(){
   if ((c.ver||1) < CFG_VER) m = Object.assign({}, DEFAULTS, {key:c.key||'', wa:c.wa||'', ckey:c.ckey||'', ukey:c.ukey||'', picSrc:c.picSrc||'wiki', pinHash:c.pinHash||'', pending:Array.isArray(c.pending)?c.pending:[]});
   if (!Array.isArray(m.pending)) m.pending = [];
   m.aboutSecs = ABOUT_SECS;
+  if (!m.speedFix1){ m.noise = false; m.speedFix1 = true; }
   return m;
 }
 function saveCfg(){ try { localStorage.setItem('voiceTripCfg', JSON.stringify(cfg)); } catch(e) {} }
@@ -1533,8 +1534,9 @@ function startEarly(){
     try { rec.mr.requestData(); } catch(e){}
     await new Promise(r=>setTimeout(r,150));
     const b1 = new Blob(rec.chunks.slice(), {type: rec.mr.mimeType || 'audio/webm'});
-    const wav1 = await toWav(b1);
-    let cl1 = null; if (cfg.cleanAudio !== false){ try { cl1 = await cleanForClone(b1); } catch(e){} }
+    let wav1 = null; try { wav1 = await toWav(b1); } catch(e){ log('early decode failed, sending raw: '+e.message); }
+    let cl1 = null; if (wav1 && cfg.cleanAudio !== false){ try { cl1 = await cleanForClone(b1); } catch(e){} }
+    wav1 = wav1 || b1;
     em('تجهيز'); const cloneP = cloneVoice(cl1 || wav1).then(id=>{ em('نسخ'); return id; }); cloneP.catch(()=>{});
     const heard = await transcribe(wav1); em('نص');
     const aboutAr = capText(heard.text || '');
@@ -1555,8 +1557,9 @@ async function fastTrip(full, msgAt){
   let E = null;
   try {
     // message part: its own short audio → transcribe while the intro work finishes
-    const msgWav = await sliceWav(full, Math.max(0, msgAt - 0.3));
-    const heardM = await transcribe(msgWav);
+    let heardM;
+    try { const msgWav = await sliceWav(full, Math.max(0, msgAt - 0.3)); heardM = await transcribe(msgWav); }
+    catch(e){ log('slice failed, using full recording: '+e.message); const h = await transcribe(full); const pr = splitByTime(h.words, msgAt); heardM = {text: pr ? pr.msg : '', lang: h.lang, words: []}; }
     clockMark('نص الرسالة');
     const msgAr = capText(heardM.text || '');
     step(2);
