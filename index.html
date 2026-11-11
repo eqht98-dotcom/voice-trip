@@ -295,6 +295,7 @@ h1{
 .fann{min-height:2.6em;margin:0;text-align:center;color:var(--cream);font-size:clamp(15px,3.8vw,18px);transition:opacity .35s}
 .fann.out{opacity:0}
 .flight.sim .globe{display:none}
+#stageWork #steps,#stageWork #workClock{display:none}
 .map .pin{cursor:pointer}
 .map .pin .dot{fill:var(--gold-hi);stroke:#0b1424;stroke-width:2}
 .map .pin .halo{fill:none;stroke:var(--gold);stroke-width:2;opacity:.7;transform-box:fill-box;transform-origin:center;animation:halo 2.2s ease-out infinite}
@@ -608,7 +609,6 @@ details.logbox summary{cursor:pointer;color:var(--muted);font-size:14px;padding:
     <div class="waqr" id="phoneBox" hidden><div class="qr" id="phoneQr"></div><p id="phoneTxt">…جاري تجهيز الرابط</p></div>
     <div class="waqr" data-qr hidden><div class="qr"></div><p>تبي رحلتك على جوالك؟ امسح الكود وأرسل الرسالة<small>وبعدها نرسل لك الملف على واتساب</small></p></div>
     <div class="usage" id="saveHint" hidden>اختر التطبيق اللي تبيه (Quick Share، بلوتوث، إيميل…)</div>
-    <div class="usage" id="usage"></div>
   </section>
 
   <div class="err" id="err"></div>
@@ -640,6 +640,10 @@ details.logbox summary{cursor:pointer;color:var(--muted);font-size:14px;padding:
       <button type="button" class="iconbtn" id="closeSettings" aria-label="إغلاق">✕</button>
     </header>
     <div class="sh-body" id="shBody">
+      <section class="grp">
+        <h4>آخر رحلة ⏱</h4>
+        <div class="usage" id="usage" style="text-align:start;line-height:1.7">ما فيه رحلة للحين.</div>
+      </section>
       <section class="grp">
         <h4>الحساب</h4>
         <div class="field">
@@ -1063,7 +1067,7 @@ function startFlight(code){
   $('fsim').hidden = false; $('stageWork').classList.add('sim');
   const trail = $('fTrail'), plane = $('fPlane'), L = trail.getTotalLength(), D = kmBetween(home, c);
   trail.style.strokeDasharray = `${L} ${L}`;
-  const anns = [`مرحباً بكم على متن Voice Airways المتجهة إلى ${l.city} 🛫`, 'نرجو ربط الأحزمة… نسمع صوتك الحين 🎧', 'نحلّق فوق السحاب ونتعلّم نبرة صوتك ☁️', `طاقم الضيافة يترجم كلامك إلى ${l.ar} ✍️`, `بدأنا الاقتراب من ${l.city}… تذكرتك تنطبع 🎫`];
+  const anns = [`مرحباً بكم على متن Voice Airways المتجهة إلى ${l.city} 🛫`, 'نرجو ربط الأحزمة والاستعداد للإقلاع', 'نحلّق الآن فوق السحاب ☁️', `استمتعوا برحلتكم إلى ${c.name}`, `بدأنا الاقتراب من ${l.city} ✈`];
   let ai = 0; const fa = $('fAnn'); fa.textContent = anns[0]; fa.classList.remove('out');
   flight.ann = setInterval(()=>{ ai = Math.min(ai+1, anns.length-1); fa.classList.add('out'); setTimeout(()=>{ fa.textContent = anns[ai]; fa.classList.remove('out'); }, 350); }, 3600);
   const t0 = performance.now();
@@ -1818,7 +1822,6 @@ function showTrip(code){
   blobs[0] = t.blob; players[0] = new Audio(URL.createObjectURL(t.blob));
   const b = $('pass0').querySelector('.play'); b.disabled = false; b.innerHTML = PLAY;
   $('saveTrip').hidden = !!t.pending; $('toPhone').hidden = !!t.pending;
-  if (t.pending){ const tx = $('pass0').querySelector('.text'); const s = document.createElement('span'); s.className = 'msgline'; s.id = 'msgWait'; s.textContent = '💌 …رسالتك تتجهز وأنت تسمع'; tx.appendChild(s); }
   const n = Object.keys(sess.trips).length;
   $('deletedNote').textContent = `🔒 صوتك محفوظ مؤقتاً (سافرت لـ${n} ${n===1?'دولة':'دول'})، فتقدر تختار دولة ثانية بدون تسجيل. ينحذف لما تضغط «مسافر جديد» أو بعد 15 دقيقة.`;
   ORDER.forEach(k=>markMap(k, k===code));
@@ -1892,7 +1895,7 @@ function buildPasses(){
           <div class="ap"><b>${l.ap}</b><small>${l.city}</small></div>
         </div>
         <div class="lang">${flagSVG(l.flag)}<span>${esc(l.name)}<small>${l.ar}</small></span></div>
-        <p class="text" dir="auto">…جاري الترجمة</p>
+        <p class="text" dir="auto"></p>
       </div>
       <div class="stub">
         <div class="kv"><i>GATE</i><b>${l.gate}</b></div>
@@ -1963,7 +1966,7 @@ function playOne(i){
   p.onended = async ()=>{
     let t = sess.trips[code];
     if (t && t.aDur && !p.dataset.full){
-      if (t.pending){ t.waiting = true; $('subs').classList.add('on'); $('subAr').dataset.k = '~'; $('subAr').textContent = '💌 …رسالتك جاية'; $('subFg').textContent = ''; const pend = t.pending; try { await pend; } catch(e){ t.waiting = false; setPlayUI(false); return; } t.waiting = false; t = sess.trips[code]; }
+      if (t.pending){ t.waiting = true; $('subs').classList.add('on'); $('subAr').dataset.k = '~'; $('subAr').textContent = '💌 رسالة إلى من تحب'; $('subFg').textContent = ''; const pend = t.pending; try { await pend; } catch(e){ t.waiting = false; setPlayUI(false); return; } t.waiting = false; t = sess.trips[code]; }
       if (t.full && trip.code === code){ const np = swapPlayer(code, 0); np.addEventListener('loadedmetadata', ()=>{ try { np.currentTime = t.aDur; } catch(e){} playOne(0); }, {once:true}); return; }
     }
     p.currentTime = 0; setPlayUI(false); c.classList.add('stamped'); markVisited(code);
@@ -2017,7 +2020,7 @@ $('saveTrip').addEventListener('click', async ()=>{
 $('newVisitor').addEventListener('click', ()=>{
   if (sess.voiceId) endSession(false);
   stopAll(); clearVisited(); players.forEach(p=>p && URL.revokeObjectURL(p.src)); players=[]; blobs=[]; $('saveTrip').hidden = true; $('toPhone').hidden = true; $('saveHint').hidden = true; $('phoneBox').hidden = true; $('phoneQr').innerHTML='';
-  $('passes').innerHTML=''; $('said').innerHTML=''; $('deletedNote').textContent=''; $('usage').textContent='';
+  $('passes').innerHTML=''; $('said').innerHTML=''; $('deletedNote').textContent='';
   $('pickHint').innerHTML = 'اضغط على الدولة، تعرّف على ثقافتها، وبعدها اضغط <b>"سافر إليها"</b> وابدأ التسجيل';
   clearErr(); trip.code = null; ORDER.forEach(k=>markMap(k,false)); $('tripBox').hidden = true; $('pickBox').hidden = false; resetRecordUI(); show('record');
   $('map').scrollIntoView({behavior:'smooth', block:'start'});
