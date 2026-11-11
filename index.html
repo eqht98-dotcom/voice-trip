@@ -1469,7 +1469,8 @@ const MODEL_RATE = {eleven_flash_v2_5:0.5, eleven_turbo_v2_5:0.5};
 function reportUsage(before){
   const rate = MODEL_RATE[cfg.model] ?? 1;
   const est = Math.round(ttsChars*rate);
-  const show = real => { $('usage').textContent = ($('usage').dataset.time ? `⏱ جهزت في ${$('usage').dataset.time} ثانية · ` : '') + (real!=null ? `استهلكت هالرحلة: ${real.toLocaleString('en-US')} كريدت` : `تقدير استهلاك هالرحلة: ≈ ${est.toLocaleString('en-US')} كريدت للنطق`) + ` · ${ttsChars.toLocaleString('en-US')} حرف`; };
+  const brk = (clock.last && clock.last.length ? ' (' + clock.last.join(' ← ') + ')' : '') + (early.lastMarks ? ' · أثناء الرسالة: ' + early.lastMarks : '') + ` · الموديل: ${cfg.model}${cfg.noise ? ' · إزالة ضوضاء: مفعّلة ⚠️' : ''}`;
+  const show = real => { $('usage').textContent = ($('usage').dataset.time ? `⏱ جهزت في ${$('usage').dataset.time} ثانية${brk} · ` : '') + (real!=null ? `استهلكت هالرحلة: ${real.toLocaleString('en-US')} كريدت` : `تقدير استهلاك هالرحلة: ≈ ${est.toLocaleString('en-US')} كريدت للنطق`) + ` · ${ttsChars.toLocaleString('en-US')} حرف`; };
   show(null);
   if (before==null) return;
   let tries = 0;
@@ -1526,21 +1527,23 @@ function finishTrip(code, aSegs, mSegs, aA, mA){
 function startEarly(){
   if (altMode || !rec.mr) return;
   const code = trip.code, l = LANGS[COUNTRIES[code].lang];
+  const e0 = performance.now(); const em = n => early.marks.push(n+' '+((performance.now()-e0)/1000).toFixed(1)+'ث');
+  early.marks = [];
   early.done = (async ()=>{
     try { rec.mr.requestData(); } catch(e){}
     await new Promise(r=>setTimeout(r,150));
     const b1 = new Blob(rec.chunks.slice(), {type: rec.mr.mimeType || 'audio/webm'});
     const wav1 = await toWav(b1);
     let cl1 = null; if (cfg.cleanAudio !== false){ try { cl1 = await cleanForClone(b1); } catch(e){} }
-    const cloneP = cloneVoice(cl1 || wav1); cloneP.catch(()=>{});
-    const heard = await transcribe(wav1);
+    em('تجهيز'); const cloneP = cloneVoice(cl1 || wav1).then(id=>{ em('نسخ'); return id; }); cloneP.catch(()=>{});
+    const heard = await transcribe(wav1); em('نص');
     const aboutAr = capText(heard.text || '');
     const aSegsP = translatePart(l, 'about', aboutAr, 'ar'); aSegsP.catch(()=>{});
     let voiceId;
     try { voiceId = await cloneP; } catch(e){ throw e; }
-    const aSegs = await aSegsP;
-    const aA = await partAudio(voiceId, aSegs);
-    log('early part ready');
+    const aSegs = await aSegsP; em('ترجمة');
+    const aA = await partAudio(voiceId, aSegs); em('نطق');
+    log('early part ready: '+early.marks.join(' · '));
     return {voiceId, aboutAr, lang: heard.lang, aSegs, aA, code};
   })();
   early.done.catch(e=>log('early failed: '+e.message));
@@ -1554,19 +1557,20 @@ async function fastTrip(full, msgAt){
     // message part: its own short audio → transcribe while the intro work finishes
     const msgWav = await sliceWav(full, Math.max(0, msgAt - 0.3));
     const heardM = await transcribe(msgWav);
-    clockMark('stt msg');
+    clockMark('نص الرسالة');
     const msgAr = capText(heardM.text || '');
     step(2);
     const mSegsP = translatePart(l, 'msg', msgAr, heardM.lang); mSegsP.catch(()=>{});
     try { E = await early.done; } catch(e){ E = null; }
-    if (!E){ log('early part failed, doing it now'); early.done = null; const wav = await toWav(full); let cl = null; try { cl = await cleanForClone(full); } catch(e){} return runTrip(wav, msgAt, cl); }
-    clockMark('intro ready');
+    early.lastMarks = (early.marks||[]).join(' · ');
+    if (!E){ log('early part failed, doing it now'); clockMark('⚠️ الطريقة السريعة فشلت'); early.done = null; const wav = await toWav(full); let cl = null; try { cl = await cleanForClone(full); } catch(e){} return runTrip(wav, msgAt, cl); }
+    clockMark('انتظار جزء التعريف');
     if (!E.aboutAr && !msgAr) throw new Error('NO_SPEECH');
     step(3);
-    const mSegs = await mSegsP; clockMark('translate msg');
+    const mSegs = await mSegsP; clockMark('ترجمة الرسالة');
     step(4);
     const mA = await partAudio(E.voiceId, mSegs.map(x=>({...x, love:true})));
-    clockMark('voice msg');
+    clockMark('نطق الرسالة');
     sess.voiceId = E.voiceId; sess.about = E.aboutAr; sess.msg = msgAr; sess.lang = E.lang || heardM.lang; sess.trips = {};
     finishTrip(code, E.aSegs, mSegs, E.aA, mA);
     E = null; touchSess();
@@ -1585,7 +1589,7 @@ async function fastTrip(full, msgAt){
 const clock = {t0:0, marks:[], tick:0};
 function clockStart(){ clock.t0 = performance.now(); clock.marks = []; clearInterval(clock.tick); clock.tick = setInterval(()=>{ const el = $('workClock'); if (el) el.textContent = ((performance.now()-clock.t0)/1000).toFixed(1) + ' ث'; }, 100); }
 function clockMark(name){ const t = (performance.now()-clock.t0)/1000; clock.marks.push(name+' '+t.toFixed(1)+'ث'); log('⏱ '+name+' @ '+t.toFixed(1)+'s'); }
-function clockStop(){ clearInterval(clock.tick); const t = (performance.now()-clock.t0)/1000; log('⏱ total '+t.toFixed(1)+'s · '+clock.marks.join(' · ')); return t; }
+function clockStop(){ clearInterval(clock.tick); const t = (performance.now()-clock.t0)/1000; log('⏱ total '+t.toFixed(1)+'s · '+clock.marks.join(' · ')); clock.last = clock.marks.slice(); return t; }
 
 async function runTrip(sample, msgAt, clean){
   let voiceId = null; ttsChars = 0; sttSecs = 0;
