@@ -615,11 +615,18 @@ details.logbox summary{cursor:pointer;color:var(--muted);font-size:14px;padding:
       </section>
 
       <section class="grp">
-        <h4>صور الثقافة (Unsplash)</h4>
+        <h4>صور الثقافة</h4>
+        <div class="field">
+          <label for="sPicSrc">مصدر الصور</label>
+          <select id="sPicSrc">
+            <option value="wiki">ويكيبيديا: دقيقة (الصورة الرئيسية لنفس الشي)</option>
+            <option value="unsplash">Unsplash: جمالية بس ممكن ما تطابق</option>
+          </select>
+        </div>
         <div class="field">
           <label for="sUKey">Unsplash Access Key</label>
           <div class="row-key"><input type="password" id="sUKey" class="ltr" placeholder="Access Key" autocomplete="off" autocapitalize="off" spellcheck="false"><button type="button" class="btn mini" id="testUKey">اختبار</button></div>
-          <div class="hint" id="uKeyStatus">لو ما حطيته، الصور تنزل من ويكيبيديا.</div>
+          <div class="hint" id="uKeyStatus">يُستخدم بس لو اخترت Unsplash كمصدر.</div>
         </div>
         <button type="button" class="btn mini" id="prefetchPics">📥 جهّز كل الصور مسبقاً</button>
         <div class="hint" id="prefetchStatus">سوّها على جهاز البوث قبل الفعالية. الصور تنحفظ فيه، فتفتح البطاقات بسرعة.</div>
@@ -665,7 +672,7 @@ function loadCfg(){
   let c = {};
   try { c = JSON.parse(localStorage.getItem('voiceTripCfg')) || {}; } catch(e) {}
   let m = Object.assign({}, DEFAULTS, c);
-  if ((c.ver||1) < CFG_VER) m = Object.assign({}, DEFAULTS, {key:c.key||'', wa:c.wa||'', ckey:c.ckey||'', ukey:c.ukey||'', pinHash:c.pinHash||'', pending:Array.isArray(c.pending)?c.pending:[]});
+  if ((c.ver||1) < CFG_VER) m = Object.assign({}, DEFAULTS, {key:c.key||'', wa:c.wa||'', ckey:c.ckey||'', ukey:c.ukey||'', picSrc:c.picSrc||'wiki', pinHash:c.pinHash||'', pending:Array.isArray(c.pending)?c.pending:[]});
   if (!Array.isArray(m.pending)) m.pending = [];
   m.aboutSecs = ABOUT_SECS;
   return m;
@@ -851,7 +858,7 @@ const COUNTRIES = {
 };
 LANGS.forEach((l,i)=>{ const c = COUNTRIES[l.flag]; c.lang = i; c.city = l.city; c.color = l.map; });
 const ORDER = ['sa', ...LANGS.map(l=>l.flag)];
-const PICS = {"sa": {"culture": [["القهوة السعودية", "Arabic coffee"], ["العرضة السعودية", "Ardah"]], "wear": [["الثوب", "Thawb"], ["البشت", "Bisht (clothing)"]], "sights": [["المسجد النبوي", "Al-Masjid an-Nabawi"], ["الحِجر في العُلا", "Hegra (Mada'in Salih)"]], "food": [["الكبسة", "Kabsa"], ["الجريش", "Jareesh"]]}, "gb": {"culture": [["شاي العصر", "Afternoon tea"], ["حافلة لندن الحمراء", "Routemaster"]], "wear": [["التنورة الاسكتلندية", "Kilt"], ["حرس الملك", "King's Guard"]], "sights": [["بيغ بن", "Big Ben"], ["جسر البرج", "Tower Bridge"]], "food": [["فيش آند تشيبس", "Fish and chips"], ["الفطور الإنجليزي", "Full breakfast"]]}, "fr": {"culture": [["الموناليزا", "Mona Lisa"], ["المطبخ الفرنسي", "French cuisine"]], "wear": [["البيريه", "Beret"], ["الأزياء الراقية", "Haute couture"]], "sights": [["برج إيفل", "Eiffel Tower"], ["متحف اللوفر", "Louvre"]], "food": [["الكرواسون", "Croissant"], ["الباغيت", "Baguette"]]}, "de": {"culture": [["أسواق الشتاء", "Christmas market"], ["بيتهوفن", "Ludwig van Beethoven"]], "wear": [["اللِدرهوزن", "Lederhosen"], ["الدرندل", "Dirndl"]], "sights": [["بوابة براندنبورغ", "Brandenburg Gate"], ["قلعة نويشفانشتاين", "Neuschwanstein Castle"]], "food": [["البريتزل", "Pretzel"], ["كعكة الغابة السوداء", "Black Forest gateau"]]}, "es": {"culture": [["الفلامنكو", "Flamenco"], ["الجيتار الإسباني", "Classical guitar"]], "wear": [["فستان الفلامنكو", "Traje de flamenca"], ["المانتيلا", "Mantilla"]], "sights": [["قصر الحمراء", "Alhambra"], ["مسجد قرطبة", "Mosque–Cathedral of Córdoba"]], "food": [["الباييا", "Paella"], ["عجة البطاطس", "Spanish omelette"]]}, "it": {"culture": [["دار أوبرا لا سكالا", "La Scala"], ["قوارب الجندول", "Gondola"]], "wear": [["أقنعة البندقية", "Venetian mask"], ["أسبوع ميلانو للموضة", "Milan Fashion Week"]], "sights": [["الكولوسيوم", "Colosseum"], ["برج بيزا المائل", "Leaning Tower of Pisa"]], "food": [["البيتزا", "Pizza"], ["الباستا", "Pasta"]]}, "tr": {"culture": [["الشاي التركي", "Turkish tea"], ["القهوة التركية", "Turkish coffee"]], "wear": [["الطربوش", "Fez"], ["السجاد التركي", "Turkish carpet"]], "sights": [["آيا صوفيا", "Hagia Sophia"], ["الجامع الأزرق", "Blue Mosque"]], "food": [["البقلاوة", "Baklava"], ["الحلقوم", "Turkish delight"]]}, "ru": {"culture": [["الماتريوشكا", "Matryoshka doll"], ["مسرح البولشوي", "Bolshoi Theatre"]], "wear": [["قبعة الأوشانكا", "Ushanka"], ["الكوكوشنيك", "Kokoshnik"]], "sights": [["الساحة الحمراء", "Red Square"], ["كاتدرائية القديس باسيل", "Saint Basil's Cathedral"]], "food": [["البورش", "Borscht"], ["البليني", "Blini"]]}, "in": {"culture": [["مهرجان الألوان", "Holi"], ["رقص بهاراتاناتيام", "Bharatanatyam"]], "wear": [["الساري", "Sari"], ["الكورتا", "Kurta"]], "sights": [["تاج محل", "Taj Mahal"], ["القلعة الحمراء", "Red Fort"]], "food": [["البرياني", "Biryani"], ["خبز النان", "Naan"]]}, "cn": {"culture": [["رأس السنة الصينية", "Chinese New Year"], ["الخط الصيني", "Chinese calligraphy"]], "wear": [["التشيباو", "Cheongsam"], ["الهانفو", "Hanfu"]], "sights": [["سور الصين العظيم", "Great Wall of China"], ["المدينة المحرمة", "Forbidden City"]], "food": [["البط البكيني", "Peking duck"], ["الدمبلنغ", "Jiaozi"]]}, "jp": {"culture": [["حفل الشاي", "Japanese tea ceremony"], ["أزهار الساكورا", "Cherry blossom"]], "wear": [["الكيمونو", "Kimono"], ["اليوكاتا", "Yukata"]], "sights": [["جبل فوجي", "Mount Fuji"], ["الجناح الذهبي", "Kinkaku-ji"]], "food": [["السوشي", "Sushi"], ["الرامن", "Ramen"]]}, "kr": {"culture": [["أبجدية الهانغول", "Hangul"], ["الطبول الكورية", "Samulnori"]], "wear": [["الهانبوك", "Hanbok"], ["القبعة الكورية التقليدية", "Gat (hat)"]], "sights": [["قصر غيونغبوكغونغ", "Gyeongbokgung"], ["برج سيول", "N Seoul Tower"]], "food": [["الكيمتشي", "Kimchi"], ["البيبيمباب", "Bibimbap"]]}, "id": {"culture": [["فن الباتيك", "Batik"], ["موسيقى الغاميلان", "Gamelan"]], "wear": [["الكبايا", "Kebaya"], ["السونغكيت", "Songket"]], "sights": [["جامع الاستقلال", "Istiqlal Mosque, Jakarta"], ["معبد بوروبودور", "Borobudur"]], "food": [["الناسي غورينغ", "Nasi goreng"], ["الساتيه", "Satay"]]}};
+const PICS = {"sa": {"culture": [["القهوة السعودية", "Arabic coffee"], ["العرضة السعودية", "Ardah"]], "wear": [["الثوب", "Thawb"], ["البشت", "Bisht (clothing)"]], "sights": [["المسجد النبوي", "Al-Masjid an-Nabawi"], ["الحِجر في العُلا", "Hegra (Mada'in Salih)"]], "food": [["الكبسة", "Kabsa"], ["الجريش", "Jareesh"]]}, "gb": {"culture": [["شاي العصر", "Afternoon tea"], ["حافلة لندن الحمراء", "Routemaster"]], "wear": [["التنورة الاسكتلندية", "Kilt"], ["حرس الملك", "King's Guard"]], "sights": [["بيغ بن", "Big Ben"], ["جسر البرج", "Tower Bridge"]], "food": [["فيش آند تشيبس", "Fish and chips"], ["الفطور الإنجليزي", "Full breakfast"]]}, "fr": {"culture": [["الموناليزا", "Mona Lisa"], ["الموناليزا في اللوفر", "Louvre Pyramid"]], "wear": [["البيريه", "Beret"], ["القميص المخطط الفرنسي", "Breton shirt"]], "sights": [["برج إيفل", "Eiffel Tower"], ["متحف اللوفر", "Louvre"]], "food": [["الكرواسون", "Croissant"], ["الباغيت", "Baguette"]]}, "de": {"culture": [["أسواق الشتاء", "Christmas market"], ["بيتهوفن", "Ludwig van Beethoven"]], "wear": [["اللِدرهوزن", "Lederhosen"], ["الدرندل", "Dirndl"]], "sights": [["بوابة براندنبورغ", "Brandenburg Gate"], ["قلعة نويشفانشتاين", "Neuschwanstein Castle"]], "food": [["البريتزل", "Pretzel"], ["كعكة الغابة السوداء", "Black Forest gateau"]]}, "es": {"culture": [["الفلامنكو", "Flamenco"], ["الجيتار الإسباني", "Classical guitar"]], "wear": [["فستان الفلامنكو", "Traje de flamenca"], ["المانتيلا", "Mantilla"]], "sights": [["قصر الحمراء", "Alhambra"], ["مسجد قرطبة", "Mosque–Cathedral of Córdoba"]], "food": [["الباييا", "Paella"], ["عجة البطاطس", "Spanish omelette"]]}, "it": {"culture": [["دار أوبرا لا سكالا", "La Scala"], ["قوارب الجندول", "Gondola"]], "wear": [["أقنعة البندقية", "Venetian mask"], ["كرنفال البندقية", "Carnival of Venice"]], "sights": [["الكولوسيوم", "Colosseum"], ["البندقية", "Grand Canal (Venice)"]], "food": [["البيتزا", "Pizza"], ["الباستا", "Pasta"]]}, "tr": {"culture": [["الشاي التركي", "Turkish tea"], ["القهوة التركية", "Turkish coffee"]], "wear": [["الطربوش", "Fez"], ["السجاد التركي", "Turkish carpet"]], "sights": [["آيا صوفيا", "Hagia Sophia"], ["الجامع الأزرق", "Blue Mosque"]], "food": [["البقلاوة", "Baklava"], ["الحلقوم", "Turkish delight"]]}, "ru": {"culture": [["الماتريوشكا", "Matryoshka doll"], ["مسرح البولشوي", "Bolshoi Theatre"]], "wear": [["قبعة الأوشانكا", "Ushanka"], ["الكوكوشنيك", "Kokoshnik"]], "sights": [["الساحة الحمراء", "Red Square"], ["كاتدرائية القديس باسيل", "Saint Basil's Cathedral"]], "food": [["البورش", "Borscht"], ["البليني", "Blini"]]}, "in": {"culture": [["مهرجان الألوان", "Holi"], ["رقص بهاراتاناتيام", "Bharatanatyam"]], "wear": [["الساري", "Sari"], ["الكورتا", "Kurta"]], "sights": [["تاج محل", "Taj Mahal"], ["القلعة الحمراء", "Red Fort"]], "food": [["البرياني", "Biryani"], ["خبز النان", "Naan"]]}, "cn": {"culture": [["رأس السنة الصينية", "Chinese New Year"], ["الخط الصيني", "Chinese calligraphy"]], "wear": [["التشيباو", "Cheongsam"], ["الهانفو", "Hanfu"]], "sights": [["سور الصين العظيم", "Great Wall of China"], ["المدينة المحرمة", "Forbidden City"]], "food": [["البط البكيني", "Peking duck"], ["النودلز", "Lamian"]]}, "jp": {"culture": [["حفل الشاي", "Japanese tea ceremony"], ["أزهار الساكورا", "Cherry blossom"]], "wear": [["الكيمونو", "Kimono"], ["اليوكاتا", "Yukata"]], "sights": [["جبل فوجي", "Mount Fuji"], ["الجناح الذهبي", "Kinkaku-ji"]], "food": [["السوشي", "Sushi"], ["الرامن", "Ramen"]]}, "kr": {"culture": [["أبجدية الهانغول", "Hangul"], ["الطبول الكورية", "Samulnori"]], "wear": [["الهانبوك", "Hanbok"], ["القبعة الكورية التقليدية", "Gat (hat)"]], "sights": [["قصر غيونغبوكغونغ", "Gyeongbokgung"], ["جزيرة جيجو", "Seongsan Ilchulbong"]], "food": [["الكيمتشي", "Kimchi"], ["البيبيمباب", "Bibimbap"]]}, "id": {"culture": [["فن الباتيك", "Batik"], ["موسيقى الغاميلان", "Gamelan"]], "wear": [["الكبايا", "Kebaya"], ["السونغكيت", "Songket"]], "sights": [["جامع الاستقلال", "Istiqlal Mosque, Jakarta"], ["جزيرة بالي", "Pura Ulun Danu Bratan"]], "food": [["الناسي غورينغ", "Nasi goreng"], ["الساتيه", "Satay"]]}};
 
 $('flagStrip').innerHTML = ORDER.map(code=>{
   const c = COUNTRIES[code], l = c.lang!=null ? LANGS[c.lang] : null;
@@ -963,7 +970,7 @@ async function wikiImg(title){
 }
 function picCandidates(u){
   const out = [];
-  if (/\/\d+px-/.test(u)){ out.push(u.replace(/\/\d+px-/, '/500px-')); out.push(u); out.push(u.replace(/\/\d+px-/, '/330px-')); }
+  if (/\/\d+px-/.test(u)){ out.push(u.replace(/\/\d+px-/, '/960px-')); out.push(u.replace(/\/\d+px-/, '/500px-')); out.push(u); out.push(u.replace(/\/\d+px-/, '/330px-')); }
   else out.push(u);
   return [...new Set(out)];
 }
@@ -1008,14 +1015,14 @@ function loadPics(root){
     const title = f.dataset.wiki, img = f.querySelector('img');
     img.onload = ()=>{ img.classList.add('ok'); f.classList.add('loaded'); };
     let u = null;
-    try { u = await unsplashImg(title); } catch(e){}
+    if (cfg.picSrc === 'unsplash'){ try { u = await unsplashImg(title); } catch(e){} }
     if (u){
       img.onerror = ()=>{ delete uCache[uQuery(title)]; saveU(); };
       img.src = u.u; usedU = true; credit();
       const a = document.createElement('a'); a.className = 'by'; a.href = u.l; a.target = '_blank'; a.rel = 'noopener'; a.textContent = '📷 ' + u.n; f.appendChild(a);
       return;
     }
-    const w = await wikiImg(title); if (!w) return;
+    const w = await wikiImg(title); if (!w){ log('pic '+title+': not found'); return; }
     const cands = picCandidates(w); let k = 0;
     img.onerror = ()=>{ k++; if (k < cands.length) img.src = cands[k]; else { log('pic '+title+': image refused'); delete picCache[title]; savePics(); } };
     img.referrerPolicy = 'no-referrer'; img.src = cands[0]; usedW = true; credit();
@@ -1601,7 +1608,7 @@ function fillSettings(){
   if (![...sel.options].some(o=>o.value===cfg.model)){ const o = document.createElement('option'); o.value = o.textContent = cfg.model; sel.appendChild(o); }
   sel.value = cfg.model;
   $('sSim').value = cfg.sim; $('sStab').value = cfg.stab; $('sNoise').checked = !!cfg.noise; $('sClean').checked = cfg.cleanAudio !== false;
-  $('sMax').value = cfg.maxChars; $('sWa').value = cfg.wa||''; $('sCKey').value = cfg.ckey||''; $('sUKey').value = cfg.ukey||''; $('sCModel').value = cfg.cmodel||DEFAULTS.cmodel;
+  $('sMax').value = cfg.maxChars; $('sWa').value = cfg.wa||''; $('sCKey').value = cfg.ckey||''; $('sUKey').value = cfg.ukey||''; $('sPicSrc').value = cfg.picSrc||'wiki'; $('sCModel').value = cfg.cmodel||DEFAULTS.cmodel;
   $('vSim').textContent = Math.round(cfg.sim*100)+'%'; $('vStab').textContent = Math.round(cfg.stab*100)+'%';
 }
 function readSettings(){
@@ -1612,7 +1619,7 @@ function readSettings(){
   if (mx) cfg.maxChars = Math.min(1500, Math.max(100, mx));
   cfg.model = $('sModel').value || DEFAULTS.model;
   cfg.sim = +$('sSim').value; cfg.stab = +$('sStab').value; cfg.noise = $('sNoise').checked; cfg.cleanAudio = $('sClean').checked;
-  cfg.ukey = $('sUKey').value.trim(); cfg.ckey = $('sCKey').value.trim(); cfg.cmodel = $('sCModel').value || DEFAULTS.cmodel;
+  cfg.ukey = $('sUKey').value.trim(); cfg.picSrc = $('sPicSrc').value || 'wiki'; cfg.ckey = $('sCKey').value.trim(); cfg.cmodel = $('sCModel').value || DEFAULTS.cmodel;
   cfg.wa = ($('sWa').value||'').replace(/\D/g,'').replace(/^00/,'');
 }
 let savedT = 0;
@@ -1690,15 +1697,26 @@ function renderPicStat(){
   let all = 0, got = 0;
   const rows = ORDER.map(code=>{
     const items = Object.values(PICS[code]||{}).flat(); const n = items.length;
-    const k = items.filter(([,t])=>uCache[uQuery(t)]).length; all += n; got += k;
+    const k = items.filter(([,t])=> cfg.picSrc==='unsplash' ? uCache[uQuery(t)] : picCache[t]).length; all += n; got += k;
     return `<div class="ps ${k===n?'full':k===0?'none':''}"><span class="fl">${flagSVG(code)}</span>${esc(COUNTRIES[code].name)}<b>${k===n?'✅':k+'/'+n}</b></div>`;
   }).join('');
   box.innerHTML = `<div class="tot">📷 الصور الجاهزة في هذا الجهاز: <b>${got} / ${all}</b></div>` + rows;
 }
 $('prefetchPics').addEventListener('click', async ()=>{
   autoSave(); const st = $('prefetchStatus'), btn = $('prefetchPics');
-  if (!cfg.ukey){ st.textContent = 'حط مفتاح Unsplash أول.'; return; }
   const all = [...new Set(Object.values(PICS).flatMap(P=>Object.values(P).flat().map(x=>x[1])))];
+  if (cfg.picSrc !== 'unsplash'){
+    btn.disabled = true; let ok = 0, miss = [];
+    for (const t of all){
+      st.textContent = `…جاري التجهيز ${ok} / ${all.length}`;
+      const w = await wikiImg(t);
+      if (w){ ok++; const im = new Image(); im.referrerPolicy = 'no-referrer'; im.src = picCandidates(w)[0]; } else miss.push(t);
+      renderPicStat();
+    }
+    st.textContent = `✅ جاهز: ${ok} من ${all.length}` + (miss.length ? ` · ما لقينا صورة لـ: ${miss.join('، ')}` : '');
+    btn.disabled = false; return;
+  }
+  if (!cfg.ukey){ st.textContent = 'حط مفتاح Unsplash أول.'; return; }
   btn.disabled = true; uLimited = 0; let ok = 0;
   for (const t of all){
     if (uCache[uQuery(t)]){ ok++; continue; }
