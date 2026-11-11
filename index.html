@@ -334,6 +334,15 @@ h1{
 .picstat .ps.none b{color:var(--muted)}
 .picstat .tot{grid-column:1/-1;font-size:15px;color:var(--cream)}
 
+/* ---------- live subtitles (movie style) ---------- */
+.subs{position:fixed;left:0;right:0;bottom:0;z-index:50;display:flex;justify-content:center;pointer-events:none;
+  padding:0 max(16px,env(safe-area-inset-right,0px)) calc(22px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.subs .box{max-width:min(1000px,100%);padding:14px 26px;border-radius:14px;background:rgba(0,0,0,.82);box-shadow:0 10px 30px rgba(0,0,0,.5);text-align:center;opacity:0;transform:translateY(8px);transition:opacity .2s,transform .2s}
+.subs.on .box{opacity:1;transform:none}
+.subs .ar{display:block;color:#fff;font-family:var(--f-body);font-weight:700;font-size:clamp(22px,3.2vw,36px);line-height:1.55;text-shadow:0 2px 4px #000}
+.subs .fg{display:block;margin-top:4px;color:#f6e3a8;font-size:clamp(14px,1.6vw,18px);line-height:1.5;opacity:.9}
+.subs .ar.love{color:#ffd9dc}
+
 /* ---------- photo picker ---------- */
 #pickDlg{width:min(900px,96vw);height:min(92dvh,980px);overflow:hidden;padding:0}
 @media (max-width:600px){#pickDlg{width:100vw;max-width:100vw;height:100dvh;max-height:100dvh;margin:0;border-radius:0;border:0}}
@@ -571,6 +580,7 @@ details.logbox summary{cursor:pointer;color:var(--muted);font-size:14px;padding:
 <dialog id="countryDlg">
   <div class="cc" id="ccBox"></div>
 </dialog>
+<div class="subs" id="subs" aria-live="polite"><div class="box"><span class="ar" id="subAr"></span><span class="fg" id="subFg" dir="auto"></span></div></div>
 <dialog id="pickDlg"><div class="pk">
   <header class="sh-head"><h3>🖼️ اختيار الصور</h3><button type="button" class="iconbtn" id="pkClose" aria-label="إغلاق">✕</button></header>
   <div class="pk-body" id="pkBody"></div>
@@ -1431,7 +1441,8 @@ Rules:
 - Keep people's names; write them in the target language's normal script.
 - Write numbers as words or digits the way a native speaker would say them.
 - Fix obvious transcription errors silently. Do not add, explain, or summarise anything. No notes, no brackets, no sound descriptions.
-Return ONLY a JSON object exactly like {"about":"...","msg":"..."} (use "" for an empty part).`;
+These translations are also shown as movie-style subtitles, so split each part into short sentences (max ~14 words each), and pair every translated sentence with the matching piece of the visitor's Arabic ("ar"), cleaned up and faithful, in the same order, covering all of it.
+Return ONLY a JSON object exactly like {"about":[{"t":"translated sentence","ar":"matching Arabic"}],"msg":[{"t":"...","ar":"..."}]} (use [] for an empty part).`;
   let r;
   try {
     r = await fetch('https://api.anthropic.com/v1/messages', {method:'POST',
@@ -1443,8 +1454,10 @@ Return ONLY a JSON object exactly like {"about":"...","msg":"..."} (use "" for a
   const raw = (d.content||[]).filter(c=>c.type==='text').map(c=>c.text).join('');
   const m = raw.match(/\{[\s\S]*\}/); if (!m) throw new Error('CLAUDE: no JSON');
   const out = JSON.parse(m[0]);
-  if (typeof out.about !== 'string' || typeof out.msg !== 'string') throw new Error('CLAUDE: bad JSON');
-  return out;
+  const ok = a => Array.isArray(a) && a.every(x=>x && typeof x.t==='string' && typeof x.ar==='string');
+  if (!ok(out.about) || !ok(out.msg)) throw new Error('CLAUDE: bad JSON');
+  const clean = a => a.map(x=>({t:x.t.trim(), ar:x.ar.trim()})).filter(x=>x.t);
+  return {about: clean(out.about), msg: clean(out.msg)};
 }
 
 let ttsChars = 0, sttSecs = 0;
@@ -1499,15 +1512,24 @@ async function runTrip(sample, msgAt, clean){
   }
 }
 /* translate + voice for one country, reusing the visitor's saved voice */
+function splitAr(t){
+  const out = []; (t.match(/[^.!?؟\n]+[.!?؟]*/g) || []).forEach(x=>{ x = x.trim(); if (!x) return;
+    if (x.length > 110) x.split(/(?<=[،,])\s*/).reduce((acc,y)=>{ if (acc.length && (acc[acc.length-1]+' '+y).length <= 110) acc[acc.length-1] += ' ' + y; else acc.push(y); return acc; }, []).forEach(y=>y.trim() && out.push(y.trim()));
+    else out.push(x); });
+  return out;
+}
+async function translateSegs(ar, l, src){ const out = []; for (const x of splitAr(ar)) out.push({ar:x, t: await translate(x, l.tl, src)}); return out; }
 async function makeTrip(code){
   const c = COUNTRIES[code], l = LANGS[c.lang];
   trip.code = code; show('work'); step(3);
   let tr = null;
   if (cfg.ckey){ try { tr = await claudeTranslate({about:sess.about, msg:sess.msg}, l); log('claude translated'); } catch(e){ log('claude failed, using google: '+e.message); } }
-  if (!tr){ tr = {about: sess.about ? await translate(sess.about, l.tl, 'ar') : '', msg: sess.msg ? await translate(sess.msg, l.tl, sess.lang) : ''}; }
+  if (!tr){ tr = {about: sess.about ? await translateSegs(sess.about, l, 'ar') : [], msg: sess.msg ? await translateSegs(sess.msg, l, sess.lang) : []}; }
   step(4);
-  const blob = await ttsBlob(sess.voiceId, tr);
-  sess.trips[code] = {tr, blob};
+  const segs = [...tr.about.map(x=>({...x})), ...tr.msg.map(x=>({...x, love:true}))];
+  const {blob, starts} = await ttsTimed(sess.voiceId, segs);
+  segs.forEach((x,i)=>x.start = starts ? starts[i] : null);
+  sess.trips[code] = {tr, blob, segs};
   showTrip(code);
 }
 function showTrip(code){
@@ -1591,23 +1613,47 @@ function buildPasses(){
 function fillPass(tr){
   const tx = $('pass0').querySelector('.text'); tx.textContent = '';
   const add = (cls, text) => { const s = document.createElement('span'); s.className = cls; s.textContent = text; tx.appendChild(s); return s; };
-  if (tr.about){ const a = add('fg', tr.about); a.dir = 'auto'; if (sess.about) add('arline', '🇸🇦 ' + sess.about); }
-  if (tr.msg){ add('msgline', '💌 ' + tr.msg); if (sess.msg) add('arline', '🇸🇦 ' + sess.msg); }
+  if (tr.about.length){ add('fg', tr.about.map(x=>x.t).join(' ')).dir = 'auto'; add('arline', '🇸🇦 ' + tr.about.map(x=>x.ar).join(' ')); }
+  if (tr.msg.length){ add('msgline', '💌 ' + tr.msg.map(x=>x.t).join(' ')); add('arline', '🇸🇦 ' + tr.msg.map(x=>x.ar).join(' ')); }
 }
-async function ttsBlob(voiceId, tr){
-  const t = [tr.about, tr.msg].filter(x=>x && x.trim()).join('\n\n');
-  ttsChars += t.length;
-  const call = model => api(`/text-to-speech/${voiceId}?output_format=mp3_44100_128`, {method:'POST', headers:{'Content-Type':'application/json','Accept':'audio/mpeg'},
-    body: JSON.stringify({text:t, model_id:model, voice_settings:{stability:+cfg.stab, similarity_boost:+cfg.sim, use_speaker_boost:true}})});
-  let r;
-  try { r = await call(cfg.model); }
-  catch(e){
-    if (cfg.model !== 'eleven_multilingual_v2' && /HTTP 4(00|04|22)/.test(e.message)){ log('model '+cfg.model+' rejected, fallback v2: '+e.message.slice(0,160)); r = await call('eleven_multilingual_v2'); }
-    else throw e;
+async function ttsTimed(voiceId, segs){
+  // one text, sentences separated by spaces (blank line before the message); remember where each sentence starts
+  let text = '', offs = [];
+  segs.forEach((x,i)=>{ if (i) text += (x.love && !segs[i-1].love) ? '\n\n' : ' '; offs.push(text.length); text += x.t; });
+  ttsChars += text.length;
+  const body = model => JSON.stringify({text, model_id:model, voice_settings:{stability:+cfg.stab, similarity_boost:+cfg.sim, use_speaker_boost:true}});
+  const timed = model => api(`/text-to-speech/${voiceId}/with-timestamps?output_format=mp3_44100_128`, {method:'POST', headers:{'Content-Type':'application/json'}, body: body(model)});
+  const plain = model => api(`/text-to-speech/${voiceId}?output_format=mp3_44100_128`, {method:'POST', headers:{'Content-Type':'application/json','Accept':'audio/mpeg'}, body: body(model)});
+  const withFallback = async fn => { try { return await fn(cfg.model); } catch(e){ if (cfg.model !== 'eleven_multilingual_v2' && /HTTP 4(00|04|22)/.test(e.message)){ log('model '+cfg.model+' rejected, fallback v2: '+e.message.slice(0,160)); return await fn('eleven_multilingual_v2'); } throw e; } };
+  try {
+    const d = await (await withFallback(timed)).json();
+    const bin = atob(d.audio_base64), u8 = new Uint8Array(bin.length); for (let i=0;i<bin.length;i++) u8[i] = bin.charCodeAt(i);
+    const blob = new Blob([u8], {type:'audio/mpeg'});
+    const al = d.alignment || d.normalized_alignment, st = al && al.character_start_times_seconds;
+    let starts = null;
+    if (st && st.length){ const k = st.length / Math.max(1, text.length); starts = offs.map(o=>st[Math.min(st.length-1, Math.round(o*k))]); }
+    return {blob, starts};
+  } catch(e){
+    log('timestamps failed, plain audio: '+e.message.slice(0,160));
+    const blob = await (await withFallback(plain)).blob();
+    return {blob, starts: offs.map(o=>-(o / Math.max(1,text.length)))};   // negative = fraction of duration (estimated)
   }
-  return await r.blob();
 }
+let subRAF = 0;
+function subTick(){
+  const p = players[0], t = trip.code && sess.trips[trip.code];
+  if (!p || p.paused || !t){ hideSubs(); return; }
+  const now = p.currentTime, dur = p.duration || 0;
+  let cur = null;
+  t.segs.forEach(x=>{ const s = x.start == null ? null : (x.start < 0 ? -x.start*dur : x.start); if (s != null && now >= s - 0.05) cur = x; });
+  if (!cur) cur = t.segs[0];
+  if (cur && $('subAr').dataset.k !== cur.ar){ $('subAr').dataset.k = cur.ar; $('subAr').textContent = cur.ar; $('subAr').classList.toggle('love', !!cur.love); $('subFg').textContent = cur.t; }
+  $('subs').classList.add('on');
+  subRAF = requestAnimationFrame(subTick);
+}
+function hideSubs(){ cancelAnimationFrame(subRAF); $('subs').classList.remove('on'); $('subAr').dataset.k = ''; }
 function setPlayUI(on){
+  if (on){ cancelAnimationFrame(subRAF); subRAF = requestAnimationFrame(subTick); } else hideSubs();
   const b = $('pass0') && $('pass0').querySelector('.play'); if (b && !b.disabled) b.innerHTML = on ? PAUSE : PLAY;
   $('playAll').textContent = on ? '⏸ إيقاف' : '▶ اسمع رحلتك';
   if ($('pass0')) $('pass0').classList.toggle('playing', on);
@@ -1877,7 +1923,7 @@ $('prefetchPics').addEventListener('click', async ()=>{
 $('testCKey').addEventListener('click', async ()=>{
   autoSave(); if (!cfg.ckey){ $('cKeyStatus').textContent = 'حط المفتاح أول.'; return; }
   $('cKeyStatus').textContent = '…جاري الاختبار';
-  try { const o = await claudeTranslate({about:'', msg:'يمه، الله يطول بعمرك، أحبك'}, LANGS[0]); $('cKeyStatus').textContent = '✅ شغال: ' + o.msg; }
+  try { const o = await claudeTranslate({about:'', msg:'يمه، الله يطول بعمرك، أحبك'}, LANGS[0]); $('cKeyStatus').textContent = '✅ شغال: ' + o.msg.map(x=>x.t).join(' '); }
   catch(e){ $('cKeyStatus').textContent = '❌ ' + (e.message.includes('401') ? 'المفتاح غير صحيح.' : e.message.includes('400') && e.message.includes('credit') ? 'رصيد Claude خلص.' : e.message.includes('404') ? 'اسم الموديل غير متاح لحسابك. جرّب الثاني.' : 'ما زبط.') + '  (' + e.message.slice(0,120) + ')'; }
 });
 $('cleanup').addEventListener('click', async ()=>{
