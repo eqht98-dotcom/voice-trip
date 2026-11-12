@@ -59,9 +59,10 @@
 "code": "sa",
 "sec": "food",
 "i": 1,
-"ar": "الجريش",
-"wiki": "Jareesh",
-"q": "jareesh Saudi dish"
+"ar": "التمور",
+"wiki": "Date palm",
+"q": "Saudi dates fruit plate",
+"force": 1
 },
 {
 "code": "gb",
@@ -85,7 +86,8 @@
 "i": 0,
 "ar": "التنورة الاسكتلندية",
 "wiki": "Kilt",
-"q": "Kilt"
+"q": "Scottish piper kilt bagpipes",
+"force": 1
 },
 {
 "code": "gb",
@@ -141,8 +143,7 @@
 "i": 1,
 "ar": "المقاهي الباريسية",
 "wiki": "Café",
-"q": "Paris café terrace",
-"force": 1
+"q": "Paris café terrace"
 },
 {
 "code": "fr",
@@ -150,7 +151,8 @@
 "i": 0,
 "ar": "البيريه",
 "wiki": "Beret",
-"q": "Beret"
+"q": "man wearing beret France",
+"force": 1
 },
 {
 "code": "fr",
@@ -350,8 +352,7 @@
 "i": 1,
 "ar": "أزياء كرنفال البندقية",
 "wiki": "Carnival of Venice",
-"q": "Venice carnival costume",
-"force": 1
+"q": "Venice carnival costume"
 },
 {
 "code": "it",
@@ -415,8 +416,7 @@
 "i": 1,
 "ar": "القفطان العثماني",
 "wiki": "Kaftan",
-"q": "Ottoman kaftan costume",
-"force": 1
+"q": "Ottoman kaftan costume"
 },
 {
 "code": "tr",
