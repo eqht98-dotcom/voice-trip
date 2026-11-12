@@ -776,6 +776,8 @@ details.logbox summary{cursor:pointer;color:var(--muted);font-size:14px;padding:
 <script>
 /* ================= config ================= */
 const API = 'https://api.elevenlabs.io/v1';
+const PROXY = ''; // رابط الـ Worker (غير سري). يُعبّأ بعد نشره على Cloudflare
+const hasEL = () => !!(cfg.key || PROXY);
 const PREFIX = 'StudentDay-';
 const MSG_PROMPT = '💌 الحين وجّه رسالة لشخص تحبه… ابدأ باسمه';
 const MSG_HINT = 'مثلاً: «يا أمي، شكراً على كل شي… أحبك»';
@@ -1381,17 +1383,18 @@ function setPhase(n){
 
 /* ================= API ================= */
 async function api(path, opts={}){
-  if (!cfg.key) throw new Error('NO_KEY');
-  const headers = Object.assign({'xi-api-key': cfg.key}, opts.headers||{});
+  if (!hasEL()) throw new Error('NO_KEY');
+  const direct = !!cfg.key;
+  const headers = Object.assign(direct ? {'xi-api-key': cfg.key} : {}, opts.headers||{});
   let r;
-  try { r = await fetch(API+path, Object.assign({}, opts, {headers})); }
+  try { r = await fetch((direct ? API : PROXY+'/el')+path, Object.assign({}, opts, {headers})); }
   catch(e){ throw new Error('NETWORK: '+e.message); }
   if (!r.ok){ let t=''; try{ t = await r.text(); }catch(e){} throw new Error('HTTP '+r.status+': '+t.slice(0,400)); }
   return r;
 }
 let lastCredits = null;
 async function refreshCredits(){
-  if (!cfg.key){ $('credits').textContent='بدون مفتاح'; return null; }
+  if (!cfg.key){ $('credits').textContent = PROXY ? '' : 'بدون مفتاح'; return null; }
   try {
     const s = await (await api('/user/subscription')).json();
     const left = (s.character_limit ?? 0) - (s.character_count ?? 0);
@@ -1421,7 +1424,7 @@ $('recBtn').addEventListener('click', async ()=>{
     stopRec(); return;
   }
   if (!trip.code){ $('map').scrollIntoView({behavior:'smooth'}); return; }
-  if (!cfg.key){ showErr('ما فيه مفتاح API. افتح الإعدادات وحط المفتاح.'); openSettings(); return; }
+  if (!hasEL()){ showErr('ما فيه مفتاح API. افتح الإعدادات وحط المفتاح.'); openSettings(); return; }
   if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){ enableAlt(); return; }
   try { rec.stream = await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false, noiseSuppression:false, autoGainControl:true, channelCount:1}}); }
   catch(e){ log('mic: '+e.message); enableAlt(); return; }
@@ -1485,7 +1488,7 @@ function enableAlt(){
   setPrompt('تكلّم عن نفسك، وبعدها وجّه رسالة لشخص تحبه باسمه', 'المتصفح منع المايك هنا، فبنسجّل بتطبيق التسجيل في الجهاز');
   $('timer').textContent = 'اضغط الزر تحت، وسجّل، وبعدها ارجع';
 }
-$('altRec').addEventListener('click', ()=>{ clearErr(); if (!cfg.key){ openSettings(); return; } $('altFile').value=''; $('altFile').click(); });
+$('altRec').addEventListener('click', ()=>{ clearErr(); if (!hasEL()){ openSettings(); return; } $('altFile').value=''; $('altFile').click(); });
 $('altFile').addEventListener('change', async ()=>{
   const f = $('altFile').files && $('altFile').files[0]; if (!f) return;
   show('work'); step(1);
@@ -1610,8 +1613,8 @@ These translations are also shown as movie-style subtitles, so split each part i
 Return ONLY a JSON object exactly like {"about":[{"t":"translated sentence","ar":"matching Arabic"}],"msg":[{"t":"...","ar":"..."}]} (use [] for an empty part).`;
   let r;
   try {
-    r = await fetch('https://api.anthropic.com/v1/messages', {method:'POST',
-      headers:{'x-api-key':cfg.ckey,'anthropic-version':'2023-06-01','content-type':'application/json','anthropic-dangerous-direct-browser-access':'true'},
+    r = await fetch(cfg.ckey ? 'https://api.anthropic.com/v1/messages' : PROXY+'/claude', {method:'POST',
+      headers: cfg.ckey ? {'x-api-key':cfg.ckey,'anthropic-version':'2023-06-01','content-type':'application/json','anthropic-dangerous-direct-browser-access':'true'} : {'content-type':'application/json'},
       body: JSON.stringify({model:cfg.cmodel||DEFAULTS.cmodel, max_tokens:2500, system:sys, messages:[{role:'user', content:JSON.stringify(parts)}]})});
   } catch(e){ throw new Error('CLAUDE_NET: '+e.message); }
   if (!r.ok){ let t=''; try{ t = await r.text(); }catch(e){} throw new Error('CLAUDE HTTP '+r.status+': '+t.slice(0,300)); }
@@ -1718,7 +1721,7 @@ async function partAudio(voiceId, segs){
 }
 async function translatePart(l, which, ar, srcLang){
   if (!ar) return [];
-  if (cfg.ckey){ try { const o = await claudeTranslate(which==='msg' ? {about:'', msg:ar} : {about:ar, msg:''}, l); const r = which==='msg' ? o.msg : o.about; if (r.length) return r; } catch(e){ log('claude failed, using google: '+e.message); } }
+  if (cfg.ckey || PROXY){ try { const o = await claudeTranslate(which==='msg' ? {about:'', msg:ar} : {about:ar, msg:''}, l); const r = which==='msg' ? o.msg : o.about; if (r.length) return r; } catch(e){ log('claude failed, using google: '+e.message); } }
   return await translateSegs(ar, l, srcLang || 'ar');
 }
 function finishTrip(code, aSegs, mSegs, aA, mA){
@@ -1866,7 +1869,7 @@ function splitAr(t){
 async function translateSegs(ar, l, src){ return Promise.all(splitAr(ar).map(async x=>({ar:x, t: await translate(x, l.tl, src)}))); }
 async function translateFor(l){
   let tr = null;
-  if (cfg.ckey){ try { tr = await claudeTranslate({about:sess.about, msg:sess.msg}, l); } catch(e){ log('claude failed, using google: '+e.message); } }
+  if (cfg.ckey || PROXY){ try { tr = await claudeTranslate({about:sess.about, msg:sess.msg}, l); } catch(e){ log('claude failed, using google: '+e.message); } }
   if (!tr){ tr = {about: sess.about ? await translateSegs(sess.about, l, 'ar') : [], msg: sess.msg ? await translateSegs(sess.msg, l, sess.lang) : []}; }
   clockMark('translate');
   return tr;
