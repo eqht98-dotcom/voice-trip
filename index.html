@@ -329,6 +329,9 @@ h1{
 .pic{position:relative;margin:0;aspect-ratio:4/3;border-radius:14px;overflow:hidden;background:linear-gradient(135deg,#1b2c4a,#0d182c);box-shadow:0 0 0 1px rgba(214,180,106,.25)}
 .pic img{display:block;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .4s,transform .4s}
 .pic img.ok{opacity:1}
+.pic.hero{grid-column:1/-1;aspect-ratio:16/9}
+.pic.hero figcaption{font-size:20px;padding:34px 14px 12px}
+.pic figcaption small{font-size:.85em;opacity:.9}
 .pic:hover img.ok{transform:scale(1.05)}
 .pic .ph{position:absolute;inset:0;display:grid;place-items:center;font-size:30px;opacity:.35}
 .pic.loaded .ph{display:none}
@@ -1207,7 +1210,10 @@ function loadPics(root){
 function openCountry(code){
   const c = COUNTRIES[code]; if (!c) return;
   const P = PICS[code] || {}, ICON = {culture:'🎭',wear:'👘',sights:'🏛️',food:'🍽️'};
-  const grid = k => `<div class="pics">${(P[k]||[]).map(([t,w],i)=>`<figure class="pic" data-wiki="${esc(w)}"${LOCAL_PICS[code+'_'+k+'_'+i] ? ` data-local="${code}_${k}_${i}"` : ''}><span class="ph">${ICON[k]}</span><img alt="${esc(t)}"><figcaption>${esc(t)}</figcaption></figure>`).join('')}</div>`;
+  // five photos: the most famous landmark large, then culture, dress, food and a second landmark
+  const one = (k, i, hero) => { const x = (P[k]||[])[i]; if (!x) return ''; const [t,w] = x, key = code+'_'+k+'_'+i;
+    return `<figure class="pic${hero?' hero':''}" data-wiki="${esc(w)}"${LOCAL_PICS[key] ? ` data-local="${key}"` : ''}><span class="ph">${ICON[k]}</span><img alt="${esc(t)}"><figcaption><small>${ICON[k]}</small> ${esc(t)}</figcaption></figure>`; };
+  const five = `<div class="pics">${one('sights',0,true)}${one('culture',0)}${one('wear',0)}${one('food',0)}${one('sights',1)}</div>`;
   const i = c.lang, l = i!=null ? LANGS[i] : null, has = !!sess.trips[code];
   $('ccBox').innerHTML = `
     <div class="cc-head">
@@ -1216,10 +1222,7 @@ function openCountry(code){
       <button type="button" class="iconbtn x" id="ccClose" aria-label="إغلاق">✕</button>
     </div>
     <div class="cc-body">
-      <section class="cc-sec"><h4>🎭 الثقافة</h4>${grid('culture')}</section>
-      <section class="cc-sec"><h4>👘 الأزياء التقليدية</h4>${grid('wear')}</section>
-      <section class="cc-sec"><h4>🏛️ أشهر المعالم</h4>${grid('sights')}</section>
-      <section class="cc-sec"><h4>🍽️ أشهر الأطباق</h4>${grid('food')}</section>
+      <section class="cc-sec">${five}</section>
     </div>
     <div class="credit" id="picCredit"></div>
     <div class="cc-foot">
