@@ -331,6 +331,17 @@ h1{
 .pic img.ok{opacity:1}
 .pic.hero{grid-column:1/-1;aspect-ratio:16/9}
 .pic.hero figcaption{font-size:20px;padding:34px 14px 12px}
+.pic img.ok{cursor:zoom-in}
+.lbx{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;background:rgba(3,6,14,.94);backdrop-filter:blur(6px);animation:lbxIn .25s ease}
+.lbx[hidden]{display:none}
+@keyframes lbxIn{from{opacity:0}to{opacity:1}}
+.lbx figure{margin:0;max-width:94vw;max-height:88vh;display:flex;flex-direction:column;align-items:center;gap:12px}
+.lbx img{max-width:94vw;max-height:78vh;border-radius:16px;box-shadow:0 0 0 1px rgba(214,180,106,.4),0 30px 80px rgba(0,0,0,.6);animation:lbxZoom .3s cubic-bezier(.2,.8,.2,1)}
+@keyframes lbxZoom{from{transform:scale(.88);opacity:.4}to{transform:none;opacity:1}}
+.lbx figcaption{color:var(--gold-hi);font-size:clamp(18px,4.5vw,24px);font-weight:700;text-align:center}
+.lbx-x{position:absolute;top:14px;inset-inline-end:14px;width:46px;height:46px;border-radius:50%;border:1px solid rgba(214,180,106,.5);background:rgba(17,29,51,.8);color:#fff;font-size:20px;cursor:pointer}
+.lbx-nav{position:absolute;top:50%;transform:translateY(-50%);width:50px;height:50px;border-radius:50%;border:1px solid rgba(214,180,106,.5);background:rgba(17,29,51,.7);color:var(--gold-hi);font-size:30px;line-height:1;cursor:pointer}
+.lbx-prev{inset-inline-start:10px}.lbx-next{inset-inline-end:10px}
 .pic figcaption small{font-size:.85em;opacity:.9}
 .pic:hover img.ok{transform:scale(1.05)}
 .pic .ph{position:absolute;inset:0;display:grid;place-items:center;font-size:30px;opacity:.35}
@@ -618,6 +629,12 @@ details.logbox summary{cursor:pointer;color:var(--muted);font-size:14px;padding:
 </div>
 
 <dialog id="countryDlg">
+  <div class="lbx" id="lbx" hidden>
+    <button type="button" class="lbx-x" aria-label="إغلاق">✕</button>
+    <button type="button" dir="ltr" class="lbx-nav lbx-prev" aria-label="السابقة">›</button>
+    <figure><img id="lbxImg" alt=""><figcaption id="lbxCap"></figcaption></figure>
+    <button type="button" dir="ltr" class="lbx-nav lbx-next" aria-label="التالية">‹</button>
+  </div>
   <div class="cc" id="ccBox"></div>
 </dialog>
 <div class="subs" id="subs" aria-live="polite"><div class="box"><span class="ar" id="subAr"></span><span class="fg" id="subFg" dir="auto"></span></div></div>
@@ -1206,6 +1223,27 @@ function loadPics(root){
   });
 }
 
+/* --- culture card: tap a photo to see it large --- */
+(function(){
+  const box = $('lbx'), im = $('lbxImg'), cap = $('lbxCap'); let list = [], at = 0, x0 = null;
+  const show = i => { at = (i + list.length) % list.length; const f = list[at]; im.src = f.querySelector('img').src; cap.textContent = f.querySelector('figcaption').textContent.trim(); im.style.animation = 'none'; im.offsetHeight; im.style.animation = ''; };
+  const close = () => { box.hidden = true; };
+  $('countryDlg').addEventListener('click', e => {
+    const img = e.target.closest('.pic img.ok'); if (!img || box.contains(img)) return;
+    list = [...$('ccBox').querySelectorAll('.pic')].filter(f => f.querySelector('img.ok'));
+    show(list.indexOf(img.closest('.pic'))); box.hidden = false;
+  });
+  box.addEventListener('click', e => {
+    if (e.target.closest('.lbx-prev')) return show(at - 1);
+    if (e.target.closest('.lbx-next')) return show(at + 1);
+    if (e.target === im) return;
+    close();
+  });
+  box.addEventListener('touchstart', e => { x0 = e.touches[0].clientX; }, {passive:true});
+  box.addEventListener('touchend', e => { if (x0 == null) return; const dx = e.changedTouches[0].clientX - x0; x0 = null; if (Math.abs(dx) > 50) show(at + (dx > 0 ? 1 : -1)); }, {passive:true});
+  $('countryDlg').addEventListener('cancel', e => { if (!box.hidden){ e.preventDefault(); close(); } });
+  $('countryDlg').addEventListener('close', close);
+})();
 /* --- culture card --- */
 function openCountry(code){
   const c = COUNTRIES[code]; if (!c) return;
