@@ -14,7 +14,7 @@
 :root{
   --night:#060a13; --navy:#0b1424; --navy-2:#111d33; --navy-3:#172744;
   --gold:#d6b46a; --gold-hi:#f6e3a8; --gold-lo:#8f6c2b; --gold-line:rgba(214,180,106,.28);
-  --cream:#f3ead6; --muted:#a99f88; --rose:#e9a2a8; --stamp:#c8473a; --ok:#7fd1a6;
+  --cream:#f3ead6; --muted:#a99f88; --rose:#e6c77a; --stamp:#c8473a; --ok:#7fd1a6;
   --f-display:"Reem Kufi","IBM Plex Sans Arabic",system-ui,sans-serif;
   --f-body:"IBM Plex Sans Arabic",system-ui,-apple-system,"Segoe UI",Tahoma,sans-serif;
   --f-latin:"Cinzel","Times New Roman",serif;
@@ -89,7 +89,7 @@ h1{
 .phase.on{color:#1a1206;background:linear-gradient(180deg,var(--gold-hi),var(--gold));border-color:var(--gold)}
 .phase.on b{color:#1a1206}
 .phase.done{color:var(--gold)}
-.phase.msg.on{background:linear-gradient(180deg,#ffd9dc,var(--rose));border-color:var(--rose)}
+.phase.msg.on{background:linear-gradient(180deg,#f6e3a8,var(--rose));border-color:var(--rose)}
 .prompt{min-height:118px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;text-align:center}
 .prompt .q{font-family:var(--f-body);font-weight:600;font-size:clamp(21px,3vw,32px);line-height:1.6;text-wrap:balance;color:var(--cream)}
 .prompt .q.swap{animation:qin .45s ease both}
@@ -153,7 +153,7 @@ h1{
 .said{width:100%;max-width:980px;display:grid;gap:12px}
 .said .blk{border:1px solid var(--gold-line);border-radius:18px;padding:14px 20px;background:rgba(11,20,36,.66);line-height:1.9;font-size:17px;min-width:0}
 .said .blk .lbl{display:block;font-size:13px;color:var(--gold);letter-spacing:.04em;margin-bottom:2px}
-.said .blk.love{border-color:rgba(233,162,168,.45);background:linear-gradient(180deg,rgba(233,162,168,.12),rgba(11,20,36,.66))}
+.said .blk.love{border-color:rgba(214,180,106,.45);background:linear-gradient(180deg,rgba(214,180,106,.12),rgba(11,20,36,.66))}
 .said .blk.love .lbl{color:var(--rose)}
 
 .passes{width:100%;display:flex;flex-wrap:wrap;justify-content:center;gap:20px}
@@ -181,7 +181,7 @@ h1{
 .pass .lang{display:flex;align-items:center;gap:10px;font-weight:600;font-size:16px}
 .pass .lang svg{width:72px;height:48px;border-radius:6px;box-shadow:0 0 0 1px rgba(0,0,0,.18),0 3px 8px rgba(0,0,0,.18);flex:none}
 .pass .lang span small{display:block;font-weight:400;color:#6b6250;font-size:13px}
-.pass .text{margin:0;font-size:15.5px;line-height:1.75;color:#2b261d;max-height:9.2em;overflow:auto;padding-inline-end:4px;overflow-wrap:anywhere}
+.pass .text{margin:0;font-size:15.5px;line-height:1.75;color:#6e5216;max-height:9.2em;overflow:auto;padding-inline-end:4px;overflow-wrap:anywhere}
 .pass .stub{
   position:relative;border-inline-start:2px dashed rgba(143,108,43,.45);padding:22px 12px 16px;
   display:flex;flex-direction:column;align-items:center;justify-content:space-between;gap:10px;background:rgba(214,180,106,.12)
@@ -250,8 +250,8 @@ h1{
 @media (max-width:600px){.prompt .q.script{font-size:18px;line-height:1.9}}
 .passes>.pass.solo{flex:1 1 100%;max-width:620px}
 .pass.solo .text{max-height:none;overflow:visible}
-.pass .text .arline{display:block;margin-top:6px;color:#6b5a35;font-size:14.5px;line-height:1.7;direction:rtl;text-align:right;font-family:var(--f-body)}
-.pass .text .msgline{display:block;margin-top:8px;padding-top:8px;border-top:1px dashed rgba(143,108,43,.4);color:#7a2f3a}
+.pass .text .arline{display:block;margin-top:6px;color:#6e5216;font-size:14.5px;line-height:1.7;direction:rtl;text-align:right;font-family:var(--f-body)}
+.pass .text .msgline{display:block;margin-top:8px;padding-top:8px;border-top:1px dashed rgba(143,108,43,.4);color:#6e5216}
 
 /* ---------- world map ---------- */
 .mapwrap{width:100%;max-width:1100px;display:flex;flex-direction:column;align-items:center;gap:14px;margin-top:8px}
@@ -380,9 +380,9 @@ h1{
   padding:0 max(16px,env(safe-area-inset-right,0px)) calc(22px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
 .subs .box{max-width:min(1000px,100%);padding:14px 26px;border-radius:14px;background:rgba(0,0,0,.82);box-shadow:0 10px 30px rgba(0,0,0,.5);text-align:center;opacity:0;transform:translateY(8px);transition:opacity .2s,transform .2s}
 .subs.on .box{opacity:1;transform:none}
-.subs .ar{display:block;color:#fff;font-family:var(--f-body);font-weight:700;font-size:clamp(22px,3.2vw,36px);line-height:1.55;text-shadow:0 2px 4px #000}
+.subs .ar{display:block;color:#f6e3a8;font-family:var(--f-body);font-weight:700;font-size:clamp(22px,3.2vw,36px);line-height:1.55;text-shadow:0 2px 4px #000}
 .subs .fg{display:block;margin-top:4px;color:#f6e3a8;font-size:clamp(14px,1.6vw,18px);line-height:1.5;opacity:.9}
-.subs .ar.love{color:#ffd9dc}
+.subs .ar.love{color:#f6e3a8}
 
 /* ---------- photo picker ---------- */
 #pickDlg{width:min(900px,96vw);height:min(92dvh,980px);overflow:hidden;padding:0}
@@ -1441,19 +1441,21 @@ function onTick(){
     const el = (now-rec.t0)/1000;
     const pr = PROMPTS(COUNTRIES[trip.code]);
     setPrompt('💬 ' + pr[Math.floor(el/7) % pr.length], 'تكلّم براحتك بأي كلام عن نفسك… وبعد 30 ثانية تطلع لك الرسالة تلقائياً');
-    setRing(el/ABOUT_SECS);
-    $('recLabel').textContent = `عرّف بنفسك · ${Math.max(0,Math.ceil(ABOUT_SECS-el))}`;
-    if (now > rec.warnUntil) $('timer').textContent = `🔴 عرّف بنفسك · باقي ${Math.max(0,Math.ceil(ABOUT_SECS-el))} ث`;
+    const TOT = ABOUT_SECS + cfg.msgSecs;
+    setRing(el/TOT);
+    $('recLabel').textContent = `${Math.min(TOT, Math.floor(el)+1)} / ${TOT}`;
+    if (now > rec.warnUntil) $('timer').textContent = `🔴 عرّف بنفسك · ${Math.min(TOT, Math.floor(el)+1)} ث`;
     if (el >= ABOUT_SECS) toPhase2();
   } else if (rec.phase===2){
     const m = (now-rec.p2)/1000;
-    setRing(m/cfg.msgSecs);
-    $('recLabel').textContent = m<MIN_MSG ? 'تكلّم…' : 'إنهاء ✓';
-    if (now > rec.warnUntil) $('timer').textContent = `💌 رسالتك · باقي ${Math.max(0,Math.ceil(cfg.msgSecs-m))} ث`;
+    const TOT = ABOUT_SECS + cfg.msgSecs, el = ABOUT_SECS + m;
+    setRing(el/TOT);
+    $('recLabel').textContent = m<MIN_MSG ? `${Math.min(TOT, Math.floor(el)+1)} / ${TOT}` : `${Math.min(TOT, Math.floor(el)+1)} · إنهاء ✓`;
+    if (now > rec.warnUntil) $('timer').textContent = `💌 رسالتك · ${Math.min(TOT, Math.floor(el)+1)} ث`;
     if (m >= cfg.msgSecs) stopRec();
   }
 }
-function toPhase2(){ rec.phase = 2; rec.p2 = performance.now(); setPhase(2); setPrompt(MSG_PROMPT, MSG_HINT, true); setRing(0); startEarly(); }
+function toPhase2(){ rec.phase = 2; rec.p2 = performance.now(); setPhase(2); setPrompt(MSG_PROMPT, MSG_HINT, true); startEarly(); }
 function stopRec(){
   if (!rec.phase) return;
   rec.phase = 0; clearInterval(rec.tick);
@@ -1666,7 +1668,34 @@ async function sliceWav(blob, fromSec){
   for (let c=0;c<ch;c++){ const d = buf.getChannelData(c); for (let i=0;i<n;i++) mono[i] += d[from+i]/ch; }
   return encodeWav(mono, sr, 16000);
 }
+/* Each ElevenLabs MP3 starts with an "Info" frame that states its own length. When two parts are joined,
+   the browser trusts the first one and stops the clock at the end of part 1 (subtitles then freeze).
+   Removing that frame (and any ID3 tag) makes the joined file report its real length. */
+async function cleanMp3(blob){
+  try {
+    const b = new Uint8Array(await blob.arrayBuffer()); let i = 0;
+    if (b[0]===0x49 && b[1]===0x44 && b[2]===0x33) i = 10 + ((b[6]&127)<<21 | (b[7]&127)<<14 | (b[8]&127)<<7 | (b[9]&127));
+    while (i < b.length-4 && !(b[i]===0xFF && (b[i+1]&0xE0)===0xE0)) i++;
+    const v = (b[i+1]>>3)&3, layer = (b[i+1]>>1)&3;
+    if (v===3 && layer===1){
+      const BR = [0,32,40,48,56,64,80,96,112,128,160,192,224,256,320], SR = [44100,48000,32000];
+      const br = BR[b[i+2]>>4], sr = SR[(b[i+2]>>2)&3], pad = (b[i+2]>>1)&1;
+      if (br && sr){
+        const len = Math.floor(144000*br/sr) + pad, head = String.fromCharCode(...b.subarray(i, Math.min(b.length, i+len)));
+        if (/Xing|Info/.test(head)) i += len;
+      }
+    }
+    return new Blob([b.subarray(i)], {type:'audio/mpeg'});
+  } catch(e){ return blob; }
+}
 function blobDuration(blob){ return new Promise(res=>{ const a = new Audio(); a.preload = 'metadata'; a.onloadedmetadata = ()=>{ res(isFinite(a.duration) ? a.duration : 0); URL.revokeObjectURL(a.src); }; a.onerror = ()=>res(0); a.src = URL.createObjectURL(blob); }); }
+function fixStarts(st, segs, dur){
+  const ok = st.length === segs.length && st.every((x,i)=> isFinite(x) && x >= 0 && x < Math.max(dur, 1) && (i===0 || x >= st[i-1]));
+  if (ok || !dur) return st;
+  log('subtitle times looked wrong → spread by length');
+  const tot = segs.reduce((a,x)=>a + x.t.length + 1, 0); let acc = 0;
+  return segs.map(x=>{ const s = dur * acc / tot; acc += x.t.length + 1; return s; });
+}
 let ttsBusy = 0; const ttsQ = [];
 async function ttsSlot(fn){
   if (ttsBusy >= 3) await new Promise(r=>ttsQ.push(r));
@@ -1685,7 +1714,7 @@ async function partAudio(voiceId, segs){
   // one request per part: the whole text voiced together keeps the most natural flow
   const {blob, starts} = await ttsSlot(()=>ttsTimed(voiceId, segs, tag));
   const dur = await blobDuration(blob);
-  return {blob, dur, starts: (starts||[]).map(x=> x < 0 ? -x*dur : x)};
+  return {blob, dur, starts: fixStarts((starts||[]).map(x=> x < 0 ? -x*dur : x), segs, dur)};
 }
 async function translatePart(l, which, ar, srcLang){
   if (!ar) return [];
@@ -1906,6 +1935,7 @@ function touchSess(){
   sess.idle = setTimeout(()=>{ if (sess.voiceId){ log('session idle: ending'); endSession(true); } }, SESS_IDLE);
 }
 async function endSession(resetUI){
+  vidCache = null; { const b = $('saveTrip'); if (b && b.dataset.label) b.innerHTML = b.dataset.label; }
   clearTimeout(sess.idle);
   const id = sess.voiceId; sess.voiceId = null; sess.about = sess.msg = ''; sess.trips = {};
   if (id) await deleteVoice(id);
@@ -1976,14 +2006,14 @@ async function ttsTimed(voiceId, segs, tag=''){
   try {
     let usedModel = cfg.model; const d = await (await withFallback(m=>{ usedModel = m; return timed(m); })).json(); d.__tag = pre(usedModel).length;
     const bin = atob(d.audio_base64), u8 = new Uint8Array(bin.length); for (let i=0;i<bin.length;i++) u8[i] = bin.charCodeAt(i);
-    const blob = new Blob([u8], {type:'audio/mpeg'});
+    const blob = await cleanMp3(new Blob([u8], {type:'audio/mpeg'}));
     const al = d.alignment || d.normalized_alignment, st = al && al.character_start_times_seconds;
     let starts = null;
     if (st && st.length){ const P = d.__tag ? Math.min(d.__tag, Math.max(0, st.length - text.length)) : 0; const k = (st.length - P) / Math.max(1, text.length); starts = offs.map(o=>st[Math.min(st.length-1, P + Math.round(o*k))]); }
     return {blob, starts};
   } catch(e){
     log('timestamps failed, plain audio: '+e.message.slice(0,160));
-    const blob = await (await withFallback(plain)).blob();
+    const blob = await cleanMp3(await (await withFallback(plain)).blob());
     return {blob, starts: offs.map(o=>-(o / Math.max(1,text.length)))};   // negative = fraction of duration (estimated)
   }
 }
@@ -2026,10 +2056,111 @@ function playOne(i){
   p.play().then(()=>setPlayUI(true)).catch(()=>setPlayUI(false));
 }
 $('playAll').addEventListener('click', ()=>playOne(0));
-function tripFile(){
-  const parts = blobs.filter(Boolean);
+/* ================= the visitor's trip as a video: every country, culture photos, moving subtitles ================= */
+let vidCache = null, vidMime = null;
+// some browsers say they can record MP4 but drop the picture: test a short clip once and keep the first format that really has video
+async function pickVideoMime(){
+  if (vidMime !== null) return vidMime;
+  const list = ['video/mp4;codecs=avc1.42E01E,mp4a.40.2','video/mp4;codecs=avc1,mp4a.40.2','video/mp4;codecs=avc1,opus','video/webm;codecs=vp8,opus','video/webm;codecs=vp9,opus','video/webm'].filter(m=>window.MediaRecorder && MediaRecorder.isTypeSupported(m));
+  for (const m of list){
+    try {
+      const c = document.createElement('canvas'); c.width = 160; c.height = 120; const x = c.getContext('2d'), st = c.captureStream(30);
+      const mr = new MediaRecorder(st, {mimeType:m}), ch = []; mr.ondataavailable = e=>{ if (e.data.size) ch.push(e.data); };
+      const stop = new Promise(r=>mr.onstop = r); mr.start(100);
+      const t0 = performance.now(); await new Promise(res=>{ const l = ()=>{ x.fillStyle = `hsl(${(performance.now()-t0)/3},70%,50%)`; x.fillRect(0,0,160,120); if (performance.now()-t0 > 600) return res(); requestAnimationFrame(l); }; l(); });
+      mr.stop(); await stop;
+      const v = document.createElement('video'); v.muted = true; v.src = URL.createObjectURL(new Blob(ch, {type:m.split(';')[0]}));
+      const w = await new Promise(r=>{ v.onloadedmetadata = ()=>r(v.videoWidth); v.onerror = ()=>r(0); setTimeout(()=>r(0), 3000); });
+      URL.revokeObjectURL(v.src);
+      if (w > 0){ vidMime = m; return m; }
+      log('video format without picture: '+m);
+    } catch(e){ log('video format failed: '+m+' '+e.message); }
+  }
+  vidMime = ''; return '';
+}
+function tripKey(){ return Object.keys(sess.trips).map(c=>c+':'+sess.trips[c].blob.size).join('|'); }
+function loadImg(src){ return new Promise(r=>{ const i = new Image(); i.onload = ()=>r(i); i.onerror = ()=>r(null); i.src = src; }); }
+function wrapLines(ctx, text, maxW){
+  const words = String(text).split(/\s+/), lines = []; let cur = '';
+  words.forEach(w=>{ const t = cur ? cur+' '+w : w; if (ctx.measureText(t).width > maxW && cur){ lines.push(cur); cur = w; } else cur = t; });
+  if (cur) lines.push(cur); return lines;
+}
+async function tripVideo(onProg){
+  const key = tripKey(); if (vidCache && vidCache.key === key) return vidCache.file;
+  const codes = Object.keys(sess.trips).filter(c=>sess.trips[c] && !sess.trips[c].pending);
+  if (!codes.length) throw new Error('NO_TRIP');
+  const W = 720, H = 1280, INTRO = 2.2, GAP = 0.6;
+  const AC = window.AudioContext || window.webkitAudioContext, ac = new AC(), dest = ac.createMediaStreamDestination();
+  const body = getComputedStyle(document.body).getPropertyValue('--f-body') || 'sans-serif';
+  try { await document.fonts.load('700 40px "IBM Plex Sans Arabic"'); } catch(e){}
+  // prepare each country: audio, photos, flag
+  const parts = []; let T = 0;
+  for (const c of codes){
+    const t = sess.trips[c], buf = await ac.decodeAudioData(await t.blob.arrayBuffer());
+    const keys = ['sights_0','culture_0','wear_0','food_0','sights_1'].map(k=>c+'_'+k).filter(k=>LOCAL_PICS[k]);
+    const imgs = (await Promise.all(keys.map(k=>loadImg('img/'+k+'.jpg?v='+PICS_VER)))).filter(Boolean);
+    let flag = null; try { flag = await loadImg('data:image/svg+xml;charset=utf-8,'+encodeURIComponent(flagSVG(c))); } catch(e){}
+    // a flag image that would block recording (browser security) is left out
+    if (flag){ try { const tc = document.createElement('canvas'); tc.width = 8; tc.height = 6; const tx = tc.getContext('2d'); tx.drawImage(flag,0,0,8,6); tx.getImageData(0,0,1,1); } catch(e){ log('flag skipped in video: '+c); flag = null; } }
+    parts.push({c, t, buf, imgs, flag, start: T, aStart: T + INTRO}); T += INTRO + buf.duration + GAP;
+  }
+  const cv = document.createElement('canvas'); cv.width = W; cv.height = H; const ctx = cv.getContext('2d');
+  const stream = cv.captureStream(30); dest.stream.getAudioTracks().forEach(tr=>stream.addTrack(tr));
+  const mime = await pickVideoMime();
+  const mr = new MediaRecorder(stream, mime ? {mimeType:mime, videoBitsPerSecond:2_500_000} : undefined), chunks = [];
+  mr.ondataavailable = e=>{ if (e.data && e.data.size) chunks.push(e.data); };
+  const done = new Promise(r=>mr.onstop = r);
+  const GOLD = '#f6e3a8', GOLD2 = '#d6b46a';
+  const draw = (now) => {
+    ctx.fillStyle = '#000'; ctx.fillRect(0,0,W,H);
+    const P = parts.find(x=>now >= x.start && now < x.start + INTRO + x.buf.duration + GAP) || parts[parts.length-1];
+    const l = LANGS[COUNTRIES[P.c].lang], local = now - P.start;
+    // culture photos: slow zoom, cross-fade every 6 s
+    if (P.imgs.length){
+      const per = 6, k = Math.floor(local/per), f = (local % per)/per;
+      const paint = (img, alpha, z) => { if (!img) return; ctx.globalAlpha = alpha;
+        const ih = H*0.62, s = Math.max(W/img.width, ih/img.height)*z, w = img.width*s, h = img.height*s;
+        ctx.save(); ctx.beginPath(); ctx.rect(0, 150, W, ih); ctx.clip(); ctx.drawImage(img, (W-w)/2, 150 + (ih-h)/2, w, h); ctx.restore(); ctx.globalAlpha = 1; };
+      paint(P.imgs[k % P.imgs.length], 1, 1 + f*0.08);
+      if (f > 0.85) paint(P.imgs[(k+1) % P.imgs.length], (f-0.85)/0.15, 1);
+      const g = ctx.createLinearGradient(0, 150 + H*0.62 - 260, 0, 150 + H*0.62); g.addColorStop(0,'rgba(0,0,0,0)'); g.addColorStop(1,'#000');
+      ctx.fillStyle = g; ctx.fillRect(0, 150 + H*0.62 - 260, W, 260);
+    }
+    // header: flag + country
+    if (P.flag) ctx.drawImage(P.flag, W/2 - 42, 34, 84, 56);
+    ctx.textAlign = 'center'; ctx.direction = 'rtl'; ctx.fillStyle = GOLD;
+    ctx.font = `700 34px ${body}`; ctx.fillText(COUNTRIES[P.c].name, W/2, 128);
+    // title card at the start of each country
+    if (local < INTRO){ ctx.fillStyle = `rgba(0,0,0,${Math.max(0, 0.75 - local/INTRO*0.75)})`; ctx.fillRect(0,150,W,H*0.62);
+      ctx.fillStyle = GOLD; ctx.font = `700 46px ${body}`; ctx.fillText('✈ ' + l.city, W/2, 150 + H*0.31); }
+    // subtitles (same timing as the page)
+    const tau = now - P.aStart; let cur = null;
+    if (tau >= 0) P.t.segs.forEach(x=>{ const st = x.start == null ? null : (x.start < 0 ? -x.start*P.buf.duration : x.start); if (st != null && tau >= st - 0.05) cur = x; });
+    if (tau >= 0 && !cur) cur = P.t.segs[0];
+    if (cur && tau <= P.buf.duration + 0.2){
+      let y = 150 + H*0.62 + 40;
+      ctx.direction = 'rtl'; ctx.fillStyle = GOLD; ctx.font = `700 38px ${body}`;
+      wrapLines(ctx, cur.ar, W-80).slice(0,4).forEach(line=>{ ctx.fillText(line, W/2, y); y += 54; });
+      y += 10; ctx.direction = 'ltr'; ctx.fillStyle = GOLD2; ctx.font = `500 28px ${body}`;
+      wrapLines(ctx, cur.t, W-80).slice(0,4).forEach(line=>{ ctx.fillText(line, W/2, y); y += 40; });
+    }
+    ctx.direction = 'rtl'; ctx.fillStyle = 'rgba(246,227,168,.55)'; ctx.font = `500 20px ${body}`;
+    ctx.fillText('رحلة حول العالم بصوتك · يوم الطلاب العالمي · تبوك', W/2, H - 34);
+  };
+  draw(0);
+  const t0 = ac.currentTime + 0.25;
+  parts.forEach(x=>{ const src = ac.createBufferSource(); src.buffer = x.buf; src.connect(dest); src.start(t0 + x.aStart); });
+  mr.start(500);
+  await new Promise(res=>{
+    const loop = () => { const now = ac.currentTime - t0; draw(Math.max(0, now)); onProg && onProg(Math.min(1, Math.max(0, now/T)));
+      if (now >= T) return res(); requestAnimationFrame(loop); };
+    loop();
+  });
+  mr.stop(); await done; ac.close && ac.close();
+  const type = (mr.mimeType || mime || 'video/webm').split(';')[0], ext = type.includes('mp4') ? 'mp4' : 'webm';
   const stamp = new Date().toISOString().slice(0,16).replace(/[-:T]/g,'');
-  return new File(parts, `voice-trip-${stamp}.mp3`, {type:'audio/mpeg'});
+  const file = new File(chunks, `voice-trip-${stamp}.${ext}`, {type});
+  vidCache = {key, file}; return file;
 }
 /* temporary link + QR: file auto-deletes after ~60 min on tmpfiles.org */
 $('toPhone').addEventListener('click', async ()=>{
@@ -2037,7 +2168,9 @@ $('toPhone').addEventListener('click', async ()=>{
   box.hidden = false; box.scrollIntoView({behavior:'smooth', block:'center'}); q.innerHTML = '<span class="spin" style="border-color:rgba(11,20,36,.2);border-top-color:#0b1424"></span>'; t.textContent = '…جاري تجهيز الرابط';
   $('toPhone').disabled = true;
   try {
-    const fd = new FormData(); fd.append('file', tripFile());
+    const vf = await tripVideo(f=>{ t.textContent = `🎬 نجهّز فيديو رحلتك… ${Math.round(f*100)}%`; });
+    t.textContent = '…جاري رفع الفيديو';
+    const fd = new FormData(); fd.append('file', vf);
     let r;
     try { r = await fetch('https://tmpfiles.org/api/v1/upload', {method:'POST', body:fd}); }
     catch(e){ throw new Error('UPLOAD_NET: '+e.message); }
@@ -2050,14 +2183,24 @@ $('toPhone').addEventListener('click', async ()=>{
     if (window.QRCode) new QRCode(q, {text:url, width:232, height:232, colorDark:'#0b1424', colorLight:'#f3ead6', correctLevel:QRCode.CorrectLevel.M});
     else q.textContent = 'QR';
     box.scrollIntoView({behavior:'smooth', block:'center'});
-    t.innerHTML = 'امسح الكود بكاميرا جوالك وحمّل رحلتك 🎧<small>الرابط مؤقت وينحذف تلقائياً بعد ساعة تقريباً</small>';
+    t.innerHTML = 'امسح الكود بكاميرا جوالك وحمّل فيديو رحلتك 🎬<small>الرابط مؤقت وينحذف تلقائياً بعد ساعة تقريباً</small>';
   } catch(e){
     log('upload failed: '+e.message); q.innerHTML = '✕';
     t.innerHTML = 'ما قدرنا نجهّز الرابط. استخدم زر "مشاركة من الجهاز" بدلها.<small>'+esc(e.message.slice(0,90))+'</small>';
   } finally { $('toPhone').disabled = false; }
 });
 $('saveTrip').addEventListener('click', async ()=>{
-  const f = tripFile();
+  const btn = $('saveTrip'), label = btn.dataset.label || (btn.dataset.label = btn.innerHTML);
+  const ready = vidCache && vidCache.key === tripKey();
+  let f;
+  if (!ready){
+    btn.disabled = true;
+    try { f = await tripVideo(p=>{ btn.textContent = `🎬 نجهّز الفيديو… ${Math.round(p*100)}%`; }); }
+    catch(e){ log('video: '+e.message); btn.innerHTML = label; btn.disabled = false; $('saveHint').textContent = 'ما قدرنا نجهّز الفيديو: '+e.message.slice(0,80); $('saveHint').hidden = false; return; }
+    btn.disabled = false; btn.innerHTML = '✅ الفيديو جاهز — اضغط للمشاركة';
+    return;
+  }
+  f = vidCache.file; btn.innerHTML = label;
   try {
     if (navigator.canShare && navigator.canShare({files:[f]})){
       await navigator.share({files:[f], title:'رحلتي حول العالم بصوتي', text:'رحلتي الصوتية من يوم الطلاب العالمي 🌍'});
@@ -2066,7 +2209,7 @@ $('saveTrip').addEventListener('click', async ()=>{
   } catch(e){ if (e && e.name === 'AbortError') return; log('share: '+e.message); }
   const a = document.createElement('a'); a.href = URL.createObjectURL(f); a.download = f.name;
   document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href), 4000);
-  $('saveHint').textContent = 'انحفظ الملف في جهاز البوث (التنزيلات). أرسله للزائر من هناك.'; $('saveHint').hidden = false;
+  $('saveHint').textContent = 'انحفظ الفيديو في جهاز البوث (التنزيلات). أرسله للزائر من هناك.'; $('saveHint').hidden = false;
 });
 $('newVisitor').addEventListener('click', ()=>{
   if (sess.voiceId) endSession(false);
