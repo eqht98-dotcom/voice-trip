@@ -1901,7 +1901,7 @@ function showTrip(code){
   fillPass(t.tr);
   blobs[0] = t.blob; players[0] = new Audio(URL.createObjectURL(t.blob));
   const b = $('pass0').querySelector('.play'); b.disabled = false; b.innerHTML = PLAY;
-  $('saveTrip').hidden = !!t.pending; $('toPhone').hidden = !!t.pending;
+  $('saveTrip').hidden = !!t.pending; $('toPhone').hidden = !!t.pending; if (!t.pending) kickVideo();
   const n = Object.keys(sess.trips).length;
   $('deletedNote').textContent = `🔒 صوتك محفوظ مؤقتاً (سافرت لـ${n} ${n===1?'دولة':'دول'})، فتقدر تختار دولة ثانية بدون تسجيل. ينحذف لما تضغط «مسافر جديد» أو بعد 15 دقيقة.`;
   ORDER.forEach(k=>markMap(k, k===code));
@@ -1918,7 +1918,7 @@ function upgradeTrip(code){
   // message audio is ready: update the ticket; if the intro is playing, its 'ended' hands over to the full audio
   const t = sess.trips[code]; t.full = true; t.pending = null;
   fillPass(t.tr); renderSaid(sess.about, sess.msg);
-  $('saveTrip').hidden = false; $('toPhone').hidden = false;
+  $('saveTrip').hidden = false; $('toPhone').hidden = false; kickVideo();
   const old = players[0];
   if (old && old.paused && !old.ended) swapPlayer(code, old.currentTime || 0);
 }
@@ -1935,7 +1935,7 @@ function touchSess(){
   sess.idle = setTimeout(()=>{ if (sess.voiceId){ log('session idle: ending'); endSession(true); } }, SESS_IDLE);
 }
 async function endSession(resetUI){
-  vidCache = null; { const b = $('saveTrip'); if (b && b.dataset.label) b.innerHTML = b.dataset.label; }
+  vidCache = null; if (vidJob){ vidJob.cancel = true; vidJob = null; } { const b = $('saveTrip'); if (b && b.dataset.label) b.innerHTML = b.dataset.label; }
   clearTimeout(sess.idle);
   const id = sess.voiceId; sess.voiceId = null; sess.about = sess.msg = ''; sess.trips = {};
   if (id) await deleteVoice(id);
@@ -2057,7 +2057,28 @@ function playOne(i){
 }
 $('playAll').addEventListener('click', ()=>playOne(0));
 /* ================= the visitor's trip as a video: every country, culture photos, moving subtitles ================= */
-let vidCache = null, vidMime = null;
+let vidCache = null, vidMime = null, vidJob = null;
+/* The video is recorded in real time (a 60 s trip takes 60 s to record), so start it quietly as soon as the
+   trip is ready — while the visitor is listening — and it is usually finished before anyone taps download. */
+function tripReady(){ const ks = Object.keys(sess.trips); return ks.length && ks.every(c=>sess.trips[c] && !sess.trips[c].pending && sess.trips[c].blob); }
+function ensureVideo(){
+  if (!tripReady()) return null;
+  const key = tripKey();
+  if (vidCache && vidCache.key === key) return Promise.resolve(vidCache.file);
+  if (vidJob && vidJob.key === key) return vidJob.p;
+  if (vidJob) vidJob.cancel = true;
+  const job = {key, prog:0, cancel:false};
+  job.p = tripVideo(f=>{ job.prog = f; }, job).finally(()=>{ if (vidJob === job) vidJob = null; });
+  vidJob = job; return job.p;
+}
+function kickVideo(){ setTimeout(()=>{ const pr = ensureVideo(); if (pr) pr.then(()=>log('video ready in background')).catch(e=>log('background video: '+e.message)); }, 900); }
+async function waitVideo(show){
+  let pr = ensureVideo(); if (!pr) throw new Error('NOT_READY');
+  const tm = setInterval(()=>{ if (vidJob) show(vidJob.prog); }, 300);
+  try { return await pr; }
+  catch(e){ if (e.message === 'AUDIO_SUSPENDED' || e.message === 'CANCELLED'){ pr = ensureVideo(); if (pr) return await pr; } throw e; }
+  finally { clearInterval(tm); }
+}
 // some browsers say they can record MP4 but drop the picture: test a short clip once and keep the first format that really has video
 async function pickVideoMime(){
   if (vidMime !== null) return vidMime;
@@ -2085,12 +2106,14 @@ function wrapLines(ctx, text, maxW){
   words.forEach(w=>{ const t = cur ? cur+' '+w : w; if (ctx.measureText(t).width > maxW && cur){ lines.push(cur); cur = w; } else cur = t; });
   if (cur) lines.push(cur); return lines;
 }
-async function tripVideo(onProg){
+async function tripVideo(onProg, job){
   const key = tripKey(); if (vidCache && vidCache.key === key) return vidCache.file;
   const codes = Object.keys(sess.trips).filter(c=>sess.trips[c] && !sess.trips[c].pending);
   if (!codes.length) throw new Error('NO_TRIP');
   const W = 720, H = 1280, INTRO = 2.2, GAP = 0.6;
   const AC = window.AudioContext || window.webkitAudioContext, ac = new AC(), dest = ac.createMediaStreamDestination();
+  try { await ac.resume(); } catch(e){}
+  if (ac.state !== 'running'){ await new Promise(r=>setTimeout(r, 600)); if (ac.state !== 'running'){ ac.close && ac.close(); throw new Error('AUDIO_SUSPENDED'); } }
   const body = getComputedStyle(document.body).getPropertyValue('--f-body') || 'sans-serif';
   try { await document.fonts.load('700 40px "IBM Plex Sans Arabic"'); } catch(e){}
   // prepare each country: audio, photos, flag
@@ -2153,10 +2176,11 @@ async function tripVideo(onProg){
   mr.start(500);
   await new Promise(res=>{
     const loop = () => { const now = ac.currentTime - t0; draw(Math.max(0, now)); onProg && onProg(Math.min(1, Math.max(0, now/T)));
-      if (now >= T) return res(); requestAnimationFrame(loop); };
+      if (now >= T || (job && job.cancel)) return res(); requestAnimationFrame(loop); };
     loop();
   });
   mr.stop(); await done; ac.close && ac.close();
+  if (job && job.cancel) throw new Error('CANCELLED');
   const type = (mr.mimeType || mime || 'video/webm').split(';')[0], ext = type.includes('mp4') ? 'mp4' : 'webm';
   const stamp = new Date().toISOString().slice(0,16).replace(/[-:T]/g,'');
   const file = new File(chunks, `voice-trip-${stamp}.${ext}`, {type});
@@ -2168,7 +2192,7 @@ $('toPhone').addEventListener('click', async ()=>{
   box.hidden = false; box.scrollIntoView({behavior:'smooth', block:'center'}); q.innerHTML = '<span class="spin" style="border-color:rgba(11,20,36,.2);border-top-color:#0b1424"></span>'; t.textContent = '…جاري تجهيز الرابط';
   $('toPhone').disabled = true;
   try {
-    const vf = await tripVideo(f=>{ t.textContent = `🎬 نجهّز فيديو رحلتك… ${Math.round(f*100)}%`; });
+    const vf = await waitVideo(f=>{ t.textContent = `🎬 نجهّز فيديو رحلتك… ${Math.round(f*100)}%`; });
     t.textContent = '…جاري رفع الفيديو';
     const fd = new FormData(); fd.append('file', vf);
     let r;
@@ -2195,7 +2219,7 @@ $('saveTrip').addEventListener('click', async ()=>{
   let f;
   if (!ready){
     btn.disabled = true;
-    try { f = await tripVideo(p=>{ btn.textContent = `🎬 نجهّز الفيديو… ${Math.round(p*100)}%`; }); }
+    try { f = await waitVideo(p=>{ btn.textContent = `🎬 نجهّز الفيديو… ${Math.round(p*100)}%`; }); }
     catch(e){ log('video: '+e.message); btn.innerHTML = label; btn.disabled = false; $('saveHint').textContent = 'ما قدرنا نجهّز الفيديو: '+e.message.slice(0,80); $('saveHint').hidden = false; return; }
     btn.disabled = false; btn.innerHTML = '✅ الفيديو جاهز — اضغط للمشاركة';
     return;
