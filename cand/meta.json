@@ -298,11 +298,20 @@
    "code": "sa",
    "sec": "food",
    "i": 1,
-   "ar": "الجريش",
-   "wiki": "Jareesh",
-   "q": "jareesh Saudi dish"
+   "ar": "التمور",
+   "wiki": "Date palm",
+   "q": "Saudi dates fruit plate",
+   "force": 1
   },
-  "cands": []
+  "cands": [
+   {
+    "src": "wikipedia",
+    "thumb": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/45/Dates005.jpg/330px-Dates005.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "page": "https://en.wikipedia.org/wiki/Date_palm",
+    "author": "",
+    "license": ""
+   }
+  ]
  },
  "gb_culture_0": {
   "item": {
@@ -405,43 +414,30 @@
    "i": 0,
    "ar": "التنورة الاسكتلندية",
    "wiki": "Kilt",
-   "q": "Kilt"
+   "q": "Scottish piper kilt bagpipes",
+   "force": 1
   },
   "cands": [
    {
-    "src": "commons",
-    "thumb": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a8/Mealt_Waterfall_with_Kilt_Rock%2C_Isle_of_Skye.jpg/960px-Mealt_Waterfall_with_Kilt_Rock%2C_Isle_of_Skye.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
-    "page": "https://commons.wikimedia.org/wiki/File:Mealt_Waterfall_with_Kilt_Rock,_Isle_of_Skye.jpg",
-    "author": "<a href=\"//commons.wikimedia.org/wiki/User:Colin\" title=\"User:Colin\">Colin</a>",
-    "license": "CC BY-SA 4.0"
-   },
-   {
-    "src": "commons",
-    "thumb": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c6/Plaid_Kilt_Nontraditional.jpg/960px-Plaid_Kilt_Nontraditional.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
-    "page": "https://commons.wikimedia.org/wiki/File:Plaid_Kilt_Nontraditional.jpg",
+    "src": "wikipedia",
+    "thumb": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e2/Scottish_mercenaries_in_the_Thirty_Years_War.jpg/330px-Scottish_mercenaries_in_the_Thirty_Years_War.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "page": "https://en.wikipedia.org/wiki/Kilt",
     "author": "",
-    "license": "Public domain"
+    "license": ""
    },
    {
     "src": "commons",
-    "thumb": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e2/Kilt_maker.jpg/960px-Kilt_maker.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
-    "page": "https://commons.wikimedia.org/wiki/File:Kilt_maker.jpg",
-    "author": "<a href=\"//commons.wikimedia.org/w/index.php?title=User:Felvalen&amp;action=edit&amp;redlink=1\" class=\"new\" title=\"User:Felvalen (page does not exist)\">Felvalen</a>",
-    "license": "CC BY-SA 4.0"
+    "thumb": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/da/Bagpipers_In_Dublin_%28Men_And_Women_In_Kilts%29.jpg/960px-Bagpipers_In_Dublin_%28Men_And_Women_In_Kilts%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "page": "https://commons.wikimedia.org/wiki/File:Bagpipers_In_Dublin_(Men_And_Women_In_Kilts).jpg",
+    "author": "William Murphy",
+    "license": "CC BY-SA 2.0"
    },
    {
     "src": "commons",
-    "thumb": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/54/Moka_KILT._13.jpg/960px-Moka_KILT._13.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
-    "page": "https://commons.wikimedia.org/wiki/File:Moka_KILT._13.jpg",
-    "author": "<p><a href=\"//commons.wikimedia.org/wiki/User:Coyau\" title=\"User:Coyau\">Coyau</a>\n</p>",
-    "license": "CC BY-SA 3.0"
-   },
-   {
-    "src": "commons",
-    "thumb": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/8b/Moka_KILT._01.jpg/960px-Moka_KILT._01.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
-    "page": "https://commons.wikimedia.org/wiki/File:Moka_KILT._01.jpg",
-    "author": "<p><a href=\"//commons.wikimedia.org/wiki/User:Coyau\" title=\"User:Coyau\">Coyau</a>\n</p>",
-    "license": "CC BY-SA 3.0"
+    "thumb": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/3c/The_%22Red_and_white%22_book_of_Menzies..._%281908%29_%2814598074380%29.jpg/960px-The_%22Red_and_white%22_book_of_Menzies..._%281908%29_%2814598074380%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "page": "https://commons.wikimedia.org/wiki/File:The_%22Red_and_white%22_book_of_Menzies..._(1908)_(14598074380).jpg",
+    "author": "<a rel=\"nofollow\" class=\"external text\" href=\"https://www.flickr.com/people/126377022@N07\">Internet Archive Book Images</a>",
+    "license": "No restrictions"
    }
   ]
  },
@@ -838,43 +834,44 @@
    "i": 0,
    "ar": "البيريه",
    "wiki": "Beret",
-   "q": "Beret"
+   "q": "man wearing beret France",
+   "force": 1
   },
   "cands": [
    {
-    "src": "commons",
-    "thumb": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/ae/Beret_%28AM_1996.145.12%29.jpg/960px-Beret_%28AM_1996.145.12%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
-    "page": "https://commons.wikimedia.org/wiki/File:Beret_(AM_1996.145.12).jpg",
+    "src": "wikipedia",
+    "thumb": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/71/Sven_Palmqvist_1965.jpg/330px-Sven_Palmqvist_1965.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "page": "https://en.wikipedia.org/wiki/Beret",
     "author": "",
-    "license": "CC BY 4.0"
+    "license": ""
    },
    {
     "src": "commons",
-    "thumb": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/1b/Bereti_lak%C3%B3h%C3%A1z.jpg/960px-Bereti_lak%C3%B3h%C3%A1z.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
-    "page": "https://commons.wikimedia.org/wiki/File:Bereti_lak%C3%B3h%C3%A1z.jpg",
-    "author": "<a href=\"//commons.wikimedia.org/wiki/User:Oprienko\" title=\"User:Oprienko\">Oprienko</a>",
-    "license": "CC BY-SA 4.0"
+    "thumb": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/3c/Young_Man_Wearing_a_Beret_MET_DR1004.jpg/960px-Young_Man_Wearing_a_Beret_MET_DR1004.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "page": "https://commons.wikimedia.org/wiki/File:Young_Man_Wearing_a_Beret_MET_DR1004.jpg",
+    "author": "<bdi><a href=\"https://en.wikipedia.org/wiki/en:Fran%C3%A7ois_Boucher\" class=\"extiw\" title=\"w:en:François Boucher\"><span title=\"French painter (1703–1770)\">François Boucher</span></a></bdi>",
+    "license": "CC0"
    },
    {
     "src": "commons",
-    "thumb": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/63/Beret_%28AM_1996.139.1-2%29.jpg/960px-Beret_%28AM_1996.139.1-2%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
-    "page": "https://commons.wikimedia.org/wiki/File:Beret_(AM_1996.139.1-2).jpg",
-    "author": "<div class=\"fn value\">\nUnknown author<span style=\"display: none;\">Unknown author</span></div>",
-    "license": "CC BY 4.0"
+    "thumb": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/22/Young_Man_Wearing_a_Beret_MET_DP805485.jpg/960px-Young_Man_Wearing_a_Beret_MET_DP805485.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "page": "https://commons.wikimedia.org/wiki/File:Young_Man_Wearing_a_Beret_MET_DP805485.jpg",
+    "author": "<bdi><a href=\"https://en.wikipedia.org/wiki/en:Fran%C3%A7ois_Boucher\" class=\"extiw\" title=\"w:en:François Boucher\"><span title=\"French painter (1703–1770)\">François Boucher</span></a></bdi>",
+    "license": "CC0"
    },
    {
     "src": "commons",
-    "thumb": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e5/Beret_%28AM_1996.167.5%29.jpg/960px-Beret_%28AM_1996.167.5%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
-    "page": "https://commons.wikimedia.org/wiki/File:Beret_(AM_1996.167.5).jpg",
-    "author": "",
-    "license": "CC BY 4.0"
+    "thumb": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e3/Man_verlaat_winkel_met_boodschappen%2C_Bestanddeelnr_254-0420.jpg/960px-Man_verlaat_winkel_met_boodschappen%2C_Bestanddeelnr_254-0420.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "page": "https://commons.wikimedia.org/wiki/File:Man_verlaat_winkel_met_boodschappen,_Bestanddeelnr_254-0420.jpg",
+    "author": "Willem van de Poll",
+    "license": "CC0"
    },
    {
     "src": "commons",
-    "thumb": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/91/Beret_%28AM_2001.25.807-1%29.jpg/960px-Beret_%28AM_2001.25.807-1%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
-    "page": "https://commons.wikimedia.org/wiki/File:Beret_(AM_2001.25.807-1).jpg",
-    "author": "<div class=\"fn value\">\nSupak Manufacturing [Co] Ltd</div>",
-    "license": "CC BY 4.0"
+    "thumb": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/26/Vijf_oude_mannen_met_petten%2C_RP-F-F01190-AQ.jpg/960px-Vijf_oude_mannen_met_petten%2C_RP-F-F01190-AQ.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "page": "https://commons.wikimedia.org/wiki/File:Vijf_oude_mannen_met_petten,_RP-F-F01190-AQ.jpg",
+    "author": "Rijksmuseum",
+    "license": "CC0"
    }
   ]
  },
