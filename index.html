@@ -1535,13 +1535,20 @@ async function cleanForClone(blob){
   for (let f=0; f<frames; f++) if (keep[f]){ parts.push(f); total += F; }
   if (total < sr*8){ log('clean: too little speech detected, using full recording'); total = 0; }
   let y;
-  if (total){ y = new Float32Array(total); let o = 0; for (const f of parts){ y.set(x.subarray(f*F,(f+1)*F), o); o += F; } }
+  if (total){
+    y = new Float32Array(total); let o = 0, prev = -2; const X = Math.min(F, Math.round(sr*0.005));
+    for (const f of parts){
+      y.set(x.subarray(f*F,(f+1)*F), o);
+      if (f !== prev+1 && o){ for (let i=0;i<X;i++){ const w = i/X; y[o+i] *= w; y[o-1-i] *= w; } }   // 5 ms fade at each cut
+      o += F; prev = f;
+    }
+  }
   else y = x;
   // 3) normalize: speech RMS to ~-20 dBFS, peaks limited to -1 dBFS
   let s2 = 0, cnt = 0, pk = 0;
   for (let i=0;i<y.length;i++){ const v = Math.abs(y[i]); if (v>pk) pk = v; if (v > thr){ s2 += y[i]*y[i]; cnt++; } }
   const speechRms = Math.sqrt(s2/Math.max(1,cnt)) || 0.05;
-  let g = 0.1 / speechRms; g = Math.min(g, 0.89/Math.max(pk,1e-4), 12);
+  let g = 0.1 / speechRms; g = Math.min(g, 0.89/Math.max(pk,1e-4), 4);
   for (let i=0;i<y.length;i++){ let v = y[i]*g; if (v>0.89) v = 0.89 + (v-0.89)*0.2; else if (v<-0.89) v = -0.89 + (v+0.89)*0.2; y[i] = v; }
   log(`clean: ${(n/sr).toFixed(1)}s -> ${(y.length/sr).toFixed(1)}s, gain x${g.toFixed(2)}`);
   return encodeWav(y, sr);
@@ -1996,6 +2003,7 @@ function fillPass(tr){
   if (tr.about.length){ add('fg', tr.about.map(x=>x.t).join(' ')).dir = 'auto'; add('arline', '🇸🇦 ' + tr.about.map(x=>x.ar).join(' ')); }
   if (tr.msg.length){ add('msgline', '💌 ' + tr.msg.map(x=>x.t).join(' ')); add('arline', '🇸🇦 ' + tr.msg.map(x=>x.ar).join(' ')); }
 }
+let TTS_FMT = 'mp3_44100_192';   // best quality; falls back to 128 if the plan doesn't allow it
 async function ttsTimed(voiceId, segs, tag=''){
   // one text, sentences separated by spaces (blank line before the message); remember where each sentence starts
   let text = '', offs = [];
@@ -2003,7 +2011,8 @@ async function ttsTimed(voiceId, segs, tag=''){
   ttsChars += text.length;
   const pre = model => (tag && /^eleven_v[34]/.test(model)) ? tag : '';
   const body = model => JSON.stringify({text: pre(model) + text, model_id:model, voice_settings:{stability:+cfg.stab, similarity_boost:+cfg.sim, use_speaker_boost:true}});
-  const timed = model => api(`/text-to-speech/${voiceId}/with-timestamps?output_format=mp3_44100_128`, {method:'POST', headers:{'Content-Type':'application/json'}, body: body(model)});
+  const timed1 = model => api(`/text-to-speech/${voiceId}/with-timestamps?output_format=${TTS_FMT}`, {method:'POST', headers:{'Content-Type':'application/json'}, body: body(model)});
+  const timed = async model => { try { return await timed1(model); } catch(e){ if (TTS_FMT !== 'mp3_44100_128' && /HTTP 4\d\d/.test(e.message) && /format|tier|subscription|plan/i.test(e.message)){ log('192 not allowed, using 128'); TTS_FMT = 'mp3_44100_128'; return await timed1(model); } throw e; } };
   const plain = model => api(`/text-to-speech/${voiceId}?output_format=mp3_44100_128`, {method:'POST', headers:{'Content-Type':'application/json','Accept':'audio/mpeg'}, body: body(model)});
   const withFallback = async fn => { try { return await fn(cfg.model); } catch(e){ if (cfg.model !== 'eleven_multilingual_v2' && /HTTP 4(00|04|22)/.test(e.message)){ log('model '+cfg.model+' rejected, fallback v2: '+e.message.slice(0,160)); return await fn('eleven_multilingual_v2'); } throw e; } };
   try {
