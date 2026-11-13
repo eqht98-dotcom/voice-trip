@@ -375,6 +375,15 @@ h1{
 .picstat .ps.none b{color:var(--muted)}
 .picstat .tot{grid-column:1/-1;font-size:15px;color:var(--cream)}
 
+/* ---------- one-minute tour on screen ---------- */
+.tourbox{position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;background:rgba(3,6,14,.96)}
+.tourbox[hidden]{display:none}
+.tour-stage{height:100%;max-height:100dvh;aspect-ratio:9/16;max-width:100vw;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative}
+.tour-stage canvas,.tour-stage video{width:100%;height:100%;object-fit:contain;background:#000}
+.tour-wait{text-align:center;color:var(--cream);font-family:var(--f-body);font-size:20px}
+.tour-wait .spin{display:inline-block;margin-bottom:14px}
+.tour-done{position:absolute;left:12px;right:12px;bottom:12%;margin:0;padding:12px;border-radius:12px;background:rgba(0,0,0,.75);color:#f6e3a8;text-align:center;font-family:var(--f-body);font-weight:700;font-size:18px}
+.tour-x{position:absolute;top:max(12px,env(safe-area-inset-top,0px));left:12px;z-index:2;width:44px;height:44px;border-radius:50%;border:1px solid var(--gold-line);background:rgba(11,20,36,.8);color:var(--cream);font-size:20px;cursor:pointer}
 /* ---------- live subtitles (movie style) ---------- */
 .subs{position:fixed;left:0;right:0;bottom:0;z-index:50;display:flex;justify-content:center;pointer-events:none;
   padding:0 max(16px,env(safe-area-inset-right,0px)) calc(22px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
@@ -614,6 +623,7 @@ details.logbox summary{cursor:pointer;color:var(--muted);font-size:14px;padding:
     <div class="passes" id="passes"></div>
     <div class="actions">
       <button class="btn gold" id="playAll">▶ اسمع رحلتك</button>
+      <button class="btn gold" id="tourBtn" hidden>🎬 خذ جولة دقيقة بصوتك</button>
       <button class="btn gold" id="toPhone" hidden>📱 خذ رحلتك على جوالك</button>
       <button class="btn" id="saveTrip" hidden>📲 مشاركة من الجهاز</button>
       <button class="btn" id="otherCountry">✈ دولة ثانية</button>
@@ -637,6 +647,7 @@ details.logbox summary{cursor:pointer;color:var(--muted);font-size:14px;padding:
   </div>
   <div class="cc" id="ccBox"></div>
 </dialog>
+<div class="tourbox" id="tourBox" hidden><button type="button" class="tour-x" id="tourClose" aria-label="إغلاق">✕</button><div class="tour-stage" id="tourStage"></div></div>
 <div class="subs" id="subs" aria-live="polite"><div class="box"><span class="ar" id="subAr"></span><span class="fg" id="subFg" dir="auto"></span></div></div>
 <dialog id="pickDlg"><div class="pk">
   <header class="sh-head"><h3>🖼️ اختيار الصور</h3><button type="button" class="iconbtn" id="pkClose" aria-label="إغلاق">✕</button></header>
@@ -1911,7 +1922,7 @@ function showTrip(code){
   fillPass(t.tr);
   blobs[0] = t.blob; players[0] = new Audio(URL.createObjectURL(t.blob));
   const b = $('pass0').querySelector('.play'); b.disabled = false; b.innerHTML = PLAY;
-  $('saveTrip').hidden = !!t.pending; $('toPhone').hidden = !!t.pending; if (!t.pending) kickVideo();
+  $('saveTrip').hidden = !!t.pending; $('toPhone').hidden = !!t.pending; $('tourBtn').hidden = !!t.pending || !TOUR[code]; if (!t.pending) kickVideo();
   const n = Object.keys(sess.trips).length;
   $('deletedNote').textContent = `🔒 صوتك محفوظ مؤقتاً (سافرت لـ${n} ${n===1?'دولة':'دول'})، فتقدر تختار دولة ثانية بدون تسجيل. ينحذف لما تضغط «مسافر جديد» أو بعد 15 دقيقة.`;
   ORDER.forEach(k=>markMap(k, k===code));
@@ -1928,7 +1939,7 @@ function upgradeTrip(code){
   // message audio is ready: update the ticket; if the intro is playing, its 'ended' hands over to the full audio
   const t = sess.trips[code]; t.full = true; t.pending = null;
   fillPass(t.tr); renderSaid(sess.about, sess.msg);
-  $('saveTrip').hidden = false; $('toPhone').hidden = false; kickVideo();
+  $('saveTrip').hidden = false; $('toPhone').hidden = false; $('tourBtn').hidden = !TOUR[code]; kickVideo();
   const old = players[0];
   if (old && old.paused && !old.ended) swapPlayer(code, old.currentTime || 0);
 }
@@ -1945,7 +1956,7 @@ function touchSess(){
   sess.idle = setTimeout(()=>{ if (sess.voiceId){ log('session idle: ending'); endSession(true); } }, SESS_IDLE);
 }
 async function endSession(resetUI){
-  vidCache = null; if (vidJob){ vidJob.cancel = true; vidJob = null; } { const b = $('saveTrip'); if (b && b.dataset.label) b.innerHTML = b.dataset.label; }
+  closeTour(); vidCache = null; if (vidJob){ vidJob.cancel = true; vidJob = null; } { const b = $('saveTrip'); if (b && b.dataset.label) b.innerHTML = b.dataset.label; }
   clearTimeout(sess.idle);
   const id = sess.voiceId; sess.voiceId = null; sess.about = sess.msg = ''; sess.trips = {};
   if (id) await deleteVoice(id);
@@ -1971,7 +1982,7 @@ function friendly(e){
 
 /* ================= boarding passes ================= */
 function buildPasses(){
-  players = []; blobs = []; $('saveTrip').hidden = true; $('toPhone').hidden = true; $('saveHint').hidden = true; $('phoneBox').hidden = true;
+  players = []; blobs = []; $('tourBtn').hidden = true; $('saveTrip').hidden = true; $('toPhone').hidden = true; $('saveHint').hidden = true; $('phoneBox').hidden = true;
   const date = new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}).toUpperCase();
   const c = COUNTRIES[trip.code], l = LANGS[c.lang], i = c.lang;
   $('resTitle').textContent = `تذكرتك إلى ${c.name} جاهزة ✈`;
@@ -2068,22 +2079,157 @@ function playOne(i){
   p.play().then(()=>setPlayUI(true)).catch(()=>setPlayUI(false));
 }
 $('playAll').addEventListener('click', ()=>playOne(0));
-/* ================= the visitor's trip as a video: every country, culture photos, moving subtitles ================= */
+/* ================= one-minute tour: the visitor's voice guides them through the country's landmarks =================
+   Each stop: Arabic name, English Wikipedia title (for the photo), optional local photo, a line in the country's
+   language (spoken in the visitor's cloned voice) and its Arabic subtitle. Lines are fixed, so no translation is needed. */
+const TOUR = {
+  gb:[
+    {n:'ساعة بيغ بن', w:'Big Ben', loc:'gb_sights_1', t:'Hello from London! I am standing next to Big Ben, listening to its famous bells.', ar:'مرحباً من لندن! أنا واقف بجانب ساعة بيغ بن، أسمع أجراسها الشهيرة.'},
+    {n:'جسر البرج', w:'Tower Bridge', loc:'gb_sights_0', t:'Now I am walking across Tower Bridge, high above the River Thames.', ar:'الحين أمشي على جسر البرج، عالياً فوق نهر التايمز.'},
+    {n:'قصر باكنغهام', w:'Buckingham Palace', t:'At Buckingham Palace, the guards in red jackets stand perfectly still.', ar:'عند قصر باكنغهام، الحرس بستراتهم الحمراء واقفين بدون حركة.'},
+    {n:'ستونهنج', w:'Stonehenge', t:'I travelled west to Stonehenge, a circle of stones thousands of years old.', ar:'سافرت غرباً إلى ستونهنج، دائرة حجارة عمرها آلاف السنين.'},
+    {n:'قلعة إدنبرة', w:'Edinburgh Castle', t:'Up north in Scotland, Edinburgh Castle sits on top of an ancient volcano.', ar:'في الشمال باسكتلندا، قلعة إدنبرة فوق بركان قديم.'},
+    {n:'منطقة البحيرات', w:'Lake District', t:'And I am finishing my trip by the calm lakes and green hills of the Lake District.', ar:'وأختم رحلتي عند البحيرات الهادئة والتلال الخضراء في منطقة البحيرات.'}],
+  fr:[
+    {n:'برج إيفل', w:'Eiffel Tower', loc:'fr_sights_0', t:'Bonjour depuis Paris ! Je suis au pied de la tour Eiffel.', ar:'مرحباً من باريس! أنا تحت برج إيفل.'},
+    {n:'متحف اللوفر', w:'Louvre', loc:'fr_sights_1', t:'Me voici au Louvre, devant sa célèbre pyramide de verre.', ar:'وهذا أنا في اللوفر، قدّام هرمه الزجاجي الشهير.'},
+    {n:'قوس النصر', w:'Arc de Triomphe', t:"Je marche sur les Champs-Élysées jusqu'à l'Arc de Triomphe.", ar:'أمشي في الشانزليزيه إلى قوس النصر.'},
+    {n:'قصر فرساي', w:'Palace of Versailles', t:'Au château de Versailles, je découvre la galerie des Glaces.', ar:'في قصر فرساي، أكتشف قاعة المرايا.'},
+    {n:'مون سان ميشيل', w:'Mont-Saint-Michel', t:'En Normandie, le Mont-Saint-Michel semble flotter sur la mer.', ar:'في نورماندي، جزيرة مون سان ميشيل كأنها تطفو على البحر.'},
+    {n:'نيس', w:'Promenade des Anglais', t:"Et je termine mon voyage au soleil, sur la Côte d'Azur, à Nice.", ar:'وأختم رحلتي تحت الشمس، على الريفييرا الفرنسية في نيس.'}],
+  de:[
+    {n:'بوابة براندنبورغ', w:'Brandenburg Gate', loc:'de_sights_1', t:'Hallo aus Berlin! Ich stehe vor dem Brandenburger Tor.', ar:'مرحباً من برلين! أنا واقف قدّام بوابة براندنبورغ.'},
+    {n:'جدار برلين', w:'East Side Gallery', t:'An der East Side Gallery sehe ich bunte Bilder auf der alten Berliner Mauer.', ar:'في معرض الجانب الشرقي أشوف رسومات ملوّنة على جدار برلين القديم.'},
+    {n:'كاتدرائية كولونيا', w:'Cologne Cathedral', t:'Weiter nach Köln: Der Dom ist riesig, mit zwei hohen Türmen.', ar:'بعدها إلى كولونيا: الكاتدرائية ضخمة وفيها برجين عاليين.'},
+    {n:'قلعة نويشفانشتاين', w:'Neuschwanstein Castle', loc:'de_sights_0', t:'In Bayern besuche ich Schloss Neuschwanstein, wie ein Schloss aus einem Märchen.', ar:'في بافاريا أزور قلعة نويشفانشتاين، كأنها قلعة من حكاية خيالية.'},
+    {n:'الغابة السوداء', w:'Black Forest', t:'Im Schwarzwald wandere ich zwischen dunklen Tannen.', ar:'في الغابة السوداء أتمشّى بين أشجار الصنوبر الداكنة.'},
+    {n:'جبل تسوغشبيتسه', w:'Zugspitze', t:'Und zum Schluss stehe ich auf der Zugspitze, dem höchsten Berg Deutschlands.', ar:'وفي الختام أنا فوق تسوغشبيتسه، أعلى جبل في ألمانيا.'}],
+  es:[
+    {n:'القصر الملكي', w:'Royal Palace of Madrid', t:'¡Hola desde Madrid! Estoy frente al Palacio Real.', ar:'مرحباً من مدريد! أنا قدّام القصر الملكي.'},
+    {n:'ساغرادا فاميليا', w:'Sagrada Família', t:'En Barcelona, la Sagrada Familia de Gaudí parece un bosque de piedra.', ar:'في برشلونة، كنيسة غاودي كأنها غابة من الحجر.'},
+    {n:'مسجد قرطبة', w:'Mosque–Cathedral of Córdoba', loc:'es_sights_1', t:'En Córdoba, camino entre los arcos rojos y blancos de la Mezquita.', ar:'في قرطبة، أمشي بين الأقواس الحمراء والبيضاء في الجامع الكبير.'},
+    {n:'قصر الحمراء', w:'Alhambra', loc:'es_sights_0', t:'Y en Granada, la Alhambra me cuenta la historia de al-Ándalus.', ar:'وفي غرناطة، قصر الحمراء يحكي لي تاريخ الأندلس.'},
+    {n:'ساحة إسبانيا', w:'Plaza de España (Seville)', t:'En Sevilla, la Plaza de España brilla con sus azulejos de colores.', ar:'في إشبيلية، ساحة إسبانيا تلمع ببلاطها الملوّن.'},
+    {n:'بركان تيدي', w:'Teide National Park', t:'Termino mi viaje en Tenerife, junto al volcán del Teide.', ar:'وأختم رحلتي في جزيرة تينيريفي، بجانب بركان تيدي.'}],
+  it:[
+    {n:'الكولوسيوم', w:'Colosseum', loc:'it_sights_0', t:'Ciao da Roma! Sono davanti al Colosseo, che ha quasi duemila anni.', ar:'مرحباً من روما! أنا قدّام الكولوسيوم، وعمره قرابة ألفين سنة.'},
+    {n:'نافورة تريفي', w:'Trevi Fountain', t:'Alla Fontana di Trevi lancio una moneta per tornare a Roma.', ar:'عند نافورة تريفي أرمي عملة عشان أرجع لروما.'},
+    {n:'برج بيزا المائل', w:'Leaning Tower of Pisa', t:'A Pisa, la torre pende davvero! Che spettacolo.', ar:'في بيزا، البرج مائل فعلاً! منظر عجيب.'},
+    {n:'كاتدرائية فلورنسا', w:'Florence Cathedral', t:'A Firenze ammiro la grande cupola del Duomo.', ar:'في فلورنسا أتأمل القبة الكبيرة للكاتدرائية.'},
+    {n:'البندقية', w:'Venice', loc:'it_sights_1', t:"A Venezia le strade sono fatte d'acqua, e si viaggia in gondola.", ar:'في البندقية الشوارع من ماء، والتنقل بالقوارب.'},
+    {n:'ساحل أمالفي', w:'Amalfi Coast', t:'E finisco il viaggio sulla Costiera Amalfitana, tra limoni e mare blu.', ar:'وأختم رحلتي على ساحل أمالفي، بين الليمون والبحر الأزرق.'}],
+  tr:[
+    {n:'آيا صوفيا', w:'Hagia Sophia', loc:'tr_sights_0', t:"İstanbul'dan merhaba! Ayasofya'nın kocaman kubbesinin altındayım.", ar:'مرحباً من إسطنبول! أنا تحت قبة آيا صوفيا الضخمة.'},
+    {n:'الجامع الأزرق', w:'Sultan Ahmed Mosque', loc:'tr_sights_1', t:"Sultanahmet Camii'nin altı minaresi gökyüzüne uzanıyor.", ar:'مآذن الجامع الأزرق الست ممتدة للسماء.'},
+    {n:'البازار الكبير', w:'Grand Bazaar, Istanbul', t:"Kapalıçarşı'da çay, halı ve baharat kokuları arasında yürüyorum.", ar:'أمشي في البازار الكبير بين الشاي والسجاد وروائح البهارات.'},
+    {n:'كابادوكيا', w:'Cappadocia', t:"Kapadokya'da gün doğarken balonlar peribacalarının üstünde uçuyor.", ar:'في كابادوكيا مع شروق الشمس، المناطيد تطير فوق الصخور العجيبة.'},
+    {n:'باموكالي', w:'Pamukkale', t:"Pamukkale'nin bembeyaz travertenlerinde ayaklarımı sıcak suya sokuyorum.", ar:'في مدرّجات باموكالي البيضاء، أحط رجولي في الماء الدافي.'},
+    {n:'مكتبة سيلسوس', w:'Library of Celsus', t:'Ve yolculuğumu Efes antik kentinde, Celsus Kütüphanesi önünde bitiriyorum.', ar:'وأختم رحلتي في مدينة أفسس الأثرية، قدّام مكتبة سيلسوس.'}],
+  ru:[
+    {n:'الساحة الحمراء', w:'Red Square', loc:'ru_sights_1', t:'Здравствуйте из Москвы! Я на Красной площади.', ar:'مرحباً من موسكو! أنا في الساحة الحمراء.'},
+    {n:'كاتدرائية القديس باسيل', w:"Saint Basil's Cathedral", loc:'ru_sights_0', t:'Передо мной храм Василия Блаженного с разноцветными куполами.', ar:'قدّامي كاتدرائية القديس باسيل بقبابها الملوّنة.'},
+    {n:'الكرملين', w:'Moscow Kremlin', t:'Рядом высокие красные стены Московского Кремля.', ar:'وبجانبها أسوار الكرملين الحمراء العالية.'},
+    {n:'قصر الشتاء', w:'Winter Palace', t:'В Санкт-Петербурге я у Зимнего дворца, где находится Эрмитаж.', ar:'في سانت بطرسبرغ، أنا عند قصر الشتاء، وفيه متحف الإرميتاج.'},
+    {n:'قصر بيترهوف', w:'Peterhof Palace', t:'В Петергофе фонтаны сверкают золотом.', ar:'في بيترهوف، النوافير تلمع بلون الذهب.'},
+    {n:'بحيرة بايكال', w:'Lake Baikal', t:'А в конце путешествия я на Байкале — самом глубоком озере в мире.', ar:'وفي نهاية الرحلة أنا عند بايكال، أعمق بحيرة في العالم.'}],
+  in:[
+    {n:'البوابة الهندية', w:'India Gate', t:'दिल्ली से नमस्ते! मैं इंडिया गेट पर हूँ।', ar:'مرحباً من دلهي! أنا عند البوابة الهندية.'},
+    {n:'القلعة الحمراء', w:'Red Fort', loc:'in_sights_1', t:'यह है लाल क़िला, मुग़ल बादशाहों का शानदार महल।', ar:'هذي القلعة الحمراء، قصر أباطرة المغول الفخم.'},
+    {n:'تاج محل', w:'Taj Mahal', loc:'in_sights_0', t:'आगरा में ताजमहल सफ़ेद संगमरमर से चमक रहा है।', ar:'في أغرا، تاج محل يلمع برخامه الأبيض.'},
+    {n:'هوا محل', w:'Hawa Mahal', t:'जयपुर में हवा महल की सैकड़ों छोटी खिड़कियाँ हैं।', ar:'في جايبور، قصر الرياح فيه مئات النوافذ الصغيرة.'},
+    {n:'مياه كيرالا', w:'Kerala backwaters', t:'केरल के बैकवॉटर्स में नाव की सैर बहुत सुंदर है।', ar:'جولة القارب في مياه كيرالا الهادئة جميلة جداً.'},
+    {n:'جبال الهيمالايا', w:'Himalayas', t:'और यात्रा का अंत हिमालय के ऊँचे बर्फ़ीले पहाड़ों के बीच।', ar:'وتنتهي الرحلة بين قمم الهيمالايا العالية المكسوّة بالثلج.'}],
+  cn:[
+    {n:'معبد السماء', w:'Temple of Heaven', t:'你好，北京！我在天坛，这里的建筑真漂亮。', ar:'مرحباً من بكين! أنا في معبد السماء، ومبانيه جميلة جداً.'},
+    {n:'المدينة المحرمة', w:'Forbidden City', loc:'cn_sights_1', t:'这是故宫，古代皇帝住过的地方。', ar:'هذي المدينة المحرمة، المكان اللي سكنه الأباطرة قديماً.'},
+    {n:'سور الصين العظيم', w:'Great Wall of China', loc:'cn_sights_0', t:'我正在长城上散步，它真的好长好长！', ar:'أتمشّى على سور الصين العظيم، وهو طويل جداً جداً!'},
+    {n:'جيش التيراكوتا', w:'Terracotta Army', t:'在西安，我看到了几千个兵马俑。', ar:'في شيآن، شفت آلاف التماثيل الطينية للجنود.'},
+    {n:'واجهة شنغهاي', w:'The Bund', t:'上海外滩的夜景灯光闪闪。', ar:'أضواء واجهة شنغهاي تلمع في الليل.'},
+    {n:'نهر لي', w:'Li River', t:'最后，我在桂林漓江坐船，山水像画一样。', ar:'وفي الختام، أركب قارب في نهر لي بقويلين، والجبال والماء كأنها لوحة.'}],
+  jp:[
+    {n:'طوكيو سكاي تري', w:'Tokyo Skytree', t:'東京からこんにちは！東京スカイツリーから街を見ています。', ar:'مرحباً من طوكيو! أطالع المدينة من برج سكاي تري.'},
+    {n:'معبد سينسو-جي', w:'Sensō-ji', t:'浅草の浅草寺で、大きな赤いちょうちんを見ました。', ar:'في أساكوسا شفت الفانوس الأحمر الكبير عند معبد سينسو-جي.'},
+    {n:'جبل فوجي', w:'Mount Fuji', loc:'jp_sights_0', t:'新幹線の窓から、富士山がきれいに見えます。', ar:'من شباك القطار السريع، جبل فوجي واضح وجميل.'},
+    {n:'بوابات فوشيمي إيناري', w:'Fushimi Inari-taisha', t:'京都の伏見稲荷大社で、たくさんの赤い鳥居をくぐります。', ar:'في كيوتو أمشي تحت مئات البوابات البرتقالية في فوشيمي إيناري.'},
+    {n:'الجناح الذهبي', w:'Kinkaku-ji', loc:'jp_sights_1', t:'金閣寺は、池の上で金色に輝いています。', ar:'الجناح الذهبي يلمع فوق البحيرة.'},
+    {n:'حديقة نارا', w:'Nara Park', t:'最後は奈良公園で、かわいい鹿にあいさつします。', ar:'وفي الختام أسلّم على الغزلان اللطيفة في حديقة نارا.'}],
+  kr:[
+    {n:'قصر غيونغبوكغونغ', w:'Gyeongbokgung', loc:'kr_sights_0', t:'서울에서 안녕하세요! 저는 경복궁에 와 있어요.', ar:'مرحباً من سيول! أنا في قصر غيونغبوكغونغ.'},
+    {n:'قرية بوكتشون هانوك', w:'Bukchon Hanok Village', t:'북촌 한옥마을에서 전통 한옥 사이를 걸어요.', ar:'أمشي بين البيوت الكورية التقليدية في قرية بوكتشون.'},
+    {n:'برج سيول', w:'N Seoul Tower', t:'N서울타워에 올라가니 서울이 한눈에 보여요.', ar:'من فوق برج سيول، أشوف المدينة كلها.'},
+    {n:'قرية غامتشون', w:'Gamcheon Culture Village', t:'부산 감천문화마을은 알록달록한 집들로 가득해요.', ar:'قرية غامتشون في بوسان مليانة بيوت ملوّنة.'},
+    {n:'شاطئ هيونداي', w:'Haeundae Beach', t:'해운대 해수욕장에서 파도 소리를 들어요.', ar:'على شاطئ هيونداي أسمع صوت الموج.'},
+    {n:'جزيرة جيجو', w:'Jeju Island', loc:'kr_sights_1', t:'마지막으로 제주도에서 한라산과 푸른 바다를 봐요.', ar:'وفي الختام، أشوف جبل هالا والبحر الأزرق في جزيرة جيجو.'}],
+  id:[
+    {n:'جامع الاستقلال', w:'Istiqlal Mosque, Jakarta', loc:'id_sights_0', t:'Halo dari Jakarta! Saya di Masjid Istiqlal, masjid terbesar di Asia Tenggara.', ar:'مرحباً من جاكرتا! أنا في جامع الاستقلال، أكبر مسجد في جنوب شرق آسيا.'},
+    {n:'النصب الوطني', w:'National Monument (Indonesia)', t:'Di dekatnya berdiri Monas, Monumen Nasional dengan puncak emas.', ar:'وبالقرب منه النصب الوطني «موناس» بقمته الذهبية.'},
+    {n:'معبد بوروبودور', w:'Borobudur', t:'Di Jawa Tengah, saya melihat matahari terbit di Candi Borobudur.', ar:'في جاوة الوسطى، أشوف شروق الشمس عند معبد بوروبودور.'},
+    {n:'جبل برومو', w:'Mount Bromo', t:'Gunung Bromo mengeluarkan asap di tengah lautan pasir.', ar:'جبل برومو يطلع منه الدخان وسط بحر من الرمل.'},
+    {n:'بالي', w:'Pura Ulun Danu Bratan', loc:'id_sights_1', t:'Di Bali, Pura Ulun Danu Bratan seperti mengapung di danau.', ar:'في بالي، معبد أولون دانو كأنه يطفو على البحيرة.'},
+    {n:'جزيرة كومودو', w:'Komodo National Park', t:'Dan perjalanan saya berakhir di Pulau Komodo, rumah komodo raksasa.', ar:'وتنتهي رحلتي في جزيرة كومودو، موطن التنين العملاق.'}],
+};
+const TOUR_LEN = 60;   // seconds per country video
+
+/* the tour narration: one ElevenLabs call per visitor per country, in the visitor's cloned voice */
+async function ensureTour(code){
+  const t = sess.trips[code]; if (!t) throw new Error('NO_TRIP');
+  if (t.tour) return t.tour;
+  if (t.tourP) return t.tourP;
+  const stops = TOUR[code]; if (!stops) throw new Error('NO_TOUR');
+  if (!sess.voiceId) throw new Error('NO_VOICE');
+  t.tourP = (async ()=>{
+    const before = lastCredits; ttsChars = 0;
+    const segs = stops.map(s=>({t:s.t, ar:s.ar}));
+    const {blob, starts} = await ttsSlot(()=>ttsTimed(sess.voiceId, segs, accentTag()));
+    const dur = await blobDuration(blob);
+    t.tour = {blob, dur, starts: fixStarts((starts||[]).map(x=> x < 0 ? -x*dur : x), segs, dur)};
+    log('tour voiced: '+code+' '+dur.toFixed(1)+'s');
+    reportUsage(before);
+    return t.tour;
+  })();
+  try { return await t.tourP; } finally { t.tourP = null; }
+}
+/* landmark photos: the page's own photo first, then Wikipedia (loaded with CORS so the video can record it) */
+const tourPicCache = {};
+function loadImgCors(src){ return new Promise(r=>{ const i = new Image(); i.crossOrigin = 'anonymous'; i.referrerPolicy = 'no-referrer'; const tm = setTimeout(()=>r(null), 8000); i.onload = ()=>{ clearTimeout(tm); r(i); }; i.onerror = ()=>{ clearTimeout(tm); r(null); }; i.src = src; }); }
+function canRecord(img){ try { const c = document.createElement('canvas'); c.width = 4; c.height = 4; const x = c.getContext('2d'); x.drawImage(img,0,0,4,4); x.getImageData(0,0,1,1); return true; } catch(e){ return false; } }
+async function tourPic(s){
+  const k = s.loc || s.w; if (tourPicCache[k] !== undefined) return tourPicCache[k];
+  let img = null;
+  if (s.loc && LOCAL_PICS[s.loc]) img = await loadImg('img/'+s.loc+'.jpg?v='+PICS_VER);
+  if (!img){
+    const u = await wikiImg(s.w);
+    if (u) for (const c of picCandidates(u)){ const i = await loadImgCors(c); if (i && canRecord(i)){ img = i; break; } }
+  }
+  if (!img) log('tour photo missing: '+s.w);
+  return (tourPicCache[k] = img);
+}
+async function tourPics(code){
+  const stops = TOUR[code] || [];
+  const imgs = await Promise.all(stops.map(tourPic));
+  // a stop without a photo borrows one of the country's local culture photos
+  const spare = (await Promise.all(['culture_0','food_0','wear_0','culture_1','food_1','wear_1'].map(k=>code+'_'+k).filter(k=>LOCAL_PICS[k]).map(k=>loadImg('img/'+k+'.jpg?v='+PICS_VER)))).filter(Boolean);
+  let j = 0;
+  spare.forEach(i=>i.__spare = true);
+  return imgs.map(i=> i || spare[j++ % Math.max(1, spare.length)] || null);
+}
+
 let vidCache = null, vidMime = null, vidJob = null;
-/* The video is recorded in real time (a 60 s trip takes 60 s to record), so start it quietly as soon as the
-   trip is ready — while the visitor is listening — and it is usually finished before anyone taps download. */
-function tripReady(){ const ks = Object.keys(sess.trips); return ks.length && ks.every(c=>sess.trips[c] && !sess.trips[c].pending && sess.trips[c].blob); }
-function ensureVideo(){
+/* The video is recorded in real time (one minute takes one minute). It is recorded while the visitor watches
+   the tour on screen, so it is ready to share as soon as the tour ends. */
+function tripReady(){ const t = trip.code && sess.trips[trip.code]; return !!(t && !t.pending && t.blob); }
+function ensureVideo(live){
   if (!tripReady()) return null;
   const key = tripKey();
   if (vidCache && vidCache.key === key) return Promise.resolve(vidCache.file);
-  if (vidJob && vidJob.key === key) return vidJob.p;
+  if (vidJob && vidJob.key === key && !live) return vidJob.p;
   if (vidJob) vidJob.cancel = true;
-  const job = {key, prog:0, cancel:false};
+  const job = {key, prog:0, cancel:false, live:!!live};
   job.p = tripVideo(f=>{ job.prog = f; }, job).finally(()=>{ if (vidJob === job) vidJob = null; });
   vidJob = job; return job.p;
 }
-function kickVideo(){ setTimeout(()=>{ const pr = ensureVideo(); if (pr) pr.then(()=>log('video ready in background')).catch(e=>log('background video: '+e.message)); }, 900); }
+// record quietly in the background only when the tour narration already exists (it costs credits to make)
+function kickVideo(){ setTimeout(()=>{ const t = trip.code && sess.trips[trip.code]; if (!t || !t.tour) return; const pr = ensureVideo(); if (pr) pr.then(()=>log('video ready in background')).catch(e=>log('background video: '+e.message)); }, 900); }
 async function waitVideo(show){
   let pr = ensureVideo(); if (!pr) throw new Error('NOT_READY');
   const tm = setInterval(()=>{ if (vidJob) show(vidJob.prog); }, 300);
@@ -2111,80 +2257,97 @@ async function pickVideoMime(){
   }
   vidMime = ''; return '';
 }
-function tripKey(){ return Object.keys(sess.trips).map(c=>c+':'+sess.trips[c].blob.size).join('|'); }
+function tripKey(){ const t = sess.trips[trip.code]; return trip.code+':'+(t && t.blob ? t.blob.size : 0); }
 function loadImg(src){ return new Promise(r=>{ const i = new Image(); i.onload = ()=>r(i); i.onerror = ()=>r(null); i.src = src; }); }
 function wrapLines(ctx, text, maxW){
-  const words = String(text).split(/\s+/), lines = []; let cur = '';
-  words.forEach(w=>{ const t = cur ? cur+' '+w : w; if (ctx.measureText(t).width > maxW && cur){ lines.push(cur); cur = w; } else cur = t; });
+  // CJK and Hindi-free-of-spaces text: break by character when a "word" is wider than the line
+  const words = /\s/.test(text) ? String(text).split(/\s+/) : [...String(text)], sep = /\s/.test(text) ? ' ' : '', lines = []; let cur = '';
+  words.forEach(w=>{ const t = cur ? cur+sep+w : w; if (ctx.measureText(t).width > maxW && cur){ lines.push(cur); cur = w; } else cur = t; });
   if (cur) lines.push(cur); return lines;
 }
+function segStart(x, dur){ return x.start == null ? null : (x.start < 0 ? -x.start*dur : x.start); }
 async function tripVideo(onProg, job){
   const key = tripKey(); if (vidCache && vidCache.key === key) return vidCache.file;
-  const codes = Object.keys(sess.trips).filter(c=>sess.trips[c] && !sess.trips[c].pending);
-  if (!codes.length) throw new Error('NO_TRIP');
-  const W = 720, H = 1280, INTRO = 2.2, GAP = 0.6;
+  const code = trip.code, t = sess.trips[code];
+  if (!t || t.pending) throw new Error('NO_TRIP');
+  const live = job && job.live;
+  if (live) tourStatus('✈ نجهّز جولتك بصوتك…');
+  const [tour, imgs] = await Promise.all([ensureTour(code), tourPics(code)]);
+  if (job && job.cancel) throw new Error('CANCELLED');
+  const stops = TOUR[code], c = COUNTRIES[code], l = LANGS[c.lang];
+  const W = 720, H = 1280, INTRO = 2.4, IMG_Y = 150, IMG_H = Math.round(H*0.62);
   const AC = window.AudioContext || window.webkitAudioContext, ac = new AC(), dest = ac.createMediaStreamDestination();
   try { await ac.resume(); } catch(e){}
   if (ac.state !== 'running'){ await new Promise(r=>setTimeout(r, 600)); if (ac.state !== 'running'){ ac.close && ac.close(); throw new Error('AUDIO_SUSPENDED'); } }
   const body = getComputedStyle(document.body).getPropertyValue('--f-body') || 'sans-serif';
   try { await document.fonts.load('700 40px "IBM Plex Sans Arabic"'); } catch(e){}
-  // prepare each country: audio, photos, flag
-  const parts = []; let T = 0;
-  for (const c of codes){
-    const t = sess.trips[c], buf = await ac.decodeAudioData(await t.blob.arrayBuffer());
-    const keys = ['sights_0','culture_0','wear_0','food_0','sights_1'].map(k=>c+'_'+k).filter(k=>LOCAL_PICS[k]);
-    const imgs = (await Promise.all(keys.map(k=>loadImg('img/'+k+'.jpg?v='+PICS_VER)))).filter(Boolean);
-    let flag = null; try { flag = await loadImg('data:image/svg+xml;charset=utf-8,'+encodeURIComponent(flagSVG(c))); } catch(e){}
-    // a flag image that would block recording (browser security) is left out
-    if (flag){ try { const tc = document.createElement('canvas'); tc.width = 8; tc.height = 6; const tx = tc.getContext('2d'); tx.drawImage(flag,0,0,8,6); tx.getImageData(0,0,1,1); } catch(e){ log('flag skipped in video: '+c); flag = null; } }
-    parts.push({c, t, buf, imgs, flag, start: T, aStart: T + INTRO}); T += INTRO + buf.duration + GAP;
-  }
+  const tourBuf = await ac.decodeAudioData(await tour.blob.arrayBuffer());
+  // the visitor's own 💌 message closes the tour (taken from the end of their trip audio)
+  let msgBuf = null, msgOff = 0, msgSegs = [];
+  try {
+    const tb = await ac.decodeAudioData(await t.blob.arrayBuffer());
+    const firstLove = t.segs.find(x=>x.love);
+    if (firstLove){ msgOff = t.aDur || segStart(firstLove, tb.duration) || 0; if (msgOff < tb.duration - 0.5){ msgBuf = tb; msgSegs = t.segs.filter(x=>x.love); } }
+  } catch(e){ log('message audio skipped in video: '+e.message); }
+  const msgDur = msgBuf ? msgBuf.duration - msgOff : 0;
+  const tourEnd = INTRO + tourBuf.duration, msgStart = tourEnd + 0.8;
+  const T = Math.max(TOUR_LEN, (msgBuf ? msgStart + msgDur : tourEnd) + 2.5);
+  const stopAt = i => INTRO + (tour.starts[i] != null ? tour.starts[i] : tourBuf.duration*i/stops.length) - 0.25;
+  let flag = null; try { flag = await loadImg('data:image/svg+xml;charset=utf-8,'+encodeURIComponent(flagSVG(code))); if (flag && !canRecord(flag)) flag = null; } catch(e){}
+
   const cv = document.createElement('canvas'); cv.width = W; cv.height = H; const ctx = cv.getContext('2d');
+  if (live) showTourCanvas(cv);
   const stream = cv.captureStream(30); dest.stream.getAudioTracks().forEach(tr=>stream.addTrack(tr));
   const mime = await pickVideoMime();
-  const mr = new MediaRecorder(stream, mime ? {mimeType:mime, videoBitsPerSecond:2_500_000} : undefined), chunks = [];
+  const mr = new MediaRecorder(stream, mime ? {mimeType:mime, videoBitsPerSecond:3_000_000} : undefined), chunks = [];
   mr.ondataavailable = e=>{ if (e.data && e.data.size) chunks.push(e.data); };
   const done = new Promise(r=>mr.onstop = r);
   const GOLD = '#f6e3a8', GOLD2 = '#d6b46a';
-  const draw = (now) => {
+  const paint = (img, alpha, z, pan) => { if (!img || alpha <= 0) return; ctx.globalAlpha = Math.min(1, alpha);
+    const s = Math.max(W/img.width, IMG_H/img.height)*z, w = img.width*s, h = img.height*s;
+    ctx.save(); ctx.beginPath(); ctx.rect(0, IMG_Y, W, IMG_H); ctx.clip(); ctx.drawImage(img, (W-w)/2 + pan*(w-W)/2, IMG_Y + (IMG_H-h)/2, w, h); ctx.restore(); ctx.globalAlpha = 1; };
+  const chip = (text, x, y) => { ctx.font = `700 28px ${body}`; const tw = ctx.measureText(text).width; ctx.fillStyle = 'rgba(0,0,0,.6)';
+    ctx.beginPath(); ctx.roundRect ? ctx.roundRect(x - tw - 36, y - 34, tw + 36, 50, 25) : ctx.rect(x - tw - 36, y - 34, tw + 36, 50); ctx.fill(); ctx.fillStyle = GOLD; ctx.textAlign = 'right'; ctx.fillText(text, x - 18, y); };
+  const draw = now => {
     ctx.fillStyle = '#000'; ctx.fillRect(0,0,W,H);
-    const P = parts.find(x=>now >= x.start && now < x.start + INTRO + x.buf.duration + GAP) || parts[parts.length-1];
-    const l = LANGS[COUNTRIES[P.c].lang], local = now - P.start;
-    // culture photos: slow zoom, cross-fade every 6 s
-    if (P.imgs.length){
-      const per = 6, k = Math.floor(local/per), f = (local % per)/per;
-      const paint = (img, alpha, z) => { if (!img) return; ctx.globalAlpha = alpha;
-        const ih = H*0.62, s = Math.max(W/img.width, ih/img.height)*z, w = img.width*s, h = img.height*s;
-        ctx.save(); ctx.beginPath(); ctx.rect(0, 150, W, ih); ctx.clip(); ctx.drawImage(img, (W-w)/2, 150 + (ih-h)/2, w, h); ctx.restore(); ctx.globalAlpha = 1; };
-      paint(P.imgs[k % P.imgs.length], 1, 1 + f*0.08);
-      if (f > 0.85) paint(P.imgs[(k+1) % P.imgs.length], (f-0.85)/0.15, 1);
-      const g = ctx.createLinearGradient(0, 150 + H*0.62 - 260, 0, 150 + H*0.62); g.addColorStop(0,'rgba(0,0,0,0)'); g.addColorStop(1,'#000');
-      ctx.fillStyle = g; ctx.fillRect(0, 150 + H*0.62 - 260, W, 260);
-    }
-    // header: flag + country
-    if (P.flag) ctx.drawImage(P.flag, W/2 - 42, 34, 84, 56);
-    ctx.textAlign = 'center'; ctx.direction = 'rtl'; ctx.fillStyle = GOLD;
-    ctx.font = `700 34px ${body}`; ctx.fillText(COUNTRIES[P.c].name, W/2, 128);
-    // title card at the start of each country
-    if (local < INTRO){ ctx.fillStyle = `rgba(0,0,0,${Math.max(0, 0.75 - local/INTRO*0.75)})`; ctx.fillRect(0,150,W,H*0.62);
-      ctx.fillStyle = GOLD; ctx.font = `700 46px ${body}`; ctx.fillText('✈ ' + l.city, W/2, 150 + H*0.31); }
-    // subtitles (same timing as the page)
-    const tau = now - P.aStart; let cur = null;
-    if (tau >= 0) P.t.segs.forEach(x=>{ const st = x.start == null ? null : (x.start < 0 ? -x.start*P.buf.duration : x.start); if (st != null && tau >= st - 0.05) cur = x; });
-    if (tau >= 0 && !cur) cur = P.t.segs[0];
-    if (cur && tau <= P.buf.duration + 0.2){
-      let y = 150 + H*0.62 + 40;
-      ctx.direction = 'rtl'; ctx.fillStyle = GOLD; ctx.font = `700 38px ${body}`;
-      wrapLines(ctx, cur.ar, W-80).slice(0,4).forEach(line=>{ ctx.fillText(line, W/2, y); y += 54; });
-      y += 10; ctx.direction = 'ltr'; ctx.fillStyle = GOLD2; ctx.font = `500 28px ${body}`;
-      wrapLines(ctx, cur.t, W-80).slice(0,4).forEach(line=>{ ctx.fillText(line, W/2, y); y += 40; });
-    }
-    ctx.direction = 'rtl'; ctx.fillStyle = 'rgba(246,227,168,.55)'; ctx.font = `500 20px ${body}`;
+    // which stop is on screen: follows the narration; during the message and the ending, the stops loop slowly
+    let i = 0, since = 0, looping = now >= msgStart;
+    if (!looping){ for (let k = 0; k < stops.length; k++) if (now >= stopAt(k)) i = k; since = Math.max(0, now - stopAt(i)); }
+    else { const per = 4, q = now - msgStart; i = Math.floor(q/per) % stops.length; since = q % per; }
+    const z = 1 + Math.min(1, since/9)*0.1, pan = (i % 2 ? 1 : -1) * Math.min(1, since/9) * 0.5;
+    paint(imgs[i], 1, z, pan);
+    if (since < 0.6 && (i > 0 || looping)){ const prev = imgs[(i - 1 + stops.length) % stops.length]; paint(prev, 1 - since/0.6, 1.1, 0); }
+    const g = ctx.createLinearGradient(0, IMG_Y + IMG_H - 280, 0, IMG_Y + IMG_H); g.addColorStop(0,'rgba(0,0,0,0)'); g.addColorStop(1,'#000');
+    ctx.fillStyle = g; ctx.fillRect(0, IMG_Y + IMG_H - 280, W, 280);
+    // header
+    if (flag) ctx.drawImage(flag, W/2 - 42, 30, 84, 56);
+    ctx.textAlign = 'center'; ctx.direction = 'rtl'; ctx.fillStyle = GOLD; ctx.font = `700 34px ${body}`;
+    ctx.fillText('جولتي في ' + c.name, W/2, 128);
+    // landmark name + progress dots
+    if (now >= INTRO){ ctx.direction = 'rtl'; chip('📍 ' + (imgs[i] && imgs[i].__spare ? l.city : stops[i].n), W - 24, IMG_Y + 56);
+      for (let k = 0; k < stops.length; k++){ ctx.beginPath(); ctx.arc(W/2 + (stops.length/2 - k - 0.5)*26, IMG_Y + IMG_H - 26, k === i ? 7 : 5, 0, Math.PI*2); ctx.fillStyle = k <= i ? GOLD : 'rgba(246,227,168,.35)'; ctx.fill(); } }
+    // title card
+    if (now < INTRO){ ctx.fillStyle = `rgba(0,0,0,${Math.max(0, 0.75 - now/INTRO*0.75)})`; ctx.fillRect(0, IMG_Y, W, IMG_H);
+      ctx.textAlign = 'center'; ctx.direction = 'rtl'; ctx.fillStyle = GOLD; ctx.font = `700 50px ${body}`; ctx.fillText('✈ ' + l.city, W/2, IMG_Y + IMG_H/2);
+      ctx.font = `500 26px ${body}`; ctx.fillText('جولة دقيقة بصوتي بـ' + l.ar, W/2, IMG_Y + IMG_H/2 + 50); }
+    // subtitles: Arabic first, then the country's language
+    let sub = null;
+    if (now >= INTRO && now <= tourEnd + 0.3) sub = stops[i];
+    else if (msgBuf && now >= msgStart && now <= msgStart + msgDur + 0.3){ const tau = msgOff + now - msgStart; let cur = msgSegs[0]; msgSegs.forEach(x=>{ const s = segStart(x, msgBuf.duration); if (s != null && tau >= s - 0.05) cur = x; }); sub = {ar:'💌 ' + cur.ar, t:cur.t}; }
+    else if (now > tourEnd + 0.3){ ctx.textAlign = 'center'; ctx.direction = 'rtl'; ctx.fillStyle = GOLD; ctx.font = `700 40px ${body}`; ctx.fillText('✓ وصلت ' + l.city, W/2, IMG_Y + IMG_H + 90); }
+    if (sub){ let y = IMG_Y + IMG_H + 52; ctx.textAlign = 'center';
+      ctx.direction = 'rtl'; ctx.fillStyle = GOLD; ctx.font = `700 36px ${body}`;
+      wrapLines(ctx, sub.ar, W-80).slice(0,3).forEach(line=>{ ctx.fillText(line, W/2, y); y += 52; });
+      y += 12; ctx.direction = 'ltr'; ctx.fillStyle = GOLD2; ctx.font = `500 28px ${body}`;
+      wrapLines(ctx, sub.t, W-80).slice(0,4).forEach(line=>{ ctx.fillText(line, W/2, y); y += 40; }); }
+    ctx.direction = 'rtl'; ctx.textAlign = 'center'; ctx.fillStyle = 'rgba(246,227,168,.55)'; ctx.font = `500 20px ${body}`;
     ctx.fillText('رحلة حول العالم بصوتك · يوم الطلاب العالمي · تبوك', W/2, H - 34);
   };
   draw(0);
   const t0 = ac.currentTime + 0.25;
-  parts.forEach(x=>{ const src = ac.createBufferSource(); src.buffer = x.buf; src.connect(dest); src.start(t0 + x.aStart); });
+  const play = (buf, at, off) => { const src = ac.createBufferSource(); src.buffer = buf; src.connect(dest); if (live) src.connect(ac.destination); src.start(t0 + at, off || 0); return src; };
+  play(tourBuf, INTRO);
+  if (msgBuf) play(msgBuf, msgStart, msgOff);
   mr.start(500);
   await new Promise(res=>{
     const loop = () => { const now = ac.currentTime - t0; draw(Math.max(0, now)); onProg && onProg(Math.min(1, Math.max(0, now/T)));
@@ -2195,9 +2358,37 @@ async function tripVideo(onProg, job){
   if (job && job.cancel) throw new Error('CANCELLED');
   const type = (mr.mimeType || mime || 'video/webm').split(';')[0], ext = type.includes('mp4') ? 'mp4' : 'webm';
   const stamp = new Date().toISOString().slice(0,16).replace(/[-:T]/g,'');
-  const file = new File(chunks, `voice-trip-${stamp}.${ext}`, {type});
+  const file = new File(chunks, `voice-trip-${code}-${stamp}.${ext}`, {type});
   vidCache = {key, file}; return file;
 }
+/* --- the tour on the booth screen --- */
+function tourStatus(text){ const b = $('tourBox'); b.hidden = false; $('tourStage').innerHTML = '<div class="tour-wait"><span class="spin"></span><p></p></div>'; $('tourStage').querySelector('p').textContent = text; }
+function showTourCanvas(cv){ $('tourBox').hidden = false; $('tourStage').innerHTML = ''; $('tourStage').appendChild(cv); }
+function closeTour(){
+  const b = $('tourBox'); if (b.hidden) return; b.hidden = true;
+  if (vidJob && vidJob.live){ vidJob.cancel = true; }
+  const v = $('tourStage').querySelector('video'); if (v){ v.pause(); URL.revokeObjectURL(v.src); }
+  $('tourStage').innerHTML = '';
+}
+async function watchTour(){
+  if (!tripReady()) return;
+  stopAll(); touchSess();
+  if (vidCache && vidCache.key === tripKey()){
+    const v = document.createElement('video'); v.src = URL.createObjectURL(vidCache.file); v.playsInline = true; v.controls = true; v.autoplay = true;
+    $('tourBox').hidden = false; $('tourStage').innerHTML = ''; $('tourStage').appendChild(v); v.play().catch(()=>{});
+    return;
+  }
+  const btn = $('tourBtn'); btn.disabled = true;
+  try {
+    await ensureVideo(true);
+    $('tourStage').insertAdjacentHTML('beforeend', '<p class="tour-done">✓ وصلت! تقدر تاخذ الفيديو على جوالك 📱</p>');
+  } catch(e){
+    if (e.message !== 'CANCELLED'){ log('tour: '+e.message); closeTour(); showErr(e.message === 'NO_VOICE' ? 'انتهت مدة صوتك المؤقت. سجّل من جديد.' : friendly(e), e.message); }
+  } finally { btn.disabled = false; }
+}
+$('tourBtn').addEventListener('click', watchTour);
+$('tourClose').addEventListener('click', closeTour);
+document.addEventListener('keydown', e=>{ if (e.key === 'Escape') closeTour(); });
 /* temporary link + QR: file auto-deletes after ~60 min on tmpfiles.org */
 $('toPhone').addEventListener('click', async ()=>{
   const box = $('phoneBox'), q = $('phoneQr'), t = $('phoneTxt');
@@ -2248,6 +2439,7 @@ $('saveTrip').addEventListener('click', async ()=>{
   $('saveHint').textContent = 'انحفظ الفيديو في جهاز البوث (التنزيلات). أرسله للزائر من هناك.'; $('saveHint').hidden = false;
 });
 $('newVisitor').addEventListener('click', ()=>{
+  closeTour(); $('tourBtn').hidden = true;
   if (sess.voiceId) endSession(false);
   stopAll(); clearVisited(); players.forEach(p=>p && URL.revokeObjectURL(p.src)); players=[]; blobs=[]; $('saveTrip').hidden = true; $('toPhone').hidden = true; $('saveHint').hidden = true; $('phoneBox').hidden = true; $('phoneQr').innerHTML='';
   $('passes').innerHTML=''; $('said').innerHTML=''; $('deletedNote').textContent='';
@@ -2256,6 +2448,7 @@ $('newVisitor').addEventListener('click', ()=>{
   $('map').scrollIntoView({behavior:'smooth', block:'start'});
 });
 $('otherCountry').addEventListener('click', ()=>{
+  closeTour(); $('tourBtn').hidden = true;
   stopAll(); touchSess(); players.forEach(p=>p && URL.revokeObjectURL(p.src)); players=[]; blobs=[];
   $('passes').innerHTML=''; $('said').innerHTML=''; $('deletedNote').textContent=''; $('usage').textContent=''; $('phoneBox').hidden = true;
   clearErr(); trip.code = null; $('tripBox').hidden = true; $('pickBox').hidden = false; resetRecordUI(); show('record');
