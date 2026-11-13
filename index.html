@@ -2206,27 +2206,39 @@ async function ensureTour(code){
 }
 /* landmark photos: the page's own photo first, then Wikipedia (loaded with CORS so the video can record it) */
 const tourPicCache = {};
-function loadImgCors(src){ return new Promise(r=>{ const i = new Image(); i.crossOrigin = 'anonymous'; i.referrerPolicy = 'no-referrer'; const tm = setTimeout(()=>r(null), 8000); i.onload = ()=>{ clearTimeout(tm); r(i); }; i.onerror = ()=>{ clearTimeout(tm); r(null); }; i.src = src; }); }
+function loadImgCors(src){ return new Promise(r=>{ const i = new Image(); i.crossOrigin = 'anonymous'; i.referrerPolicy = 'no-referrer'; const tm = setTimeout(()=>r(null), 5000); i.onload = ()=>{ clearTimeout(tm); r(i); }; i.onerror = ()=>{ clearTimeout(tm); r(null); }; i.src = src; }); }
 function canRecord(img){ try { const c = document.createElement('canvas'); c.width = 4; c.height = 4; const x = c.getContext('2d'); x.drawImage(img,0,0,4,4); x.getImageData(0,0,1,1); return true; } catch(e){ return false; } }
+const withTimeout = (p, ms) => Promise.race([p, new Promise(r=>setTimeout(()=>r(null), ms))]);
 async function tourPic(s){
   const k = s.loc || s.w; if (tourPicCache[k] !== undefined) return tourPicCache[k];
+  if (!tourPicCache['p:'+k]) tourPicCache['p:'+k] = withTimeout(tourPicLoad(s), 7000).then(img=>{ if (img) tourPicCache[k] = img; return img; });
+  return tourPicCache['p:'+k];
+}
+async function tourPicLoad(s){
   let img = null;
   if (s.loc && LOCAL_PICS[s.loc]) img = await loadImg('img/'+s.loc+'.jpg?v='+PICS_VER);
   if (!img){
     const u = await wikiImg(s.w);
-    if (u) for (const c of picCandidates(u)){ const i = await loadImgCors(c); if (i && canRecord(i)){ img = i; break; } }
+    if (u) for (const c of picCandidates(u).slice(0,2)){ const i = await loadImgCors(c); if (i && canRecord(i)){ img = i; break; } }
   }
   if (!img) log('tour photo missing: '+s.w);
-  return (tourPicCache[k] = img);
+  return img;
 }
 /* Veo clips made before the event: vid/<code>_<stop>.mp4 (e.g. vid/jp_1.mp4 … vid/jp_6.mp4). A stop with a clip
    shows the clip; a stop without one falls back to its photo. */
 const CLIP_VER = 1;
-function tourClip(code, n){ return new Promise(r=>{
-  const v = document.createElement('video'); v.muted = true; v.playsInline = true; v.loop = true; v.preload = 'auto';
-  const tm = setTimeout(()=>done(null), 15000), done = x=>{ clearTimeout(tm); v.onloadeddata = v.onerror = null; r(x); };
-  v.onloadeddata = ()=>{ v.__video = true; done(v); }; v.onerror = ()=>done(null);
-  v.src = 'vid/'+code+'_'+n+'.mp4?v='+CLIP_VER; }); }
+const clipCache = {};
+async function tourClip(code, n){
+  const src = 'vid/'+code+'_'+n+'.mp4?v='+CLIP_VER;
+  if (clipCache[src] !== undefined) return clipCache[src];
+  // a missing clip answers 404 at once; without this check some phones wait a long time on the video element
+  try { const h = await fetch(src, {method:'HEAD', cache:'no-store'}); if (!h.ok) return (clipCache[src] = null); } catch(e){ return (clipCache[src] = null); }
+  return (clipCache[src] = await new Promise(r=>{
+    const v = document.createElement('video'); v.muted = true; v.playsInline = true; v.setAttribute('playsinline',''); v.loop = true; v.preload = 'auto';
+    const tm = setTimeout(()=>done(null), 6000), done = x=>{ clearTimeout(tm); v.onloadedmetadata = v.onerror = null; r(x); };
+    v.onloadedmetadata = ()=>{ v.__video = true; done(v); }; v.onerror = ()=>done(null);
+    v.src = src; v.load(); }));
+}
 async function tourPics(code){
   const stops = TOUR[code] || [];
   const [pics, clips] = await Promise.all([Promise.all(stops.map(tourPic)), Promise.all(stops.map((s,k)=>tourClip(code, k+1)))]);
@@ -2239,7 +2251,9 @@ async function tourPics(code){
   return imgs.map(i=> i || spare[j++ % Math.max(1, spare.length)] || null);
 }
 
-let vidCache = null, vidMime = null, vidJob = null;
+let vidCache = null, vidMime = null, vidJob = null, primedAC = null;
+// iPhone only lets sound start from a tap, so the audio engine for the video is created at the moment of the tap
+function primeAudio(){ try { if (primedAC && primedAC.state !== 'closed') return; const AC = window.AudioContext || window.webkitAudioContext; primedAC = new AC(); primedAC.resume(); } catch(e){ primedAC = null; } }
 /* The video is recorded in real time (one minute takes one minute). It is recorded while the visitor watches
    the tour on screen, so it is ready to share as soon as the tour ends. */
 function tripReady(){ const t = trip.code && sess.trips[trip.code]; return !!(t && !t.pending && t.blob); }
@@ -2254,7 +2268,7 @@ function ensureVideo(live){
   vidJob = job; return job.p;
 }
 // record quietly in the background only when the tour narration already exists (it costs credits to make)
-function kickVideo(){ setTimeout(()=>{ const t = trip.code && sess.trips[trip.code]; if (!t || !t.tour) return; const pr = ensureVideo(); if (pr) pr.then(()=>log('video ready in background')).catch(e=>log('background video: '+e.message)); }, 900); }
+function kickVideo(){ setTimeout(()=>{ const t = trip.code && sess.trips[trip.code]; if (trip.code && TOUR[trip.code]) tourPics(trip.code).catch(()=>{}); if (!t || !t.tour) return; const pr = ensureVideo(); if (pr) pr.then(()=>log('video ready in background')).catch(e=>log('background video: '+e.message)); }, 900); }
 async function waitVideo(show){
   let pr = ensureVideo(); if (!pr) throw new Error('NOT_READY');
   const tm = setInterval(()=>{ if (vidJob) show(vidJob.prog); }, 300);
@@ -2296,12 +2310,13 @@ async function tripVideo(onProg, job){
   const code = trip.code, t = sess.trips[code];
   if (!t || t.pending) throw new Error('NO_TRIP');
   const live = job && job.live;
-  if (live) tourStatus('✈ نجهّز جولتك بصوتك…');
+  if (live) tourStatus('✈ نجهّز جولتك بصوتك بـ' + LANGS[COUNTRIES[trip.code].lang].ar + '… ثوانٍ قليلة');
   const [tour, imgs] = await Promise.all([ensureTour(code), tourPics(code)]);
   if (job && job.cancel) throw new Error('CANCELLED');
   const stops = TOUR[code], c = COUNTRIES[code], l = LANGS[c.lang];
   const W = 720, H = 1280, INTRO = 2.4, IMG_Y = 150, IMG_H = Math.round(H*0.62);
-  const AC = window.AudioContext || window.webkitAudioContext, ac = new AC(), dest = ac.createMediaStreamDestination();
+  const AC = window.AudioContext || window.webkitAudioContext, ac = (primedAC && primedAC.state !== 'closed') ? primedAC : new AC(), dest = ac.createMediaStreamDestination();
+  primedAC = null;
   try { await ac.resume(); } catch(e){}
   if (ac.state !== 'running'){ await new Promise(r=>setTimeout(r, 600)); if (ac.state !== 'running'){ ac.close && ac.close(); throw new Error('AUDIO_SUSPENDED'); } }
   const body = getComputedStyle(document.body).getPropertyValue('--f-body') || 'sans-serif';
@@ -2402,7 +2417,7 @@ function closeTour(){
 }
 async function watchTour(){
   if (!tripReady()) return;
-  stopAll(); touchSess();
+  primeAudio(); stopAll(); touchSess();
   if (vidCache && vidCache.key === tripKey()){
     const v = document.createElement('video'); v.src = URL.createObjectURL(vidCache.file); v.playsInline = true; v.controls = true; v.autoplay = true;
     $('tourBox').hidden = false; $('tourStage').innerHTML = ''; $('tourStage').appendChild(v); v.play().catch(()=>{});
@@ -2421,11 +2436,12 @@ $('tourClose').addEventListener('click', closeTour);
 document.addEventListener('keydown', e=>{ if (e.key === 'Escape') closeTour(); });
 /* temporary link + QR: file auto-deletes after ~60 min on tmpfiles.org */
 $('toPhone').addEventListener('click', async ()=>{
+  primeAudio();
   const box = $('phoneBox'), q = $('phoneQr'), t = $('phoneTxt');
   box.hidden = false; box.scrollIntoView({behavior:'smooth', block:'center'}); q.innerHTML = '<span class="spin" style="border-color:rgba(11,20,36,.2);border-top-color:#0b1424"></span>'; t.textContent = '…جاري تجهيز الرابط';
   $('toPhone').disabled = true;
   try {
-    const vf = await waitVideo(f=>{ t.textContent = `🎬 نجهّز فيديو رحلتك… ${Math.round(f*100)}%`; });
+    const vf = await waitVideo(f=>{ t.textContent = f > 0 ? `🎬 نسجّل جولتك (دقيقة)… ${Math.round(f*100)}%` : '✈ نجهّز صوت جولتك…'; });
     t.textContent = '…جاري رفع الفيديو';
     const fd = new FormData(); fd.append('file', vf);
     let r;
@@ -2447,12 +2463,13 @@ $('toPhone').addEventListener('click', async ()=>{
   } finally { $('toPhone').disabled = false; }
 });
 $('saveTrip').addEventListener('click', async ()=>{
+  primeAudio();
   const btn = $('saveTrip'), label = btn.dataset.label || (btn.dataset.label = btn.innerHTML);
   const ready = vidCache && vidCache.key === tripKey();
   let f;
   if (!ready){
     btn.disabled = true;
-    try { f = await waitVideo(p=>{ btn.textContent = `🎬 نجهّز الفيديو… ${Math.round(p*100)}%`; }); }
+    try { f = await waitVideo(p=>{ btn.textContent = p > 0 ? `🎬 نسجّل الجولة… ${Math.round(p*100)}%` : '✈ نجهّز صوت الجولة…'; }); }
     catch(e){ log('video: '+e.message); btn.innerHTML = label; btn.disabled = false; $('saveHint').textContent = 'ما قدرنا نجهّز الفيديو: '+e.message.slice(0,80); $('saveHint').hidden = false; return; }
     btn.disabled = false; btn.innerHTML = '✅ الفيديو جاهز — اضغط للمشاركة';
     return;
