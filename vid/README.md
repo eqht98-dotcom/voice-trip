@@ -493,3 +493,41 @@ Vertical 9:16 cinematic shot of Pura Ulun Danu Bratan, Indonesia, slow aerial pu
 Vertical 9:16 cinematic shot of Komodo National Park, Indonesia, slow pan from left to right, golden hour light, realistic, travel documentary style, no text, no logos, no close-up faces.
 ```
 
+
+## النرويج
+
+**1. دار أوبرا أوسلو** → احفظه باسم `no_1.mp4`
+
+```
+Vertical 9:16 cinematic shot of Oslo Opera House, Norway, slow drone push-in, golden hour light, realistic, travel documentary style, no text, no logos, no close-up faces.
+```
+
+**2. حديقة فيغلاند** → احفظه باسم `no_2.mp4`
+
+```
+Vertical 9:16 cinematic shot of the Vigeland Sculpture Park, Oslo, Norway, slow aerial orbit, golden hour light, realistic, travel documentary style, no text, no logos, no close-up faces.
+```
+
+**3. رصيف بريغن** → احفظه باسم `no_3.mp4`
+
+```
+Vertical 9:16 cinematic shot of Bryggen wharf in Bergen, Norway, gentle crane up, golden hour light, realistic, travel documentary style, no text, no logos, no close-up faces.
+```
+
+**4. مضيق غيرانغر** → احفظه باسم `no_4.mp4`
+
+```
+Vertical 9:16 cinematic shot of Geirangerfjord, Norway, smooth dolly forward, golden hour light, realistic, travel documentary style, no text, no logos, no close-up faces.
+```
+
+**5. صخرة المنبر** → احفظه باسم `no_5.mp4`
+
+```
+Vertical 9:16 cinematic shot of Preikestolen above Lysefjord, Norway, slow aerial pull-back, golden hour light, realistic, travel documentary style, no text, no logos, no close-up faces.
+```
+
+**6. جزر لوفوتن** → احفظه باسم `no_6.mp4`
+
+```
+Vertical 9:16 cinematic shot of the Lofoten Islands, Norway, slow pan from left to right, golden hour light, realistic, travel documentary style, no text, no logos, no close-up faces.
+```
