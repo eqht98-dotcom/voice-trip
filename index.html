@@ -2204,9 +2204,19 @@ async function tourPic(s){
   if (!img) log('tour photo missing: '+s.w);
   return (tourPicCache[k] = img);
 }
+/* Veo clips made before the event: vid/<code>_<stop>.mp4 (e.g. vid/jp_1.mp4 … vid/jp_6.mp4). A stop with a clip
+   shows the clip; a stop without one falls back to its photo. */
+const CLIP_VER = 1;
+function tourClip(code, n){ return new Promise(r=>{
+  const v = document.createElement('video'); v.muted = true; v.playsInline = true; v.loop = true; v.preload = 'auto';
+  const tm = setTimeout(()=>done(null), 15000), done = x=>{ clearTimeout(tm); v.onloadeddata = v.onerror = null; r(x); };
+  v.onloadeddata = ()=>{ v.__video = true; done(v); }; v.onerror = ()=>done(null);
+  v.src = 'vid/'+code+'_'+n+'.mp4?v='+CLIP_VER; }); }
 async function tourPics(code){
   const stops = TOUR[code] || [];
-  const imgs = await Promise.all(stops.map(tourPic));
+  const [pics, clips] = await Promise.all([Promise.all(stops.map(tourPic)), Promise.all(stops.map((s,k)=>tourClip(code, k+1)))]);
+  log('tour clips for '+code+': '+clips.filter(Boolean).length+'/'+stops.length);
+  const imgs = pics.map((p,k)=>clips[k] || p);
   // a stop without a photo borrows one of the country's local culture photos
   const spare = (await Promise.all(['culture_0','food_0','wear_0','culture_1','food_1','wear_1'].map(k=>code+'_'+k).filter(k=>LOCAL_PICS[k]).map(k=>loadImg('img/'+k+'.jpg?v='+PICS_VER)))).filter(Boolean);
   let j = 0;
@@ -2303,8 +2313,10 @@ async function tripVideo(onProg, job){
   mr.ondataavailable = e=>{ if (e.data && e.data.size) chunks.push(e.data); };
   const done = new Promise(r=>mr.onstop = r);
   const GOLD = '#f6e3a8', GOLD2 = '#d6b46a';
+  let shown = -1;
   const paint = (img, alpha, z, pan) => { if (!img || alpha <= 0) return; ctx.globalAlpha = Math.min(1, alpha);
-    const s = Math.max(W/img.width, IMG_H/img.height)*z, w = img.width*s, h = img.height*s;
+    const iw = img.videoWidth || img.width, ih = img.videoHeight || img.height; if (img.__video){ z = 1; pan = 0; }
+    const s = Math.max(W/iw, IMG_H/ih)*z, w = iw*s, h = ih*s;
     ctx.save(); ctx.beginPath(); ctx.rect(0, IMG_Y, W, IMG_H); ctx.clip(); ctx.drawImage(img, (W-w)/2 + pan*(w-W)/2, IMG_Y + (IMG_H-h)/2, w, h); ctx.restore(); ctx.globalAlpha = 1; };
   const chip = (text, x, y) => { ctx.font = `700 28px ${body}`; const tw = ctx.measureText(text).width; ctx.fillStyle = 'rgba(0,0,0,.6)';
     ctx.beginPath(); ctx.roundRect ? ctx.roundRect(x - tw - 36, y - 34, tw + 36, 50, 25) : ctx.rect(x - tw - 36, y - 34, tw + 36, 50); ctx.fill(); ctx.fillStyle = GOLD; ctx.textAlign = 'right'; ctx.fillText(text, x - 18, y); };
@@ -2315,6 +2327,8 @@ async function tripVideo(onProg, job){
     if (!looping){ for (let k = 0; k < stops.length; k++) if (now >= stopAt(k)) i = k; since = Math.max(0, now - stopAt(i)); }
     else { const per = 4, q = now - msgStart; i = Math.floor(q/per) % stops.length; since = q % per; }
     const z = 1 + Math.min(1, since/9)*0.1, pan = (i % 2 ? 1 : -1) * Math.min(1, since/9) * 0.5;
+    if (i !== shown){ const v = imgs[i]; if (v && v.__video){ try { v.currentTime = 0; } catch(e){} v.play().catch(()=>{}); }
+      const pv = imgs[shown]; if (pv && pv.__video && pv !== v) setTimeout(()=>pv.pause(), 700); shown = i; }
     paint(imgs[i], 1, z, pan);
     if (since < 0.6 && (i > 0 || looping)){ const prev = imgs[(i - 1 + stops.length) % stops.length]; paint(prev, 1 - since/0.6, 1.1, 0); }
     const g = ctx.createLinearGradient(0, IMG_Y + IMG_H - 280, 0, IMG_Y + IMG_H); g.addColorStop(0,'rgba(0,0,0,0)'); g.addColorStop(1,'#000');
@@ -2355,6 +2369,7 @@ async function tripVideo(onProg, job){
     loop();
   });
   mr.stop(); await done; ac.close && ac.close();
+  imgs.forEach(v=>v && v.__video && v.pause());
   if (job && job.cancel) throw new Error('CANCELLED');
   const type = (mr.mimeType || mime || 'video/webm').split(';')[0], ext = type.includes('mp4') ? 'mp4' : 'webm';
   const stamp = new Date().toISOString().slice(0,16).replace(/[-:T]/g,'');
