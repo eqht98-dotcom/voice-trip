@@ -2440,10 +2440,12 @@ async function sendToPhone(kind){
       log('uploaded '+kind+': '+url);
     }
     q.innerHTML = '';
-    if (window.QRCode) new QRCode(q, {text:url, width:232, height:232, colorDark:'#0b1424', colorLight:'#f3ead6', correctLevel:QRCode.CorrectLevel.M});
+    // the QR opens a small save page with one button that puts the file in the phone's photos (or files)
+    const page = location.origin + location.pathname.replace(/[^/]*$/, '') + 'save.html#k=' + kind + '&u=' + encodeURIComponent(url);
+    if (window.QRCode) new QRCode(q, {text:page, width:232, height:232, colorDark:'#0b1424', colorLight:'#f3ead6', correctLevel:QRCode.CorrectLevel.M});
     else q.textContent = 'QR';
     box.scrollIntoView({behavior:'smooth', block:'center'});
-    t.innerHTML = `امسح الكود بكاميرا جوالك وحمّل ${what} رحلتك ${kind === 'audio' ? '🎧' : '🎬'}<small>الرابط مؤقت وينحذف تلقائياً بعد ساعة تقريباً</small>`;
+    t.innerHTML = `امسح الكود بكاميرا جوالك واضغط «${kind === 'audio' ? 'احفظ الصوت' : 'احفظ الفيديو في الصور'}» ${kind === 'audio' ? '🎧' : '🎬'}<small>الرابط مؤقت وينحذف تلقائياً بعد ساعة تقريباً</small>`;
   } catch(e){
     if (stoppedVideo(e)){ q.innerHTML = '⏸'; vb.innerHTML = '▶ كمّل تجهيز الفيديو';
       t.innerHTML = 'وقف تجهيز الفيديو لأنك طلعت من الصفحة.<small>اضغط «كمّل تجهيز الفيديو» وخلّ الصفحة مفتوحة حتى يخلص، أو حمّل الصوت فوراً.</small>'; return; }

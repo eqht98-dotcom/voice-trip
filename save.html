@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>احفظ رحلتك</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Reem+Kufi:wght@700&family=IBM+Plex+Sans+Arabic:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --night:#060a13; --navy:#0b1424; --navy-2:#111d33;
+  --gold:#d6b46a; --gold-hi:#f6e3a8; --gold-lo:#8f6c2b; --gold-line:rgba(214,180,106,.28);
+  --cream:#f3ead6; --muted:#a99f88; --ok:#7fd1a6;
+  --f-display:"Reem Kufi","IBM Plex Sans Arabic",system-ui,sans-serif;
+  --f-body:"IBM Plex Sans Arabic",system-ui,-apple-system,"Segoe UI",Tahoma,sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%}
+body{background:radial-gradient(120% 70% at 50% 0%,#14213b 0%,var(--night) 60%) var(--night);color:var(--cream);font-family:var(--f-body);
+  padding:calc(20px + env(safe-area-inset-top,0px)) 16px calc(28px + env(safe-area-inset-bottom,0px));display:flex;justify-content:center}
+main{width:100%;max-width:440px;display:flex;flex-direction:column;align-items:center;gap:16px;text-align:center}
+h1{margin:4px 0 0;font-family:var(--f-display);font-size:30px;color:var(--gold-hi);font-weight:700}
+.sub{margin:0;color:var(--muted);font-size:15px;line-height:1.7}
+.media{width:100%;border-radius:18px;overflow:hidden;border:1px solid var(--gold-line);background:#000}
+.media video{display:block;width:100%;max-height:42vh;background:#000}
+.media audio{display:block;width:100%;margin:18px 0}
+.media.audio{background:var(--navy);padding:6px 14px}
+.btn{appearance:none;border:0;cursor:pointer;width:100%;min-height:60px;border-radius:16px;font:700 20px/1.2 var(--f-body);text-decoration:none;
+  display:flex;align-items:center;justify-content:center;gap:10px;padding:14px 18px;color:#1a1408;
+  background:linear-gradient(180deg,var(--gold-hi),var(--gold) 55%,var(--gold-lo));box-shadow:0 8px 24px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.5)}
+.btn:active{transform:translateY(1px)}
+.btn[aria-disabled="true"]{opacity:.55;pointer-events:none}
+.steps{width:100%;margin:0;padding:14px 18px;border-radius:16px;border:1px solid var(--gold-line);background:rgba(11,20,36,.7);list-style:none;counter-reset:s;text-align:right}
+.steps li{counter-increment:s;display:flex;gap:12px;align-items:flex-start;padding:8px 0;font-size:16px;line-height:1.6}
+.steps li::before{content:counter(s);flex:none;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;background:var(--gold);color:#1a1408;font-weight:700;font-size:14px;margin-top:2px}
+.status{min-height:22px;margin:0;font-size:14px;color:var(--muted)}
+.status.ok{color:var(--ok)}
+.note{margin:4px 0 0;font-size:13px;color:var(--muted);line-height:1.7}
+.err{padding:18px;border-radius:16px;border:1px solid var(--gold-line);background:rgba(11,20,36,.7);line-height:1.8}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<main>
+  <h1 id="title">رحلتك جاهزة ✈</h1>
+  <p class="sub" id="lead">احفظها عندك وشاركها مع اللي تحبهم</p>
+  <a class="btn" id="saveBtn" href="#" aria-disabled="true">…نجهّز الملف</a>
+  <p class="status" id="status" role="status"></p>
+  <ol class="steps" id="steps" hidden></ol>
+  <div class="media" id="media"></div>
+  <p class="note">الرابط مؤقت وينحذف تلقائياً بعد ساعة تقريباً · رحلة حول العالم بصوتك</p>
+</main>
+<script>
+(()=>{
+  const $ = id => document.getElementById(id);
+  const q = new URLSearchParams(location.hash.slice(1));
+  const url = q.get('u') || '', kind = q.get('k') === 'audio' ? 'audio' : 'video';
+  // only files from the booth's temporary host are accepted
+  if (!/^https:\/\/tmpfiles\.org\/dl\/\d+\/[\w.\-]+$/.test(url)){
+    document.querySelector('main').innerHTML = '<div class="err">الرابط غير صالح أو انتهت مدته.<br>ارجع للبوث وامسح الكود من جديد.</div>';
+    return;
+  }
+  const name = decodeURIComponent(url.split('/').pop());
+  const isVideo = kind === 'video';
+  const ua = navigator.userAgent, iOS = /iPhone|iPad|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const btn = $('saveBtn'), status = $('status'), steps = $('steps');
+  const label = isVideo ? (iOS ? '📥 احفظ الفيديو في الصور' : '📥 حمّل الفيديو') : (iOS ? '📥 احفظ الصوت في الملفات' : '📥 حمّل الصوت');
+  $('title').textContent = isVideo ? 'فيديو رحلتك جاهز 🎬' : 'صوت رحلتك جاهز 🎧';
+
+  // preview straight from the link (works without downloading first)
+  const m = document.createElement(isVideo ? 'video' : 'audio');
+  m.src = url; m.controls = true; m.preload = 'metadata'; m.setAttribute('playsinline', '');
+  if (!isVideo) $('media').classList.add('audio');
+  $('media').appendChild(m);
+
+  const showSteps = list => { steps.innerHTML = list.map(s => '<li><span>' + s + '</span></li>').join(''); steps.hidden = false; };
+  const ready = (text, ok) => { btn.textContent = text; btn.removeAttribute('aria-disabled'); status.textContent = ok || ''; status.classList.toggle('ok', !!ok); };
+
+  let file = null;
+  const canShareFiles = f => { try { return !!(navigator.canShare && navigator.canShare({files:[f]})); } catch(e){ return false; } };
+
+  // the file is fetched first, so the tap can open the save sheet at once (iPhone needs it ready at the tap)
+  (async () => {
+    try {
+      const r = await fetch(url, {mode:'cors'});
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      const b = await r.blob();
+      const type = isVideo ? 'video/mp4' : 'audio/mpeg';
+      file = new File([b], name, {type});
+      if (canShareFiles(file)){
+        ready(label, '✓ جاهز');
+        showSteps(isVideo
+          ? ['اضغط الزر فوق', 'اختر <b>«حفظ الفيديو»</b>', 'تلقاه في ألبوم الصور 🎉']
+          : ['اضغط الزر فوق', 'اختر <b>«حفظ في الملفات»</b>', 'تلقاه في تطبيق الملفات 🎉']);
+        btn.addEventListener('click', async e => {
+          e.preventDefault();
+          try { await navigator.share({files:[file], title:'رحلتي حول العالم بصوتي'}); }
+          catch(err){ if (err && err.name === 'AbortError') return; fallback(); }
+        });
+      } else {
+        // no share sheet with files (most Android browsers): a normal download from the page itself
+        const a = URL.createObjectURL(file);
+        btn.href = a; btn.download = name; ready(label, '✓ جاهز');
+        showSteps(isVideo ? ['اضغط الزر فوق', 'يتحمّل الفيديو في جهازك', 'تلقاه في الاستوديو أو التنزيلات'] : ['اضغط الزر فوق', 'يتحمّل الصوت في جهازك']);
+      }
+    } catch(e){ fallback(); }
+  })();
+
+  // if the file can't be fetched here, open it directly and save it from there
+  function fallback(){
+    btn.href = url; btn.target = '_blank'; btn.rel = 'noopener';
+    ready(isVideo ? '▶ افتح الفيديو' : '▶ افتح الصوت', '');
+    showSteps(iOS
+      ? (isVideo ? ['اضغط الزر فوق، يفتح الفيديو', 'اضغط زر المشاركة <b>⬆︎</b>', 'اختر <b>«حفظ الفيديو»</b>'] : ['اضغط الزر فوق', 'اضغط زر المشاركة <b>⬆︎</b>', 'اختر <b>«حفظ في الملفات»</b>'])
+      : ['اضغط الزر فوق', 'اضغط ⋮ ثم <b>«تنزيل»</b>']);
+  }
+})();
+</script>
+</body>
+</html>
