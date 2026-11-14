@@ -619,7 +619,7 @@ details.logbox summary{cursor:pointer;color:var(--muted);font-size:14px;padding:
       <button class="btn gold" id="playAll">▶ اسمع رحلتك</button>
       <button class="btn gold" id="toPhone" hidden aria-expanded="false" aria-controls="dlChoice">⬇ حمّل مقطعك</button>
       <div class="dlchoice" id="dlChoice" hidden><button class="btn gold" id="dlAudio">🎧 حمّل الصوت</button><button class="btn gold" id="dlVideo">🎬 حمّل الفيديو</button></div>
-      <button class="btn" id="saveTrip" hidden>📲 مشاركة من الجهاز</button>
+      <button class="btn" id="saveTrip" hidden style="display:none">📲 مشاركة من الجهاز</button>
       <button class="btn" id="otherCountry">✈ دولة ثانية</button>
       <button class="btn" id="newVisitor">مسافر جديد ↺</button>
     </div>
@@ -1983,7 +1983,7 @@ function friendly(e){
 
 /* ================= boarding passes ================= */
 function buildPasses(){
-  players = []; blobs = []; $('saveTrip').hidden = true; $('toPhone').hidden = true; closeChoice(); if ($('dlVideo').dataset.label) $('dlVideo').innerHTML = $('dlVideo').dataset.label; $('saveHint').hidden = true; $('phoneBox').hidden = true;
+  players = []; blobs = []; $('saveTrip').hidden = true; $('toPhone').hidden = true; closeChoice(); if ($('dlVideo').dataset.label) $('dlVideo').innerHTML = $('dlVideo').dataset.label; $('saveHint').hidden = true; $('saveHint').hidden = true; $('phoneBox').hidden = true;
   const date = new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}).toUpperCase();
   const c = COUNTRIES[trip.code], l = LANGS[c.lang], i = c.lang;
   $('resTitle').textContent = `تذكرتك إلى ${c.name} جاهزة ✈`;
@@ -2186,7 +2186,7 @@ async function tripVideo(onProg, job){
     let flag = null; try { flag = await loadImg('data:image/svg+xml;charset=utf-8,'+encodeURIComponent(flagSVG(c).replace(/<svg /g,'<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" '))); } catch(e){}
     // a flag image that would block recording (browser security) is left out
     if (flag){ try { const tc = document.createElement('canvas'); tc.width = 8; tc.height = 6; const tx = tc.getContext('2d'); tx.drawImage(flag,0,0,8,6); tx.getImageData(0,0,1,1); } catch(e){ log('flag skipped in video: '+c); flag = null; } }
-    parts.push({c, t, buf, imgs, flag, start: T, aStart: T + INTRO}); T += INTRO + buf.duration + GAP;
+    parts.push({c, t, buf, imgs, flag, clips: await loadClips(c), start: T, aStart: T + INTRO}); T += INTRO + buf.duration + GAP;
   }
   const cv = document.createElement('canvas'); cv.width = W; cv.height = H; const ctx = cv.getContext('2d');
   const stream = cv.captureStream(30); dest.stream.getAudioTracks().forEach(tr=>stream.addTrack(tr));
@@ -2201,18 +2201,40 @@ async function tripVideo(onProg, job){
   mr.start(500);
   await new Promise(res=>{
     let stuck = 0;
-    const loop = () => { const now = ac.currentTime - t0; draw(Math.max(0, now)); onProg && onProg(Math.min(1, Math.max(0, now/T)));
+    const loop = () => { const now = ac.currentTime - t0; draw.tick(Math.max(0, now)); draw(Math.max(0, now)); onProg && onProg(Math.min(1, Math.max(0, now/T)));
       // the phone paused the sound (a call, leaving the page): try to wake it, give up after 2 s
       if (ac.state !== 'running'){ if (!stuck){ stuck = performance.now(); ac.resume().catch(()=>{}); } else if (performance.now() - stuck > 2000 && job){ job.cancel = true; job.interrupted = true; } } else stuck = 0;
       if (now >= T || (job && job.cancel)) return res(); requestAnimationFrame(loop); };
     loop();
   });
-  try { mr.stop(); } catch(e){} await Promise.race([done, new Promise(r=>setTimeout(r, 1500))]); ac.close && ac.close();
+  draw.stop(); try { mr.stop(); } catch(e){} await Promise.race([done, new Promise(r=>setTimeout(r, 1500))]); ac.close && ac.close();
   if (job && job.cancel) throw new Error(job.interrupted ? 'INTERRUPTED' : 'CANCELLED');
   const type = (mr.mimeType || mime || 'video/webm').split(';')[0], ext = type.includes('mp4') ? 'mp4' : 'webm';
   const stamp = new Date().toISOString().slice(0,16).replace(/[-:T]/g,'');
   const file = new File(chunks, `voice-trip-${stamp}.${ext}`, {type});
   vidCache = {key, file}; return file;
+}
+/* cinematic clips: clips/<code>_1.mp4 … clips/<code>_6.mp4, used in order when they exist */
+const CLIP_VER = 1, CLIP_SLOT = 4, clipCache = {};
+async function loadClip(src){
+  if (clipCache[src] !== undefined) return clipCache[src];
+  try { const h = await fetch(src, {method:'HEAD', cache:'no-store'}); if (!h.ok) return (clipCache[src] = null); } catch(e){ return (clipCache[src] = null); }
+  return (clipCache[src] = await new Promise(r=>{
+    const v = document.createElement('video'); v.muted = true; v.playsInline = true; v.setAttribute('playsinline',''); v.preload = 'auto'; v.loop = true;
+    const tm = setTimeout(()=>done(null), 8000), done = x=>{ clearTimeout(tm); v.onloadeddata = v.onerror = null; r(x); };
+    v.onloadeddata = ()=>done(v.videoWidth ? v : null); v.onerror = ()=>done(null);
+    v.src = src; v.load(); }));
+}
+async function loadClips(code){
+  const list = await Promise.all([1,2,3,4,5,6].map(n=>loadClip('clips/'+code+'_'+n+'.mp4?v='+CLIP_VER)));
+  return list.filter(Boolean);
+}
+// which clip is on screen `local` seconds into a country, and at which moment of that clip
+function clipAt(P, local){
+  if (!P.clips || !P.clips.length) return null;
+  const k = Math.floor(Math.max(0, local)/CLIP_SLOT), into = Math.max(0, local) - k*CLIP_SLOT, vid = P.clips[k % P.clips.length];
+  const d = vid.duration && isFinite(vid.duration) ? vid.duration : CLIP_SLOT;
+  return {vid, into, f: into/CLIP_SLOT, t: Math.min(into, Math.max(0, d - 0.05))};
 }
 /* one frame of the trip video at time `now` (seconds); shared by the fast and the real-time video */
 function tripDrawer(ctx, parts, W, H, INTRO, GAP, body){
@@ -2221,8 +2243,16 @@ function tripDrawer(ctx, parts, W, H, INTRO, GAP, body){
     ctx.fillStyle = '#000'; ctx.fillRect(0,0,W,H);
     const P = parts.find(x=>now >= x.start && now < x.start + INTRO + x.buf.duration + GAP) || parts[parts.length-1];
     const l = LANGS[COUNTRIES[P.c].lang], local = now - P.start;
-    // culture photos: slow zoom, cross-fade every 6 s
-    if (P.imgs.length){
+    // cinematic clips (clips/<code>_<n>.mp4) fill the whole frame; otherwise the culture photos
+    const cl = clipAt(P, local);
+    if (cl){
+      const v = cl.vid, vw = v.videoWidth, vh = v.videoHeight, z = 1.02 + cl.f*0.04, s = Math.max(W/vw, H/vh)*z, w = vw*s, h = vh*s;
+      try { ctx.drawImage(v, (W-w)/2, (H-h)/2, w, h); } catch(e){}
+      if (cl.into < 0.3){ ctx.fillStyle = `rgba(0,0,0,${1 - cl.into/0.3})`; ctx.fillRect(0,0,W,H); }
+      const gt = ctx.createLinearGradient(0, 0, 0, 220); gt.addColorStop(0,'rgba(0,0,0,.75)'); gt.addColorStop(1,'rgba(0,0,0,0)'); ctx.fillStyle = gt; ctx.fillRect(0,0,W,220);
+      const gb = ctx.createLinearGradient(0, H*0.6, 0, H); gb.addColorStop(0,'rgba(0,0,0,0)'); gb.addColorStop(0.45,'rgba(0,0,0,.7)'); gb.addColorStop(1,'rgba(0,0,0,.92)'); ctx.fillStyle = gb; ctx.fillRect(0,H*0.6,W,H*0.4);
+    }
+    else if (P.imgs.length){
       const per = 6, k = Math.floor(local/per), f = (local % per)/per;
       const paint = (img, alpha, z) => { if (!img) return; ctx.globalAlpha = alpha;
         const ih = H*0.62, s = Math.max(W/img.width, ih/img.height)*z, w = img.width*s, h = img.height*s;
@@ -2237,7 +2267,7 @@ function tripDrawer(ctx, parts, W, H, INTRO, GAP, body){
     ctx.textAlign = 'center'; ctx.direction = 'rtl'; ctx.fillStyle = GOLD;
     ctx.font = `700 34px ${body}`; ctx.fillText(COUNTRIES[P.c].name, W/2, 128);
     // title card at the start of each country
-    if (local < INTRO){ ctx.fillStyle = `rgba(0,0,0,${Math.max(0, 0.75 - local/INTRO*0.75)})`; ctx.fillRect(0,150,W,H*0.62);
+    if (local < INTRO){ ctx.fillStyle = `rgba(0,0,0,${Math.max(0, 0.75 - local/INTRO*0.75)})`; if (cl) ctx.fillRect(0,0,W,H); else ctx.fillRect(0,150,W,H*0.62);
       ctx.fillStyle = GOLD; ctx.font = `700 46px ${body}`; ctx.fillText('✈ ' + l.city, W/2, 150 + H*0.31); }
     // subtitles (same timing as the page)
     const tau = now - P.aStart; let cur = null;
@@ -2253,6 +2283,17 @@ function tripDrawer(ctx, parts, W, H, INTRO, GAP, body){
     ctx.direction = 'rtl'; ctx.fillStyle = 'rgba(246,227,168,.55)'; ctx.font = `500 20px ${body}`;
     ctx.fillText('رحلة حول العالم بصوتك · يوم الطلاب العالمي · تبوك', W/2, H - 34);
   };
+  const partAt = now => parts.find(x=>now >= x.start && now < x.start + INTRO + x.buf.duration + GAP) || parts[parts.length-1];
+  // fast video: put the clip on the exact frame before drawing it
+  draw.seek = async now => { const P = partAt(now), cl = clipAt(P, now - P.start); if (!cl) return;
+    const v = cl.vid; if (Math.abs(v.currentTime - cl.t) < 0.02) return;
+    await new Promise(r=>{ const tm = setTimeout(done, 1500); function done(){ clearTimeout(tm); v.removeEventListener('seeked', done); r(); } v.addEventListener('seeked', done); v.currentTime = cl.t; }); };
+  // real-time video: let the current clip play, start each one from its beginning
+  let playing = null;
+  draw.tick = now => { const P = partAt(now), cl = clipAt(P, now - P.start), v = cl && cl.vid;
+    if (v === playing) return; if (playing) playing.pause(); playing = v;
+    if (v){ try { v.currentTime = 0; } catch(e){} v.play().catch(()=>{}); } };
+  draw.stop = () => { if (playing) playing.pause(); playing = null; };
   return draw;
 }
 /* ================= fast video: made in a few seconds instead of in real time =================
@@ -2357,7 +2398,7 @@ async function fastTripVideo(onProg, job){
     const imgs = (await Promise.all(keys.map(k=>loadImg('img/'+k+'.jpg?v='+PICS_VER)))).filter(Boolean);
     let flag = null; try { flag = await loadImg('data:image/svg+xml;charset=utf-8,'+encodeURIComponent(flagSVG(c).replace(/<svg /g,'<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" '))); } catch(e){}
     if (flag && !canRecordImg(flag)) flag = null;
-    parts.push({c, t, buf:{duration:dur}, imgs, flag, start, aStart});
+    parts.push({c, t, buf:{duration:dur}, imgs, flag, clips: await loadClips(c), start, aStart});
     T = aFrames.length*fdur;
   }
   if (job && job.cancel) throw new Error(job.interrupted ? 'INTERRUPTED' : 'CANCELLED');
@@ -2377,7 +2418,7 @@ async function fastTripVideo(onProg, job){
   for (let i = 0; i < N; i++){
     if (failed) throw failed;
     if (job && job.cancel){ try { encoder.close(); } catch(e){} throw new Error(job.interrupted ? 'INTERRUPTED' : 'CANCELLED'); }
-    draw(i/fps);
+    await draw.seek(i/fps); draw(i/fps);
     const fr = new VideoFrame(cv, {timestamp: Math.round(i*1e6/fps), duration: Math.round(1e6/fps)});
     encoder.encode(fr, {keyFrame: i % (fps*2) === 0}); fr.close();
     if (encoder.encodeQueueSize > 6) await new Promise(r=>{ const w = ()=> encoder.encodeQueueSize > 2 ? setTimeout(w, 5) : r(); w(); });
@@ -2395,61 +2436,49 @@ async function fastTripVideo(onProg, job){
   vidCache = {key, file}; return file;
 }
 /* temporary link + QR: file auto-deletes after ~60 min on tmpfiles.org */
-/* "Download your clip": the visitor picks voice (ready at once) or video, then scans a QR on their phone */
-const upCache = {};
+/* "Download your clip": the visitor picks voice or video, and the phone's share sheet opens straight away
+   (Save Video puts it in Photos, AirDrop sends it to another iPhone). No QR code. */
 function closeChoice(){ $('dlChoice').hidden = true; $('toPhone').setAttribute('aria-expanded','false'); }
 $('toPhone').addEventListener('click', ()=>{
-  primeAudio();   // a tap: lets the video's sound start on iPhone
+  primeAudio();   // a tap: lets the video's sound start on iPhone if the slow recording is used
   const open = $('dlChoice').hidden; $('dlChoice').hidden = !open; $('toPhone').setAttribute('aria-expanded', String(open));
-  // start the video now, so it is often ready by the time they choose it
   if (open && !(vidCache && vidCache.key === tripKey())){ const pr = ensureVideo(true); if (pr) pr.catch(e=>log('video: '+e.message)); }
 });
-$('dlAudio').addEventListener('click', ()=>sendToPhone('audio'));
-$('dlVideo').addEventListener('click', ()=>{ primeAudio(); sendToPhone('video'); });
+$('dlAudio').addEventListener('click', ()=>saveClip('audio'));
+$('dlVideo').addEventListener('click', ()=>{ primeAudio(); saveClip('video'); });
 function tripAudioFile(){
   const codes = Object.keys(sess.trips).filter(c=>sess.trips[c] && sess.trips[c].blob);
   const stamp = new Date().toISOString().slice(0,16).replace(/[-:T]/g,'');
   return new File(codes.map(c=>sess.trips[c].blob), `voice-trip-${codes.join('-')}-${stamp}.mp3`, {type:'audio/mpeg'});
 }
-async function uploadTemp(file){
-  const fd = new FormData(); fd.append('file', file);
-  let r;
-  try { r = await fetch('https://tmpfiles.org/api/v1/upload', {method:'POST', body:fd}); }
-  catch(e){ throw new Error('UPLOAD_NET: '+e.message); }
-  if (!r.ok) throw new Error('UPLOAD HTTP '+r.status);
-  const d = await r.json();
-  let url = d && d.data && d.data.url; if (!url) throw new Error('UPLOAD: no url');
-  return url.replace(/^http:/,'https:').replace('tmpfiles.org/','tmpfiles.org/dl/');
-}
-let sending = false;
-async function sendToPhone(kind){
-  if (sending) return; sending = true;
-  const vb = $('dlVideo'); vb.dataset.label = vb.dataset.label || vb.innerHTML;
-  const box = $('phoneBox'), q = $('phoneQr'), t = $('phoneTxt'), what = kind === 'audio' ? 'صوت' : 'فيديو';
-  box.hidden = false; box.scrollIntoView({behavior:'smooth', block:'center'}); q.innerHTML = '<span class="spin" style="border-color:rgba(11,20,36,.2);border-top-color:#0b1424"></span>'; t.textContent = '…جاري تجهيز الرابط';
-  $('dlAudio').disabled = $('dlVideo').disabled = true;
+// the share sheet must open from the tap itself, so a file that is not ready yet is prepared first and the
+// button then asks for one more tap
+async function shareFile(f, hint){
   try {
-    const key = kind+':'+tripKey();
-    let url = upCache[key];
-    if (!url){
-      let f;
-      if (kind === 'audio') f = tripAudioFile();
-      else { f = await waitVideo(p=>{ t.innerHTML = `🎬 نجهّز فيديو رحلتك… ${Math.round(p*100)}%<small>${fastVideoOk() ? 'ثوانٍ قليلة' : `خلّ الصفحة مفتوحة حتى يخلص (حوالي ${vidSecs()} ثانية)`}</small>`; }); vb.innerHTML = vb.dataset.label; }
-      t.textContent = `…جاري رفع ال${what}`;
-      url = upCache[key] = await uploadTemp(f);
-      log('uploaded '+kind+': '+url);
+    if (navigator.canShare && navigator.canShare({files:[f]})){
+      await navigator.share({files:[f], title:'رحلتي حول العالم بصوتي'});
+      hint.textContent = f.type.startsWith('video') ? '✓ اختر «حفظ الفيديو» عشان يروح لألبوم الصور، أو AirDrop لجوال ثاني.' : '✓ اختر «حفظ في الملفات» أو AirDrop.'; hint.hidden = false; return;
     }
-    q.innerHTML = '';
-    if (window.QRCode) new QRCode(q, {text:url, width:232, height:232, colorDark:'#0b1424', colorLight:'#f3ead6', correctLevel:QRCode.CorrectLevel.M});
-    else q.textContent = 'QR';
-    box.scrollIntoView({behavior:'smooth', block:'center'});
-    t.innerHTML = `امسح الكود بكاميرا جوالك وحمّل ${what} رحلتك ${kind === 'audio' ? '🎧' : '🎬'}<small>الرابط مؤقت وينحذف تلقائياً بعد ساعة تقريباً</small>`;
+  } catch(e){ if (e && e.name === 'AbortError') return; log('share: '+e.message); }
+  const a = document.createElement('a'); a.href = URL.createObjectURL(f); a.download = f.name;
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href), 4000);
+  hint.textContent = 'انحفظ الملف في التنزيلات.'; hint.hidden = false;
+}
+let preparing = false;
+async function saveClip(kind){
+  const hint = $('saveHint'), vb = $('dlVideo'); vb.dataset.label = vb.dataset.label || vb.innerHTML;
+  hint.hidden = true;
+  if (kind === 'audio') return shareFile(tripAudioFile(), hint);
+  if (vidCache && vidCache.key === tripKey()){ vb.innerHTML = vb.dataset.label; return shareFile(vidCache.file, hint); }
+  if (preparing) return; preparing = true; vb.disabled = true;
+  try {
+    await waitVideo(p=>{ vb.textContent = `🎬 نجهّز الفيديو… ${Math.round(p*100)}%`; });
+    vb.innerHTML = '✅ الفيديو جاهز، اضغط للحفظ';
   } catch(e){
-    if (stoppedVideo(e)){ q.innerHTML = '⏸'; vb.innerHTML = '▶ كمّل تجهيز الفيديو';
-      t.innerHTML = 'وقف تجهيز الفيديو لأنك طلعت من الصفحة.<small>اضغط «كمّل تجهيز الفيديو» وخلّ الصفحة مفتوحة حتى يخلص، أو حمّل الصوت فوراً.</small>'; return; }
-    log('upload failed: '+e.message); q.innerHTML = '✕';
-    t.innerHTML = 'ما قدرنا نجهّز الرابط. استخدم زر "مشاركة من الجهاز" بدلها.<small>'+esc(e.message.slice(0,90))+'</small>';
-  } finally { sending = false; $('dlAudio').disabled = $('dlVideo').disabled = false; }
+    log('video: '+e.message);
+    vb.innerHTML = stoppedVideo(e) ? '▶ كمّل تجهيز الفيديو' : vb.dataset.label;
+    hint.textContent = stoppedVideo(e) ? 'وقف التجهيز لأنك طلعت من الصفحة. اضغط الزر وخلّ الصفحة مفتوحة.' : 'ما قدرنا نجهّز الفيديو: '+e.message.slice(0,80); hint.hidden = false;
+  } finally { preparing = false; vb.disabled = false; }
 }
 $('saveTrip').addEventListener('click', async ()=>{
   primeAudio();
