@@ -215,6 +215,9 @@ h1{
 .note{color:var(--ok);font-size:15px;text-align:center}
 .usage{color:var(--muted);font-size:13px;text-align:center}
 
+.dlchoice{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;width:100%}
+.dlchoice[hidden]{display:none}
+.dlchoice .btn{flex:1 1 150px;max-width:240px}
 .waqr{display:flex;align-items:center;gap:16px;padding:14px 18px;border-radius:18px;border:1px solid var(--gold-line);background:rgba(11,20,36,.66);max-width:560px;width:100%}
 .waqr .qr{flex:none;width:132px;height:132px;padding:8px;border-radius:12px;background:var(--cream);display:grid;place-items:center}
 .waqr .qr img,.waqr .qr canvas{width:116px!important;height:116px!important}
@@ -614,7 +617,8 @@ details.logbox summary{cursor:pointer;color:var(--muted);font-size:14px;padding:
     <div class="passes" id="passes"></div>
     <div class="actions">
       <button class="btn gold" id="playAll">▶ اسمع رحلتك</button>
-      <button class="btn gold" id="toPhone" hidden>📱 خذ رحلتك على جوالك</button>
+      <button class="btn gold" id="toPhone" hidden aria-expanded="false" aria-controls="dlChoice">⬇ حمّل مقطعك</button>
+      <div class="dlchoice" id="dlChoice" hidden><button class="btn gold" id="dlAudio">🎧 حمّل الصوت</button><button class="btn gold" id="dlVideo">🎬 حمّل الفيديو</button></div>
       <button class="btn" id="saveTrip" hidden>📲 مشاركة من الجهاز</button>
       <button class="btn" id="otherCountry">✈ دولة ثانية</button>
       <button class="btn" id="newVisitor">مسافر جديد ↺</button>
@@ -1979,7 +1983,7 @@ function friendly(e){
 
 /* ================= boarding passes ================= */
 function buildPasses(){
-  players = []; blobs = []; $('saveTrip').hidden = true; $('toPhone').hidden = true; if ($('toPhone').dataset.label) $('toPhone').innerHTML = $('toPhone').dataset.label; $('saveHint').hidden = true; $('phoneBox').hidden = true;
+  players = []; blobs = []; $('saveTrip').hidden = true; $('toPhone').hidden = true; closeChoice(); if ($('dlVideo').dataset.label) $('dlVideo').innerHTML = $('dlVideo').dataset.label; $('saveHint').hidden = true; $('phoneBox').hidden = true;
   const date = new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}).toUpperCase();
   const c = COUNTRIES[trip.code], l = LANGS[c.lang], i = c.lang;
   $('resTitle').textContent = `تذكرتك إلى ${c.name} جاهزة ✈`;
@@ -2075,7 +2079,11 @@ function playOne(i){
   p.onerror = ()=>setPlayUI(false);
   p.play().then(()=>setPlayUI(true)).catch(()=>setPlayUI(false));
 }
-$('playAll').addEventListener('click', ()=>playOne(0));
+$('playAll').addEventListener('click', ()=>{
+  playOne(0);
+  // a tap is the chance to start the video quietly on iPhone, so it is ready by the time they download it
+  if (!(vidCache && vidCache.key === tripKey())){ primeAudio(); const pr = ensureVideo(true); if (pr) pr.then(()=>log('video ready early')).catch(e=>log('early video: '+e.message)); }
+});
 /* ================= the visitor's trip as a video: every country, culture photos, moving subtitles ================= */
 let vidCache = null, vidMime = null, vidJob = null, primedAC = null, wakeLock = null;
 // iPhone lets sound start only from a tap, so the audio engine for the video is made at the moment of the tap
@@ -2110,10 +2118,22 @@ async function waitVideo(show){
   let pr = ensureVideo(true); if (!pr) throw new Error('NOT_READY');
   const tm = setInterval(()=>{ if (vidJob) show(vidJob.prog); }, 300);
   holdScreen(true);
-  try { return await pr; }
-  catch(e){ if (e.message === 'CANCELLED' && !document.hidden){ pr = ensureVideo(true); if (pr) return await pr; } throw e; }
+  try {
+    for (let tries = 0; ; tries++){
+      try { return await pr; }
+      catch(e){
+        if (!/INTERRUPTED|CANCELLED/.test(e.message) || tries > 4) throw e;
+        // the fast video needs no tap: when the visitor comes back to the page, carry on by itself
+        if (/INTERRUPTED/.test(e.message) && !fastVideoOk()) throw e;
+        await untilVisible();
+        pr = ensureVideo(true); if (!pr) throw e;
+      }
+    }
+  }
   finally { clearInterval(tm); holdScreen(false); }
 }
+const fastVideoOk = () => !!(window.VideoEncoder && window.VideoFrame);
+const untilVisible = () => document.hidden ? new Promise(r=>{ const f = ()=>{ if (!document.hidden){ document.removeEventListener('visibilitychange', f); r(); } }; document.addEventListener('visibilitychange', f); }) : Promise.resolve();
 const stoppedVideo = e => /INTERRUPTED|AUDIO_SUSPENDED|CANCELLED/.test(e && e.message || '');
 // some browsers say they can record MP4 but drop the picture: test a short clip once and keep the first format that really has video
 async function pickVideoMime(){
@@ -2144,6 +2164,10 @@ function wrapLines(ctx, text, maxW){
 }
 async function tripVideo(onProg, job){
   const key = tripKey(); if (vidCache && vidCache.key === key) return vidCache.file;
+  if (window.VideoEncoder && window.VideoFrame && !(job && job.slow)){
+    try { return await fastTripVideo(onProg, job); }
+    catch(e){ if (/INTERRUPTED|CANCELLED/.test(e.message)) throw e; log('fast video unavailable, recording in real time: '+(e.message||e)); if (job) job.prog = 0; }
+  }
   const codes = Object.keys(sess.trips).filter(c=>sess.trips[c] && !sess.trips[c].pending);
   if (!codes.length) throw new Error('NO_TRIP');
   const W = 720, H = 1280, INTRO = 2.2, GAP = 0.6;
@@ -2159,7 +2183,7 @@ async function tripVideo(onProg, job){
     const t = sess.trips[c], buf = await ac.decodeAudioData(await t.blob.arrayBuffer());
     const keys = ['sights_0','culture_0','wear_0','food_0','sights_1'].map(k=>c+'_'+k).filter(k=>LOCAL_PICS[k]);
     const imgs = (await Promise.all(keys.map(k=>loadImg('img/'+k+'.jpg?v='+PICS_VER)))).filter(Boolean);
-    let flag = null; try { flag = await loadImg('data:image/svg+xml;charset=utf-8,'+encodeURIComponent(flagSVG(c))); } catch(e){}
+    let flag = null; try { flag = await loadImg('data:image/svg+xml;charset=utf-8,'+encodeURIComponent(flagSVG(c).replace(/<svg /g,'<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" '))); } catch(e){}
     // a flag image that would block recording (browser security) is left out
     if (flag){ try { const tc = document.createElement('canvas'); tc.width = 8; tc.height = 6; const tx = tc.getContext('2d'); tx.drawImage(flag,0,0,8,6); tx.getImageData(0,0,1,1); } catch(e){ log('flag skipped in video: '+c); flag = null; } }
     parts.push({c, t, buf, imgs, flag, start: T, aStart: T + INTRO}); T += INTRO + buf.duration + GAP;
@@ -2170,6 +2194,28 @@ async function tripVideo(onProg, job){
   const mr = new MediaRecorder(stream, mime ? {mimeType:mime, videoBitsPerSecond:2_500_000} : undefined), chunks = [];
   mr.ondataavailable = e=>{ if (e.data && e.data.size) chunks.push(e.data); };
   const done = new Promise(r=>mr.onstop = r);
+  const draw = tripDrawer(ctx, parts, W, H, INTRO, GAP, body);
+  draw(0);
+  const t0 = ac.currentTime + 0.25;
+  parts.forEach(x=>{ const src = ac.createBufferSource(); src.buffer = x.buf; src.connect(dest); src.start(t0 + x.aStart); });
+  mr.start(500);
+  await new Promise(res=>{
+    let stuck = 0;
+    const loop = () => { const now = ac.currentTime - t0; draw(Math.max(0, now)); onProg && onProg(Math.min(1, Math.max(0, now/T)));
+      // the phone paused the sound (a call, leaving the page): try to wake it, give up after 2 s
+      if (ac.state !== 'running'){ if (!stuck){ stuck = performance.now(); ac.resume().catch(()=>{}); } else if (performance.now() - stuck > 2000 && job){ job.cancel = true; job.interrupted = true; } } else stuck = 0;
+      if (now >= T || (job && job.cancel)) return res(); requestAnimationFrame(loop); };
+    loop();
+  });
+  try { mr.stop(); } catch(e){} await Promise.race([done, new Promise(r=>setTimeout(r, 1500))]); ac.close && ac.close();
+  if (job && job.cancel) throw new Error(job.interrupted ? 'INTERRUPTED' : 'CANCELLED');
+  const type = (mr.mimeType || mime || 'video/webm').split(';')[0], ext = type.includes('mp4') ? 'mp4' : 'webm';
+  const stamp = new Date().toISOString().slice(0,16).replace(/[-:T]/g,'');
+  const file = new File(chunks, `voice-trip-${stamp}.${ext}`, {type});
+  vidCache = {key, file}; return file;
+}
+/* one frame of the trip video at time `now` (seconds); shared by the fast and the real-time video */
+function tripDrawer(ctx, parts, W, H, INTRO, GAP, body){
   const GOLD = '#f6e3a8', GOLD2 = '#d6b46a';
   const draw = (now) => {
     ctx.fillStyle = '#000'; ctx.fillRect(0,0,W,H);
@@ -2207,57 +2253,204 @@ async function tripVideo(onProg, job){
     ctx.direction = 'rtl'; ctx.fillStyle = 'rgba(246,227,168,.55)'; ctx.font = `500 20px ${body}`;
     ctx.fillText('رحلة حول العالم بصوتك · يوم الطلاب العالمي · تبوك', W/2, H - 34);
   };
-  draw(0);
-  const t0 = ac.currentTime + 0.25;
-  parts.forEach(x=>{ const src = ac.createBufferSource(); src.buffer = x.buf; src.connect(dest); src.start(t0 + x.aStart); });
-  mr.start(500);
-  await new Promise(res=>{
-    let stuck = 0;
-    const loop = () => { const now = ac.currentTime - t0; draw(Math.max(0, now)); onProg && onProg(Math.min(1, Math.max(0, now/T)));
-      // the phone paused the sound (a call, leaving the page): try to wake it, give up after 2 s
-      if (ac.state !== 'running'){ if (!stuck){ stuck = performance.now(); ac.resume().catch(()=>{}); } else if (performance.now() - stuck > 2000 && job){ job.cancel = true; job.interrupted = true; } } else stuck = 0;
-      if (now >= T || (job && job.cancel)) return res(); requestAnimationFrame(loop); };
-    loop();
-  });
-  try { mr.stop(); } catch(e){} await Promise.race([done, new Promise(r=>setTimeout(r, 1500))]); ac.close && ac.close();
+  return draw;
+}
+/* ================= fast video: made in a few seconds instead of in real time =================
+   The picture is drawn frame by frame and compressed by the phone's video encoder (WebCodecs), and the trip's
+   own MP3 is put next to it without re-encoding (or AAC when the browser can make it). Nothing plays aloud,
+   so no tap is needed and it can be made the moment the ticket is ready. Browsers without this fall back to
+   the real-time recording below. */
+const FAST_FPS = 24;
+function canRecordImg(img){ try { const c = document.createElement('canvas'); c.width = 8; c.height = 6; const x = c.getContext('2d'); x.drawImage(img,0,0,8,6); x.getImageData(0,0,1,1); return true; } catch(e){ return false; } }
+function mp3Frames(bytes){
+  const BR1 = [0,32,40,48,56,64,80,96,112,128,160,192,224,256,320], SR1 = [44100,48000,32000];
+  const frames = []; let i = 0, sr = 0;
+  while (i + 4 <= bytes.length){
+    if (bytes[i] === 0x49 && bytes[i+1] === 0x44 && bytes[i+2] === 0x33 && i + 10 <= bytes.length){   // ID3v2 tag
+      const n = ((bytes[i+6]&127)<<21)|((bytes[i+7]&127)<<14)|((bytes[i+8]&127)<<7)|(bytes[i+9]&127); i += 10 + n; continue; }
+    const b1 = bytes[i+1], b2 = bytes[i+2];
+    // MPEG-1 Layer III only (what ElevenLabs sends)
+    if (bytes[i] !== 0xFF || (b1 & 0xFE) !== 0xFA){ i++; continue; }
+    const br = BR1[b2 >> 4], s = SR1[(b2 >> 2) & 3], pad = (b2 >> 1) & 1;
+    if (!br || !s){ i++; continue; }
+    const len = Math.floor(144000*br/s) + pad;
+    if (i + len > bytes.length) break;
+    if (sr && s !== sr){ i += len; continue; }
+    sr = s; frames.push(bytes.subarray(i, i + len)); i += len;
+  }
+  const mono = frames.length && (frames[0][3] >> 6) === 3;
+  return {frames, sr, spf: 1152, channels: mono ? 1 : 2};
+}
+// a silent MP3 frame: same header as the trip's audio, no CRC, no padding, all audio data zero
+function mp3Silence(like){
+  const h = new Uint8Array(like.subarray(0,4)); h[1] |= 1; h[2] &= ~2;
+  const BR1 = [0,32,40,48,56,64,80,96,112,128,160,192,224,256,320], SR1 = [44100,48000,32000];
+  const len = Math.floor(144000*BR1[h[2]>>4]/SR1[(h[2]>>2)&3]);
+  const f = new Uint8Array(len); f.set(h); return f;
+}
+/* a minimal MP4 file writer: one video track (H.264) and one audio track (AAC or MP3) */
+function mp4File(v, a){
+  const enc = new TextEncoder();
+  const u32 = n => [(n>>>24)&255,(n>>>16)&255,(n>>>8)&255,n&255], u16 = n => [(n>>8)&255,n&255];
+  const box = (type, ...parts) => { const body = parts.flatMap(p=>p instanceof Uint8Array ? Array.from(p) : p); return [...u32(body.length + 8), ...enc.encode(type), ...body]; };
+  const full = (type, ver, flags, ...parts) => box(type, [ver, (flags>>16)&255, (flags>>8)&255, flags&255], ...parts);
+  const matrix = [0x00010000,0,0,0,0x00010000,0,0,0,0x40000000].flatMap(u32);
+  const durMs = Math.round(Math.max(v.duration, a.duration)*1000);
+  const desc = (tag, body) => { const n = body.length; return [tag, 0x80|((n>>21)&127), 0x80|((n>>14)&127), 0x80|((n>>7)&127), n&127, ...body]; };
+  const stbl = (t, entry, offsets) => box('stbl',
+    full('stsd',0,0,u32(1),entry),
+    full('stts',0,0,u32(t.deltas.length), t.deltas.flatMap(([c,d])=>[...u32(c),...u32(d)])),
+    t.sync ? full('stss',0,0,u32(t.sync.length), t.sync.flatMap(u32)) : [],
+    full('stsc',0,0,u32(1),u32(1),u32(1),u32(1)),
+    full('stsz',0,0,u32(0),u32(t.sizes.length), t.sizes.flatMap(u32)),
+    full('stco',0,0,u32(offsets.length), offsets.flatMap(u32)));
+  const runs = list => { const r = []; list.forEach(d=>{ const l = r[r.length-1]; if (l && l[1] === d) l[0]++; else r.push([1,d]); }); return r; };
+  const vt = {deltas: runs(v.durs), sizes: v.samples.map(s=>s.length), sync: v.keys.map(k=>k+1)};
+  const at = {deltas: runs(a.durs), sizes: a.samples.map(s=>s.length)};
+  const avc1 = box('avc1', [0,0,0,0,0,0], u16(1), new Array(16).fill(0), u16(v.width), u16(v.height),
+    u32(0x00480000), u32(0x00480000), u32(0), u16(1), new Array(32).fill(0), u16(0x18), u16(0xFFFF), box('avcC', v.avcC));
+  const es = desc(3, [...u16(2), 0, ...desc(4, [a.oti, 0x15, 0,0,0, ...u32(a.bitrate), ...u32(a.bitrate), ...(a.asc ? desc(5, Array.from(a.asc)) : [])]), ...desc(6, [2])]);
+  const mp4a = box('mp4a', [0,0,0,0,0,0], u16(1), u32(0), u32(0), u16(a.channels), u16(16), u16(0), u16(0), u32(a.sr << 16), full('esds',0,0,es));
+  const moov = offs => box('moov',
+    full('mvhd',0,0,u32(0),u32(0),u32(1000),u32(durMs),u32(0x00010000),u16(0x0100),new Array(10).fill(0),matrix,new Array(24).fill(0),u32(3)),
+    box('trak', full('tkhd',0,3,u32(0),u32(0),u32(1),u32(0),u32(Math.round(v.duration*1000)),new Array(8).fill(0),u16(0),u16(0),u16(0),u16(0),matrix,u32(v.width<<16),u32(v.height<<16)),
+      box('mdia', full('mdhd',0,0,u32(0),u32(0),u32(v.timescale),u32(Math.round(v.duration*v.timescale)),u16(0x55C4),u16(0)),
+        full('hdlr',0,0,u32(0),enc.encode('vide'),new Array(12).fill(0),enc.encode('VideoHandler'),[0]),
+        box('minf', full('vmhd',0,1,new Array(8).fill(0)), box('dinf', full('dref',0,0,u32(1), full('url ',0,1))), stbl(vt, avc1, offs.v)))),
+    box('trak', full('tkhd',0,3,u32(0),u32(0),u32(2),u32(0),u32(Math.round(a.duration*1000)),new Array(8).fill(0),u16(0),u16(1),u16(0x0100),u16(0),matrix,u32(0),u32(0)),
+      box('mdia', full('mdhd',0,0,u32(0),u32(0),u32(a.sr),u32(Math.round(a.duration*a.sr)),u16(0x55C4),u16(0)),
+        full('hdlr',0,0,u32(0),enc.encode('soun'),new Array(12).fill(0),enc.encode('SoundHandler'),[0]),
+        box('minf', full('smhd',0,0,u16(0),u16(0)), box('dinf', full('dref',0,0,u32(1), full('url ',0,1))), stbl(at, mp4a, offs.a)))));
+  const ftyp = box('ftyp', enc.encode('isom'), u32(512), enc.encode('isomiso2avc1mp41'));
+  // interleave video and audio by time so phones can play while loading
+  const order = [...v.samples.map((s,i)=>({s, t:v.times[i], k:'v'})), ...a.samples.map((s,i)=>({s, t:a.times[i], k:'a'}))].sort((x,y)=>x.t - y.t);
+  const fake = {v: v.samples.map(()=>0), a: a.samples.map(()=>0)};
+  const head = ftyp.length + moov(fake).length + 8;
+  const offs = {v: [], a: []}; let pos = head;
+  order.forEach(o=>{ offs[o.k].push(pos); pos += o.s.length; });
+  const mdatLen = pos - head + 8;
+  return new Blob([new Uint8Array(ftyp), new Uint8Array(moov(offs)), new Uint8Array([...u32(mdatLen), ...enc.encode('mdat')]), ...order.map(o=>o.s)], {type:'video/mp4'});
+}
+async function fastTripVideo(onProg, job){
+  const key = tripKey();
+  const codes = Object.keys(sess.trips).filter(c=>sess.trips[c] && !sess.trips[c].pending);
+  if (!codes.length) throw new Error('NO_TRIP');
+  const W = 720, H = 1280, INTRO = 2.2, GAP = 0.6, fps = FAST_FPS;
+  const vcfg = {codec:'avc1.42E01F', width:W, height:H, bitrate:2_500_000, framerate:fps, avc:{format:'avc'}};
+  if (!(await VideoEncoder.isConfigSupported(vcfg)).supported) throw new Error('NO_H264');
+  const body = getComputedStyle(document.body).getPropertyValue('--f-body') || 'sans-serif';
+  try { await document.fonts.load('700 40px "IBM Plex Sans Arabic"'); } catch(e){}
+  // audio: each country's MP3 frames, with silent frames for the title card and the gap
+  const parts = []; let T = 0, aFrames = [], sr = 0, silence = null, ch = 2, kbps = 128;
+  for (const c of codes){
+    const t = sess.trips[c], m = mp3Frames(new Uint8Array(await t.blob.arrayBuffer()));
+    if (!m.frames.length || (sr && m.sr !== sr)) throw new Error('MP3_FORMAT');
+    sr = m.sr; ch = m.channels; kbps = Math.max(kbps, [0,32,40,48,56,64,80,96,112,128,160,192,224,256,320][m.frames[0][2]>>4]); silence = silence || mp3Silence(m.frames[0]);
+    const fdur = m.spf/sr, nIntro = Math.round(INTRO/fdur), nGap = Math.round(GAP/fdur);
+    const start = aFrames.length*fdur;
+    for (let k = 0; k < nIntro; k++) aFrames.push(silence);
+    const aStart = aFrames.length*fdur;
+    aFrames.push(...m.frames);
+    const dur = m.frames.length*fdur;
+    for (let k = 0; k < nGap; k++) aFrames.push(silence);
+    const keys = ['sights_0','culture_0','wear_0','food_0','sights_1'].map(k=>c+'_'+k).filter(k=>LOCAL_PICS[k]);
+    const imgs = (await Promise.all(keys.map(k=>loadImg('img/'+k+'.jpg?v='+PICS_VER)))).filter(Boolean);
+    let flag = null; try { flag = await loadImg('data:image/svg+xml;charset=utf-8,'+encodeURIComponent(flagSVG(c).replace(/<svg /g,'<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" '))); } catch(e){}
+    if (flag && !canRecordImg(flag)) flag = null;
+    parts.push({c, t, buf:{duration:dur}, imgs, flag, start, aStart});
+    T = aFrames.length*fdur;
+  }
   if (job && job.cancel) throw new Error(job.interrupted ? 'INTERRUPTED' : 'CANCELLED');
-  const type = (mr.mimeType || mime || 'video/webm').split(';')[0], ext = type.includes('mp4') ? 'mp4' : 'webm';
+  const audio = {oti:0x6B, sr, channels:ch, bitrate:kbps*1000, asc:null, samples:aFrames, durs:aFrames.map(()=>1152), times:aFrames.map((f,i)=>i*1152/sr), duration:T};
+  // video
+  const cv = document.createElement('canvas'); cv.width = W; cv.height = H; const ctx = cv.getContext('2d');
+  const draw = tripDrawer(ctx, parts, W, H, INTRO, GAP, body);
+  const v = {width:W, height:H, timescale:fps*1000, samples:[], durs:[], times:[], keys:[], avcC:null, duration:0};
+  let failed = null;
+  const encoder = new VideoEncoder({
+    output:(chunk, meta)=>{ if (meta && meta.decoderConfig && meta.decoderConfig.description && !v.avcC) { const d = meta.decoderConfig.description; v.avcC = ArrayBuffer.isView(d) ? new Uint8Array(d.buffer, d.byteOffset, d.byteLength).slice() : new Uint8Array(d).slice(); }
+      const d = new Uint8Array(chunk.byteLength); chunk.copyTo(d); if (chunk.type === 'key') v.keys.push(v.samples.length);
+      v.samples.push(d); v.times.push(chunk.timestamp/1e6); v.durs.push(1000); },
+    error:e=>{ failed = e; }});
+  encoder.configure(vcfg);
+  const N = Math.ceil(T*fps);
+  for (let i = 0; i < N; i++){
+    if (failed) throw failed;
+    if (job && job.cancel){ try { encoder.close(); } catch(e){} throw new Error(job.interrupted ? 'INTERRUPTED' : 'CANCELLED'); }
+    draw(i/fps);
+    const fr = new VideoFrame(cv, {timestamp: Math.round(i*1e6/fps), duration: Math.round(1e6/fps)});
+    encoder.encode(fr, {keyFrame: i % (fps*2) === 0}); fr.close();
+    if (encoder.encodeQueueSize > 6) await new Promise(r=>{ const w = ()=> encoder.encodeQueueSize > 2 ? setTimeout(w, 5) : r(); w(); });
+    if (i % 12 === 0){ onProg && onProg(i/N); await new Promise(r=>setTimeout(r, 0)); }
+  }
+  await encoder.flush(); encoder.close();
+  if (failed) throw failed;
+  if (!v.avcC || !v.samples.length) throw new Error('NO_AVCC');
+  v.duration = N/fps;
+  const blob = mp4File(v, audio);
+  onProg && onProg(1);
   const stamp = new Date().toISOString().slice(0,16).replace(/[-:T]/g,'');
-  const file = new File(chunks, `voice-trip-${stamp}.${ext}`, {type});
+  const file = new File([blob], `voice-trip-${stamp}.mp4`, {type:'video/mp4'});
+  log('fast video: '+N+' frames, '+(file.size/1e6).toFixed(1)+' MB');
   vidCache = {key, file}; return file;
 }
 /* temporary link + QR: file auto-deletes after ~60 min on tmpfiles.org */
-$('toPhone').addEventListener('click', async ()=>{
-  primeAudio();
-  const pb = $('toPhone'); pb.dataset.label = pb.dataset.label || pb.innerHTML;
-  const box = $('phoneBox'), q = $('phoneQr'), t = $('phoneTxt');
+/* "Download your clip": the visitor picks voice (ready at once) or video, then scans a QR on their phone */
+const upCache = {};
+function closeChoice(){ $('dlChoice').hidden = true; $('toPhone').setAttribute('aria-expanded','false'); }
+$('toPhone').addEventListener('click', ()=>{
+  primeAudio();   // a tap: lets the video's sound start on iPhone
+  const open = $('dlChoice').hidden; $('dlChoice').hidden = !open; $('toPhone').setAttribute('aria-expanded', String(open));
+  // start the video now, so it is often ready by the time they choose it
+  if (open && !(vidCache && vidCache.key === tripKey())){ const pr = ensureVideo(true); if (pr) pr.catch(e=>log('video: '+e.message)); }
+});
+$('dlAudio').addEventListener('click', ()=>sendToPhone('audio'));
+$('dlVideo').addEventListener('click', ()=>{ primeAudio(); sendToPhone('video'); });
+function tripAudioFile(){
+  const codes = Object.keys(sess.trips).filter(c=>sess.trips[c] && sess.trips[c].blob);
+  const stamp = new Date().toISOString().slice(0,16).replace(/[-:T]/g,'');
+  return new File(codes.map(c=>sess.trips[c].blob), `voice-trip-${codes.join('-')}-${stamp}.mp3`, {type:'audio/mpeg'});
+}
+async function uploadTemp(file){
+  const fd = new FormData(); fd.append('file', file);
+  let r;
+  try { r = await fetch('https://tmpfiles.org/api/v1/upload', {method:'POST', body:fd}); }
+  catch(e){ throw new Error('UPLOAD_NET: '+e.message); }
+  if (!r.ok) throw new Error('UPLOAD HTTP '+r.status);
+  const d = await r.json();
+  let url = d && d.data && d.data.url; if (!url) throw new Error('UPLOAD: no url');
+  return url.replace(/^http:/,'https:').replace('tmpfiles.org/','tmpfiles.org/dl/');
+}
+let sending = false;
+async function sendToPhone(kind){
+  if (sending) return; sending = true;
+  const vb = $('dlVideo'); vb.dataset.label = vb.dataset.label || vb.innerHTML;
+  const box = $('phoneBox'), q = $('phoneQr'), t = $('phoneTxt'), what = kind === 'audio' ? 'صوت' : 'فيديو';
   box.hidden = false; box.scrollIntoView({behavior:'smooth', block:'center'}); q.innerHTML = '<span class="spin" style="border-color:rgba(11,20,36,.2);border-top-color:#0b1424"></span>'; t.textContent = '…جاري تجهيز الرابط';
-  $('toPhone').disabled = true;
+  $('dlAudio').disabled = $('dlVideo').disabled = true;
   try {
-    const vf = await waitVideo(f=>{ t.innerHTML = `🎬 نجهّز فيديو رحلتك… ${Math.round(f*100)}%<small>خلّ الصفحة مفتوحة حتى يخلص (حوالي ${vidSecs()} ثانية)</small>`; });
-    pb.innerHTML = pb.dataset.label;
-    t.textContent = '…جاري رفع الفيديو';
-    const fd = new FormData(); fd.append('file', vf);
-    let r;
-    try { r = await fetch('https://tmpfiles.org/api/v1/upload', {method:'POST', body:fd}); }
-    catch(e){ throw new Error('UPLOAD_NET: '+e.message); }
-    if (!r.ok) throw new Error('UPLOAD HTTP '+r.status);
-    const d = await r.json();
-    let url = d && d.data && d.data.url; if (!url) throw new Error('UPLOAD: no url');
-    url = url.replace(/^http:/,'https:').replace('tmpfiles.org/','tmpfiles.org/dl/');
-    log('uploaded: '+url);
+    const key = kind+':'+tripKey();
+    let url = upCache[key];
+    if (!url){
+      let f;
+      if (kind === 'audio') f = tripAudioFile();
+      else { f = await waitVideo(p=>{ t.innerHTML = `🎬 نجهّز فيديو رحلتك… ${Math.round(p*100)}%<small>${fastVideoOk() ? 'ثوانٍ قليلة' : `خلّ الصفحة مفتوحة حتى يخلص (حوالي ${vidSecs()} ثانية)`}</small>`; }); vb.innerHTML = vb.dataset.label; }
+      t.textContent = `…جاري رفع ال${what}`;
+      url = upCache[key] = await uploadTemp(f);
+      log('uploaded '+kind+': '+url);
+    }
     q.innerHTML = '';
     if (window.QRCode) new QRCode(q, {text:url, width:232, height:232, colorDark:'#0b1424', colorLight:'#f3ead6', correctLevel:QRCode.CorrectLevel.M});
     else q.textContent = 'QR';
     box.scrollIntoView({behavior:'smooth', block:'center'});
-    t.innerHTML = 'امسح الكود بكاميرا جوالك وحمّل فيديو رحلتك 🎬<small>الرابط مؤقت وينحذف تلقائياً بعد ساعة تقريباً</small>';
+    t.innerHTML = `امسح الكود بكاميرا جوالك وحمّل ${what} رحلتك ${kind === 'audio' ? '🎧' : '🎬'}<small>الرابط مؤقت وينحذف تلقائياً بعد ساعة تقريباً</small>`;
   } catch(e){
-    if (stoppedVideo(e)){ q.innerHTML = '⏸'; pb.innerHTML = '▶ كمّل تجهيز الفيديو';
-      t.innerHTML = 'وقف تجهيز الفيديو لأنك طلعت من الصفحة.<small>اضغط «كمّل تجهيز الفيديو» وخلّ الصفحة مفتوحة حتى يخلص.</small>'; return; }
+    if (stoppedVideo(e)){ q.innerHTML = '⏸'; vb.innerHTML = '▶ كمّل تجهيز الفيديو';
+      t.innerHTML = 'وقف تجهيز الفيديو لأنك طلعت من الصفحة.<small>اضغط «كمّل تجهيز الفيديو» وخلّ الصفحة مفتوحة حتى يخلص، أو حمّل الصوت فوراً.</small>'; return; }
     log('upload failed: '+e.message); q.innerHTML = '✕';
     t.innerHTML = 'ما قدرنا نجهّز الرابط. استخدم زر "مشاركة من الجهاز" بدلها.<small>'+esc(e.message.slice(0,90))+'</small>';
-  } finally { $('toPhone').disabled = false; }
-});
+  } finally { sending = false; $('dlAudio').disabled = $('dlVideo').disabled = false; }
+}
 $('saveTrip').addEventListener('click', async ()=>{
   primeAudio();
   const btn = $('saveTrip'), label = btn.dataset.label || (btn.dataset.label = btn.innerHTML);
@@ -2283,13 +2476,14 @@ $('saveTrip').addEventListener('click', async ()=>{
 });
 $('newVisitor').addEventListener('click', ()=>{
   if (sess.voiceId) endSession(false);
-  stopAll(); clearVisited(); players.forEach(p=>p && URL.revokeObjectURL(p.src)); players=[]; blobs=[]; $('saveTrip').hidden = true; $('toPhone').hidden = true; $('saveHint').hidden = true; $('phoneBox').hidden = true; $('phoneQr').innerHTML='';
+  stopAll(); clearVisited(); players.forEach(p=>p && URL.revokeObjectURL(p.src)); players=[]; blobs=[]; $('saveTrip').hidden = true; $('toPhone').hidden = true; closeChoice(); $('saveHint').hidden = true; $('phoneBox').hidden = true; $('phoneQr').innerHTML='';
   $('passes').innerHTML=''; $('said').innerHTML=''; $('deletedNote').textContent='';
   $('pickHint').innerHTML = 'اضغط على الدولة، تعرّف على ثقافتها، وبعدها اضغط <b>"سافر إليها"</b> وابدأ التسجيل';
   clearErr(); trip.code = null; ORDER.forEach(k=>markMap(k,false)); $('tripBox').hidden = true; $('pickBox').hidden = false; resetRecordUI(); show('record');
   $('map').scrollIntoView({behavior:'smooth', block:'start'});
 });
 $('otherCountry').addEventListener('click', ()=>{
+  closeChoice();
   stopAll(); touchSess(); players.forEach(p=>p && URL.revokeObjectURL(p.src)); players=[]; blobs=[];
   $('passes').innerHTML=''; $('said').innerHTML=''; $('deletedNote').textContent=''; $('usage').textContent=''; $('phoneBox').hidden = true;
   clearErr(); trip.code = null; $('tripBox').hidden = true; $('pickBox').hidden = false; resetRecordUI(); show('record');
