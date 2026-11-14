@@ -215,6 +215,9 @@ h1{
 .note{color:var(--ok);font-size:15px;text-align:center}
 .usage{color:var(--muted);font-size:13px;text-align:center}
 
+.dlchoice{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;width:100%}
+.dlchoice[hidden]{display:none}
+.dlchoice .btn{flex:1 1 150px;max-width:240px}
 .waqr{display:flex;align-items:center;gap:16px;padding:14px 18px;border-radius:18px;border:1px solid var(--gold-line);background:rgba(11,20,36,.66);max-width:560px;width:100%}
 .waqr .qr{flex:none;width:132px;height:132px;padding:8px;border-radius:12px;background:var(--cream);display:grid;place-items:center}
 .waqr .qr img,.waqr .qr canvas{width:116px!important;height:116px!important}
@@ -614,7 +617,8 @@ details.logbox summary{cursor:pointer;color:var(--muted);font-size:14px;padding:
     <div class="passes" id="passes"></div>
     <div class="actions">
       <button class="btn gold" id="playAll">▶ اسمع رحلتك</button>
-      <button class="btn gold" id="toPhone" hidden>📱 خذ رحلتك على جوالك</button>
+      <button class="btn gold" id="toPhone" hidden aria-expanded="false" aria-controls="dlChoice">⬇ حمّل مقطعك</button>
+      <div class="dlchoice" id="dlChoice" hidden><button class="btn gold" id="dlAudio">🎧 حمّل الصوت</button><button class="btn gold" id="dlVideo">🎬 حمّل الفيديو</button></div>
       <button class="btn" id="saveTrip" hidden>📲 مشاركة من الجهاز</button>
       <button class="btn" id="otherCountry">✈ دولة ثانية</button>
       <button class="btn" id="newVisitor">مسافر جديد ↺</button>
@@ -1979,7 +1983,7 @@ function friendly(e){
 
 /* ================= boarding passes ================= */
 function buildPasses(){
-  players = []; blobs = []; $('saveTrip').hidden = true; $('toPhone').hidden = true; if ($('toPhone').dataset.label) $('toPhone').innerHTML = $('toPhone').dataset.label; $('saveHint').hidden = true; $('phoneBox').hidden = true;
+  players = []; blobs = []; $('saveTrip').hidden = true; $('toPhone').hidden = true; closeChoice(); if ($('dlVideo').dataset.label) $('dlVideo').innerHTML = $('dlVideo').dataset.label; $('saveHint').hidden = true; $('phoneBox').hidden = true;
   const date = new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}).toUpperCase();
   const c = COUNTRIES[trip.code], l = LANGS[c.lang], i = c.lang;
   $('resTitle').textContent = `تذكرتك إلى ${c.name} جاهزة ✈`;
@@ -2075,7 +2079,11 @@ function playOne(i){
   p.onerror = ()=>setPlayUI(false);
   p.play().then(()=>setPlayUI(true)).catch(()=>setPlayUI(false));
 }
-$('playAll').addEventListener('click', ()=>playOne(0));
+$('playAll').addEventListener('click', ()=>{
+  playOne(0);
+  // a tap is the chance to start the video quietly on iPhone, so it is ready by the time they download it
+  if (!(vidCache && vidCache.key === tripKey())){ primeAudio(); const pr = ensureVideo(true); if (pr) pr.then(()=>log('video ready early')).catch(e=>log('early video: '+e.message)); }
+});
 /* ================= the visitor's trip as a video: every country, culture photos, moving subtitles ================= */
 let vidCache = null, vidMime = null, vidJob = null, primedAC = null, wakeLock = null;
 // iPhone lets sound start only from a tap, so the audio engine for the video is made at the moment of the tap
@@ -2227,37 +2235,62 @@ async function tripVideo(onProg, job){
   vidCache = {key, file}; return file;
 }
 /* temporary link + QR: file auto-deletes after ~60 min on tmpfiles.org */
-$('toPhone').addEventListener('click', async ()=>{
-  primeAudio();
-  const pb = $('toPhone'); pb.dataset.label = pb.dataset.label || pb.innerHTML;
-  const box = $('phoneBox'), q = $('phoneQr'), t = $('phoneTxt');
+/* "Download your clip": the visitor picks voice (ready at once) or video, then scans a QR on their phone */
+const upCache = {};
+function closeChoice(){ $('dlChoice').hidden = true; $('toPhone').setAttribute('aria-expanded','false'); }
+$('toPhone').addEventListener('click', ()=>{
+  primeAudio();   // a tap: lets the video's sound start on iPhone
+  const open = $('dlChoice').hidden; $('dlChoice').hidden = !open; $('toPhone').setAttribute('aria-expanded', String(open));
+  // start the video now, so it is often ready by the time they choose it
+  if (open && !(vidCache && vidCache.key === tripKey())){ const pr = ensureVideo(true); if (pr) pr.catch(e=>log('video: '+e.message)); }
+});
+$('dlAudio').addEventListener('click', ()=>sendToPhone('audio'));
+$('dlVideo').addEventListener('click', ()=>{ primeAudio(); sendToPhone('video'); });
+function tripAudioFile(){
+  const codes = Object.keys(sess.trips).filter(c=>sess.trips[c] && sess.trips[c].blob);
+  const stamp = new Date().toISOString().slice(0,16).replace(/[-:T]/g,'');
+  return new File(codes.map(c=>sess.trips[c].blob), `voice-trip-${codes.join('-')}-${stamp}.mp3`, {type:'audio/mpeg'});
+}
+async function uploadTemp(file){
+  const fd = new FormData(); fd.append('file', file);
+  let r;
+  try { r = await fetch('https://tmpfiles.org/api/v1/upload', {method:'POST', body:fd}); }
+  catch(e){ throw new Error('UPLOAD_NET: '+e.message); }
+  if (!r.ok) throw new Error('UPLOAD HTTP '+r.status);
+  const d = await r.json();
+  let url = d && d.data && d.data.url; if (!url) throw new Error('UPLOAD: no url');
+  return url.replace(/^http:/,'https:').replace('tmpfiles.org/','tmpfiles.org/dl/');
+}
+let sending = false;
+async function sendToPhone(kind){
+  if (sending) return; sending = true;
+  const vb = $('dlVideo'); vb.dataset.label = vb.dataset.label || vb.innerHTML;
+  const box = $('phoneBox'), q = $('phoneQr'), t = $('phoneTxt'), what = kind === 'audio' ? 'صوت' : 'فيديو';
   box.hidden = false; box.scrollIntoView({behavior:'smooth', block:'center'}); q.innerHTML = '<span class="spin" style="border-color:rgba(11,20,36,.2);border-top-color:#0b1424"></span>'; t.textContent = '…جاري تجهيز الرابط';
-  $('toPhone').disabled = true;
+  $('dlAudio').disabled = $('dlVideo').disabled = true;
   try {
-    const vf = await waitVideo(f=>{ t.innerHTML = `🎬 نجهّز فيديو رحلتك… ${Math.round(f*100)}%<small>خلّ الصفحة مفتوحة حتى يخلص (حوالي ${vidSecs()} ثانية)</small>`; });
-    pb.innerHTML = pb.dataset.label;
-    t.textContent = '…جاري رفع الفيديو';
-    const fd = new FormData(); fd.append('file', vf);
-    let r;
-    try { r = await fetch('https://tmpfiles.org/api/v1/upload', {method:'POST', body:fd}); }
-    catch(e){ throw new Error('UPLOAD_NET: '+e.message); }
-    if (!r.ok) throw new Error('UPLOAD HTTP '+r.status);
-    const d = await r.json();
-    let url = d && d.data && d.data.url; if (!url) throw new Error('UPLOAD: no url');
-    url = url.replace(/^http:/,'https:').replace('tmpfiles.org/','tmpfiles.org/dl/');
-    log('uploaded: '+url);
+    const key = kind+':'+tripKey();
+    let url = upCache[key];
+    if (!url){
+      let f;
+      if (kind === 'audio') f = tripAudioFile();
+      else { f = await waitVideo(p=>{ t.innerHTML = `🎬 نجهّز فيديو رحلتك… ${Math.round(p*100)}%<small>خلّ الصفحة مفتوحة حتى يخلص (حوالي ${vidSecs()} ثانية)</small>`; }); vb.innerHTML = vb.dataset.label; }
+      t.textContent = `…جاري رفع ال${what}`;
+      url = upCache[key] = await uploadTemp(f);
+      log('uploaded '+kind+': '+url);
+    }
     q.innerHTML = '';
     if (window.QRCode) new QRCode(q, {text:url, width:232, height:232, colorDark:'#0b1424', colorLight:'#f3ead6', correctLevel:QRCode.CorrectLevel.M});
     else q.textContent = 'QR';
     box.scrollIntoView({behavior:'smooth', block:'center'});
-    t.innerHTML = 'امسح الكود بكاميرا جوالك وحمّل فيديو رحلتك 🎬<small>الرابط مؤقت وينحذف تلقائياً بعد ساعة تقريباً</small>';
+    t.innerHTML = `امسح الكود بكاميرا جوالك وحمّل ${what} رحلتك ${kind === 'audio' ? '🎧' : '🎬'}<small>الرابط مؤقت وينحذف تلقائياً بعد ساعة تقريباً</small>`;
   } catch(e){
-    if (stoppedVideo(e)){ q.innerHTML = '⏸'; pb.innerHTML = '▶ كمّل تجهيز الفيديو';
-      t.innerHTML = 'وقف تجهيز الفيديو لأنك طلعت من الصفحة.<small>اضغط «كمّل تجهيز الفيديو» وخلّ الصفحة مفتوحة حتى يخلص.</small>'; return; }
+    if (stoppedVideo(e)){ q.innerHTML = '⏸'; vb.innerHTML = '▶ كمّل تجهيز الفيديو';
+      t.innerHTML = 'وقف تجهيز الفيديو لأنك طلعت من الصفحة.<small>اضغط «كمّل تجهيز الفيديو» وخلّ الصفحة مفتوحة حتى يخلص، أو حمّل الصوت فوراً.</small>'; return; }
     log('upload failed: '+e.message); q.innerHTML = '✕';
     t.innerHTML = 'ما قدرنا نجهّز الرابط. استخدم زر "مشاركة من الجهاز" بدلها.<small>'+esc(e.message.slice(0,90))+'</small>';
-  } finally { $('toPhone').disabled = false; }
-});
+  } finally { sending = false; $('dlAudio').disabled = $('dlVideo').disabled = false; }
+}
 $('saveTrip').addEventListener('click', async ()=>{
   primeAudio();
   const btn = $('saveTrip'), label = btn.dataset.label || (btn.dataset.label = btn.innerHTML);
@@ -2283,13 +2316,14 @@ $('saveTrip').addEventListener('click', async ()=>{
 });
 $('newVisitor').addEventListener('click', ()=>{
   if (sess.voiceId) endSession(false);
-  stopAll(); clearVisited(); players.forEach(p=>p && URL.revokeObjectURL(p.src)); players=[]; blobs=[]; $('saveTrip').hidden = true; $('toPhone').hidden = true; $('saveHint').hidden = true; $('phoneBox').hidden = true; $('phoneQr').innerHTML='';
+  stopAll(); clearVisited(); players.forEach(p=>p && URL.revokeObjectURL(p.src)); players=[]; blobs=[]; $('saveTrip').hidden = true; $('toPhone').hidden = true; closeChoice(); $('saveHint').hidden = true; $('phoneBox').hidden = true; $('phoneQr').innerHTML='';
   $('passes').innerHTML=''; $('said').innerHTML=''; $('deletedNote').textContent='';
   $('pickHint').innerHTML = 'اضغط على الدولة، تعرّف على ثقافتها، وبعدها اضغط <b>"سافر إليها"</b> وابدأ التسجيل';
   clearErr(); trip.code = null; ORDER.forEach(k=>markMap(k,false)); $('tripBox').hidden = true; $('pickBox').hidden = false; resetRecordUI(); show('record');
   $('map').scrollIntoView({behavior:'smooth', block:'start'});
 });
 $('otherCountry').addEventListener('click', ()=>{
+  closeChoice();
   stopAll(); touchSess(); players.forEach(p=>p && URL.revokeObjectURL(p.src)); players=[]; blobs=[];
   $('passes').innerHTML=''; $('said').innerHTML=''; $('deletedNote').textContent=''; $('usage').textContent=''; $('phoneBox').hidden = true;
   clearErr(); trip.code = null; $('tripBox').hidden = true; $('pickBox').hidden = false; resetRecordUI(); show('record');
