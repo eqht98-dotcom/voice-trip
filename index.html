@@ -1979,7 +1979,7 @@ function friendly(e){
 
 /* ================= boarding passes ================= */
 function buildPasses(){
-  players = []; blobs = []; $('saveTrip').hidden = true; $('toPhone').hidden = true; $('saveHint').hidden = true; $('phoneBox').hidden = true;
+  players = []; blobs = []; $('saveTrip').hidden = true; $('toPhone').hidden = true; if ($('toPhone').dataset.label) $('toPhone').innerHTML = $('toPhone').dataset.label; $('saveHint').hidden = true; $('phoneBox').hidden = true;
   const date = new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}).toUpperCase();
   const c = COUNTRIES[trip.code], l = LANGS[c.lang], i = c.lang;
   $('resTitle').textContent = `تذكرتك إلى ${c.name} جاهزة ✈`;
@@ -2077,15 +2077,29 @@ function playOne(i){
 }
 $('playAll').addEventListener('click', ()=>playOne(0));
 /* ================= the visitor's trip as a video: every country, culture photos, moving subtitles ================= */
-let vidCache = null, vidMime = null, vidJob = null;
+let vidCache = null, vidMime = null, vidJob = null, primedAC = null, wakeLock = null;
+// iPhone lets sound start only from a tap, so the audio engine for the video is made at the moment of the tap
+function primeAudio(){ try { if (primedAC && primedAC.state !== 'closed') return; const AC = window.AudioContext || window.webkitAudioContext; primedAC = new AC(); primedAC.resume(); } catch(e){ primedAC = null; } }
+// keep the screen on while the video records (a locked screen stops it)
+async function holdScreen(on){
+  try {
+    if (on && !wakeLock && navigator.wakeLock) { wakeLock = await navigator.wakeLock.request('screen'); wakeLock.addEventListener('release', ()=>{ wakeLock = null; }); }
+    if (!on && wakeLock) { const w = wakeLock; wakeLock = null; await w.release(); }
+  } catch(e){ log('wake lock: '+e.message); }
+}
+// a phone stops the page when you leave it: stop the recording cleanly so it can start again when you come back
+document.addEventListener('visibilitychange', ()=>{ if (document.hidden && vidJob){ vidJob.cancel = true; vidJob.interrupted = true; log('video stopped: page hidden'); } });
+// rough length of the video: the trip audio is MP3 at about 192 kbps (24 KB a second), plus a short title card per country
+const vidSecs = () => Math.max(10, Math.round(Object.values(sess.trips).filter(t=>t && t.blob).reduce((a,t)=>a + t.blob.size/24000 + 3, 0)));
 /* The video is recorded in real time (a 60 s trip takes 60 s to record), so start it quietly as soon as the
    trip is ready — while the visitor is listening — and it is usually finished before anyone taps download. */
 function tripReady(){ const ks = Object.keys(sess.trips); return ks.length && ks.every(c=>sess.trips[c] && !sess.trips[c].pending && sess.trips[c].blob); }
-function ensureVideo(){
+function ensureVideo(fromTap){
   if (!tripReady()) return null;
   const key = tripKey();
   if (vidCache && vidCache.key === key) return Promise.resolve(vidCache.file);
-  if (vidJob && vidJob.key === key) return vidJob.p;
+  // a background start that never got going (no tap, so no sound allowed) is replaced by one started from the tap
+  if (vidJob && vidJob.key === key && !(fromTap && vidJob.prog === 0)) return vidJob.p;
   if (vidJob) vidJob.cancel = true;
   const job = {key, prog:0, cancel:false};
   job.p = tripVideo(f=>{ job.prog = f; }, job).finally(()=>{ if (vidJob === job) vidJob = null; });
@@ -2093,12 +2107,14 @@ function ensureVideo(){
 }
 function kickVideo(){ setTimeout(()=>{ const pr = ensureVideo(); if (pr) pr.then(()=>log('video ready in background')).catch(e=>log('background video: '+e.message)); }, 900); }
 async function waitVideo(show){
-  let pr = ensureVideo(); if (!pr) throw new Error('NOT_READY');
+  let pr = ensureVideo(true); if (!pr) throw new Error('NOT_READY');
   const tm = setInterval(()=>{ if (vidJob) show(vidJob.prog); }, 300);
+  holdScreen(true);
   try { return await pr; }
-  catch(e){ if (e.message === 'AUDIO_SUSPENDED' || e.message === 'CANCELLED'){ pr = ensureVideo(); if (pr) return await pr; } throw e; }
-  finally { clearInterval(tm); }
+  catch(e){ if (e.message === 'CANCELLED' && !document.hidden){ pr = ensureVideo(true); if (pr) return await pr; } throw e; }
+  finally { clearInterval(tm); holdScreen(false); }
 }
+const stoppedVideo = e => /INTERRUPTED|AUDIO_SUSPENDED|CANCELLED/.test(e && e.message || '');
 // some browsers say they can record MP4 but drop the picture: test a short clip once and keep the first format that really has video
 async function pickVideoMime(){
   if (vidMime !== null) return vidMime;
@@ -2131,7 +2147,8 @@ async function tripVideo(onProg, job){
   const codes = Object.keys(sess.trips).filter(c=>sess.trips[c] && !sess.trips[c].pending);
   if (!codes.length) throw new Error('NO_TRIP');
   const W = 720, H = 1280, INTRO = 2.2, GAP = 0.6;
-  const AC = window.AudioContext || window.webkitAudioContext, ac = new AC(), dest = ac.createMediaStreamDestination();
+  const AC = window.AudioContext || window.webkitAudioContext, ac = (primedAC && primedAC.state !== 'closed') ? primedAC : new AC(), dest = ac.createMediaStreamDestination();
+  primedAC = null;
   try { await ac.resume(); } catch(e){}
   if (ac.state !== 'running'){ await new Promise(r=>setTimeout(r, 600)); if (ac.state !== 'running'){ ac.close && ac.close(); throw new Error('AUDIO_SUSPENDED'); } }
   const body = getComputedStyle(document.body).getPropertyValue('--f-body') || 'sans-serif';
@@ -2195,12 +2212,15 @@ async function tripVideo(onProg, job){
   parts.forEach(x=>{ const src = ac.createBufferSource(); src.buffer = x.buf; src.connect(dest); src.start(t0 + x.aStart); });
   mr.start(500);
   await new Promise(res=>{
+    let stuck = 0;
     const loop = () => { const now = ac.currentTime - t0; draw(Math.max(0, now)); onProg && onProg(Math.min(1, Math.max(0, now/T)));
+      // the phone paused the sound (a call, leaving the page): try to wake it, give up after 2 s
+      if (ac.state !== 'running'){ if (!stuck){ stuck = performance.now(); ac.resume().catch(()=>{}); } else if (performance.now() - stuck > 2000 && job){ job.cancel = true; job.interrupted = true; } } else stuck = 0;
       if (now >= T || (job && job.cancel)) return res(); requestAnimationFrame(loop); };
     loop();
   });
-  mr.stop(); await done; ac.close && ac.close();
-  if (job && job.cancel) throw new Error('CANCELLED');
+  try { mr.stop(); } catch(e){} await Promise.race([done, new Promise(r=>setTimeout(r, 1500))]); ac.close && ac.close();
+  if (job && job.cancel) throw new Error(job.interrupted ? 'INTERRUPTED' : 'CANCELLED');
   const type = (mr.mimeType || mime || 'video/webm').split(';')[0], ext = type.includes('mp4') ? 'mp4' : 'webm';
   const stamp = new Date().toISOString().slice(0,16).replace(/[-:T]/g,'');
   const file = new File(chunks, `voice-trip-${stamp}.${ext}`, {type});
@@ -2208,11 +2228,14 @@ async function tripVideo(onProg, job){
 }
 /* temporary link + QR: file auto-deletes after ~60 min on tmpfiles.org */
 $('toPhone').addEventListener('click', async ()=>{
+  primeAudio();
+  const pb = $('toPhone'); pb.dataset.label = pb.dataset.label || pb.innerHTML;
   const box = $('phoneBox'), q = $('phoneQr'), t = $('phoneTxt');
   box.hidden = false; box.scrollIntoView({behavior:'smooth', block:'center'}); q.innerHTML = '<span class="spin" style="border-color:rgba(11,20,36,.2);border-top-color:#0b1424"></span>'; t.textContent = '…جاري تجهيز الرابط';
   $('toPhone').disabled = true;
   try {
-    const vf = await waitVideo(f=>{ t.textContent = `🎬 نجهّز فيديو رحلتك… ${Math.round(f*100)}%`; });
+    const vf = await waitVideo(f=>{ t.innerHTML = `🎬 نجهّز فيديو رحلتك… ${Math.round(f*100)}%<small>خلّ الصفحة مفتوحة حتى يخلص (حوالي ${vidSecs()} ثانية)</small>`; });
+    pb.innerHTML = pb.dataset.label;
     t.textContent = '…جاري رفع الفيديو';
     const fd = new FormData(); fd.append('file', vf);
     let r;
@@ -2229,18 +2252,21 @@ $('toPhone').addEventListener('click', async ()=>{
     box.scrollIntoView({behavior:'smooth', block:'center'});
     t.innerHTML = 'امسح الكود بكاميرا جوالك وحمّل فيديو رحلتك 🎬<small>الرابط مؤقت وينحذف تلقائياً بعد ساعة تقريباً</small>';
   } catch(e){
+    if (stoppedVideo(e)){ q.innerHTML = '⏸'; pb.innerHTML = '▶ كمّل تجهيز الفيديو';
+      t.innerHTML = 'وقف تجهيز الفيديو لأنك طلعت من الصفحة.<small>اضغط «كمّل تجهيز الفيديو» وخلّ الصفحة مفتوحة حتى يخلص.</small>'; return; }
     log('upload failed: '+e.message); q.innerHTML = '✕';
     t.innerHTML = 'ما قدرنا نجهّز الرابط. استخدم زر "مشاركة من الجهاز" بدلها.<small>'+esc(e.message.slice(0,90))+'</small>';
   } finally { $('toPhone').disabled = false; }
 });
 $('saveTrip').addEventListener('click', async ()=>{
+  primeAudio();
   const btn = $('saveTrip'), label = btn.dataset.label || (btn.dataset.label = btn.innerHTML);
   const ready = vidCache && vidCache.key === tripKey();
   let f;
   if (!ready){
     btn.disabled = true;
-    try { f = await waitVideo(p=>{ btn.textContent = `🎬 نجهّز الفيديو… ${Math.round(p*100)}%`; }); }
-    catch(e){ log('video: '+e.message); btn.innerHTML = label; btn.disabled = false; $('saveHint').textContent = 'ما قدرنا نجهّز الفيديو: '+e.message.slice(0,80); $('saveHint').hidden = false; return; }
+    try { f = await waitVideo(p=>{ btn.textContent = `🎬 نجهّز الفيديو… ${Math.round(p*100)}% (خلّ الصفحة مفتوحة)`; }); }
+    catch(e){ log('video: '+e.message); if (stoppedVideo(e)){ btn.innerHTML = '▶ كمّل تجهيز الفيديو'; btn.disabled = false; $('saveHint').textContent = 'وقف التجهيز لأنك طلعت من الصفحة. اضغط الزر وخلّ الصفحة مفتوحة.'; $('saveHint').hidden = false; return; } btn.innerHTML = label; btn.disabled = false; $('saveHint').textContent = 'ما قدرنا نجهّز الفيديو: '+e.message.slice(0,80); $('saveHint').hidden = false; return; }
     btn.disabled = false; btn.innerHTML = '✅ الفيديو جاهز — اضغط للمشاركة';
     return;
   }
