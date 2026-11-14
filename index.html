@@ -383,6 +383,10 @@ h1{
   padding:0 max(16px,env(safe-area-inset-right,0px)) calc(22px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
 .subs .box{max-width:min(1000px,100%);padding:14px 26px;border-radius:14px;background:rgba(0,0,0,.82);box-shadow:0 10px 30px rgba(0,0,0,.5);text-align:center;opacity:0;transform:translateY(8px);transition:opacity .2s,transform .2s}
 .subs.on .box{opacity:1;transform:none}
+/* when the QR code sits where the subtitles would be, the subtitles move to the top of the screen */
+.subs.top{bottom:auto;top:0;padding-top:calc(14px + env(safe-area-inset-top,0px));padding-bottom:0}
+.subs.top .box{transform:translateY(-8px)}
+.subs.top.on .box{transform:none}
 .subs .ar{display:block;color:#f6e3a8;font-family:var(--f-body);font-weight:700;font-size:clamp(22px,3.2vw,36px);line-height:1.55;text-shadow:0 2px 4px #000}
 .subs .fg{display:block;margin-top:4px;color:#f6e3a8;font-size:clamp(14px,1.6vw,18px);line-height:1.5;opacity:.9}
 .subs .ar.love{color:#f6e3a8}
@@ -642,6 +646,26 @@ details.logbox summary{cursor:pointer;color:var(--muted);font-size:14px;padding:
   <div class="cc" id="ccBox"></div>
 </dialog>
 <div class="subs" id="subs" aria-live="polite"><div class="box"><span class="ar" id="subAr"></span><span class="fg" id="subFg" dir="auto"></span></div></div>
+<script>
+(()=>{ // keep the subtitles off the QR code: put them at the top while the QR box is in their way
+  const subs = document.getElementById('subs'), qr = document.getElementById('phoneBox');
+  if (!subs || !qr) return;
+  let queued = false;
+  const place = () => { queued = false;
+    const vh = window.innerHeight, box = subs.querySelector('.box'), need = Math.max(box ? box.offsetHeight : 0, 140) + 40;
+    const r = qr.hidden ? null : qr.getBoundingClientRect();
+    // the QR box is on screen and reaches into the strip at the bottom where the subtitles show
+    const inWay = !!r && r.height > 0 && r.top < vh && r.bottom > vh - need;
+    subs.classList.toggle('top', inWay);
+  };
+  const soon = () => { if (!queued){ queued = true; requestAnimationFrame(place); } };
+  addEventListener('scroll', soon, {passive:true}); addEventListener('resize', soon);
+  if (window.ResizeObserver){ new ResizeObserver(soon).observe(qr); new ResizeObserver(soon).observe(subs); }
+  new MutationObserver(soon).observe(qr, {attributes:true, attributeFilter:['hidden']});
+  new MutationObserver(soon).observe(subs, {attributes:true, attributeFilter:['class'], subtree:false});
+  soon();
+})();
+</script>
 <dialog id="pickDlg"><div class="pk">
   <header class="sh-head"><h3>🖼️ اختيار الصور</h3><button type="button" class="iconbtn" id="pkClose" aria-label="إغلاق">✕</button></header>
   <div class="pk-body" id="pkBody"></div>
