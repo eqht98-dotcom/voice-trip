@@ -214,6 +214,7 @@ h1{
 .actions{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
 .note{color:var(--ok);font-size:15px;text-align:center}
 .usage{color:var(--muted);font-size:13px;text-align:center}
+.credits-big{font-size:24px;font-weight:700;color:var(--gold-hi,#f6e3a8);font-variant-numeric:tabular-nums}
 
 .dlchoice{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;width:100%}
 .dlchoice[hidden]{display:none}
@@ -508,7 +509,6 @@ details.logbox summary{cursor:pointer;color:var(--muted);font-size:14px;padding:
   <div class="topbar">
     <span class="brandline">VOICE AIRWAYS · STUDENT DAY</span>
     <div class="tools">
-      <span class="pill" id="credits">—</span>
       <button class="iconbtn" id="openSettings" title="إعدادات المنظمين" aria-label="إعدادات المنظمين">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
       </button>
@@ -664,6 +664,10 @@ details.logbox summary{cursor:pointer;color:var(--muted);font-size:14px;padding:
       <button type="button" class="iconbtn" id="closeSettings" aria-label="إغلاق">✕</button>
     </header>
     <div class="sh-body" id="shBody">
+      <section class="grp">
+        <h4>رصيد ElevenLabs</h4>
+        <div class="credits-big" id="credits" aria-live="polite">—</div>
+      </section>
       <section class="grp">
         <h4>آخر رحلة ⏱</h4>
         <div class="usage" id="usage" style="text-align:start;line-height:1.7">ما فيه رحلة للحين.</div>
@@ -1417,7 +1421,7 @@ async function refreshCredits(){
       left = (await r.json()).left;
       if (typeof left !== 'number') throw new Error('no balance');
     }
-    $('credits').textContent = 'الرصيد: ' + left.toLocaleString('en-US');
+    $('credits').textContent = left.toLocaleString('en-US') + ' كريدت';
     lastCredits = left; return left;
   } catch(e){ $('credits').textContent='—'; log('credits: '+e.message); return null; }
 }
@@ -2714,7 +2718,7 @@ function openSettings(){
   pinUI('unlock', 'أدخل الرمز السري');
   $('pinDlg').showModal();
 }
-function reallyOpenSettings(){ fillSettings(); renderPicStat(); document.body.classList.add('modal-open'); $('settings').showModal(); }
+function reallyOpenSettings(){ refreshCredits(); fillSettings(); renderPicStat(); document.body.classList.add('modal-open'); $('settings').showModal(); }
 $('pinCancel').addEventListener('click', ()=>$('pinDlg').close());
 $('pinForm').addEventListener('submit', async e=>{
   e.preventDefault();
