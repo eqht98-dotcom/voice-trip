@@ -1,6 +1,6 @@
 {
  "es_1": {
-  "query": "tenerife",
+  "query": "id:20451",
   "pixabay_id": 20451,
   "url": "https://pixabay.com/videos/id-20451/",
   "by": "ChristianBodhi",
@@ -8,7 +8,7 @@
   "portrait": false
  },
  "es_2": {
-  "query": "mallorca coast",
+  "query": "id:182187",
   "pixabay_id": 182187,
   "url": "https://pixabay.com/videos/id-182187/",
   "by": "Radds",
@@ -16,23 +16,23 @@
   "portrait": true
  },
  "es_3": {
-  "query": "pyrenees",
-  "pixabay_id": 48654,
-  "url": "https://pixabay.com/videos/id-48654/",
-  "by": "hermanokn",
-  "duration": 7,
+  "query": "picos de europa",
+  "pixabay_id": 175183,
+  "url": "https://pixabay.com/videos/id-175183/",
+  "by": "OleksandrPidvalnyi",
+  "duration": 48,
   "portrait": false
  },
  "es_4": {
-  "query": "andalusia landscape",
-  "pixabay_id": 156620,
-  "url": "https://pixabay.com/videos/id-156620/",
-  "by": "mvalero",
-  "duration": 51,
-  "portrait": false
+  "query": "lanzarote",
+  "pixabay_id": 197529,
+  "url": "https://pixabay.com/videos/id-197529/",
+  "by": "Matthias_Groeneveld",
+  "duration": 26,
+  "portrait": true
  },
  "gb_1": {
-  "query": "scotland highlands",
+  "query": "id:370134",
   "pixabay_id": 370134,
   "url": "https://pixabay.com/videos/id-370134/",
   "by": "Jacko-007",
@@ -40,7 +40,7 @@
   "portrait": true
  },
  "gb_2": {
-  "query": "isle of skye",
+  "query": "id:248653",
   "pixabay_id": 248653,
   "url": "https://pixabay.com/videos/id-248653/",
   "by": "D-GM",
@@ -48,7 +48,7 @@
   "portrait": false
  },
  "gb_3": {
-  "query": "lake district",
+  "query": "id:153860",
   "pixabay_id": 153860,
   "url": "https://pixabay.com/videos/id-153860/",
   "by": "MWillsh",
@@ -56,7 +56,7 @@
   "portrait": false
  },
  "gb_4": {
-  "query": "cliffs dover",
+  "query": "id:116967",
   "pixabay_id": 116967,
   "url": "https://pixabay.com/videos/id-116967/",
   "by": "adamixx",
@@ -64,7 +64,7 @@
   "portrait": false
  },
  "fr_1": {
-  "query": "lavender provence",
+  "query": "id:93272",
   "pixabay_id": 93272,
   "url": "https://pixabay.com/videos/id-93272/",
   "by": "savisione",
@@ -72,7 +72,7 @@
   "portrait": false
  },
  "fr_2": {
-  "query": "mont blanc chamonix",
+  "query": "id:205062",
   "pixabay_id": 205062,
   "url": "https://pixabay.com/videos/id-205062/",
   "by": "borystr74",
@@ -80,7 +80,7 @@
   "portrait": false
  },
  "fr_3": {
-  "query": "corsica",
+  "query": "id:155525",
   "pixabay_id": 155525,
   "url": "https://pixabay.com/videos/id-155525/",
   "by": "LaurentPgP84",
@@ -88,7 +88,7 @@
   "portrait": false
  },
  "fr_4": {
-  "query": "etretat cliffs",
+  "query": "id:26603",
   "pixabay_id": 26603,
   "url": "https://pixabay.com/videos/id-26603/",
   "by": "WestNL",
@@ -96,7 +96,7 @@
   "portrait": false
  },
  "de_1": {
-  "query": "bavaria alps",
+  "query": "id:38370",
   "pixabay_id": 38370,
   "url": "https://pixabay.com/videos/id-38370/",
   "by": "Ronin_Studio_Munich",
@@ -104,15 +104,15 @@
   "portrait": false
  },
  "de_2": {
-  "query": "black forest",
-  "pixabay_id": 379979,
-  "url": "https://pixabay.com/videos/id-379979/",
-  "by": "Christian187",
-  "duration": 6,
+  "query": "eibsee",
+  "pixabay_id": 254787,
+  "url": "https://pixabay.com/videos/id-254787/",
+  "by": "nirjharbasakuet",
+  "duration": 12,
   "portrait": true
  },
  "de_3": {
-  "query": "saxon switzerland",
+  "query": "id:240744",
   "pixabay_id": 240744,
   "url": "https://pixabay.com/videos/id-240744/",
   "by": "adege",
@@ -120,7 +120,7 @@
   "portrait": false
  },
  "de_4": {
-  "query": "königssee",
+  "query": "id:126367",
   "pixabay_id": 126367,
   "url": "https://pixabay.com/videos/id-126367/",
   "by": "caswi",
@@ -128,7 +128,7 @@
   "portrait": false
  },
  "it_1": {
-  "query": "dolomites",
+  "query": "id:11949",
   "pixabay_id": 11949,
   "url": "https://pixabay.com/videos/id-11949/",
   "by": "Hans",
@@ -136,7 +136,7 @@
   "portrait": false
  },
  "it_2": {
-  "query": "lake como",
+  "query": "id:67201",
   "pixabay_id": 67201,
   "url": "https://pixabay.com/videos/id-67201/",
   "by": "mariancroitoru",
@@ -144,7 +144,7 @@
   "portrait": false
  },
  "it_3": {
-  "query": "tuscany",
+  "query": "id:274864",
   "pixabay_id": 274864,
   "url": "https://pixabay.com/videos/id-274864/",
   "by": "u_39hd1c26hy",
@@ -152,7 +152,7 @@
   "portrait": true
  },
  "it_4": {
-  "query": "amalfi coast",
+  "query": "id:10784",
   "pixabay_id": 10784,
   "url": "https://pixabay.com/videos/id-10784/",
   "by": "Coverr-Free-Footage",
@@ -160,7 +160,7 @@
   "portrait": false
  },
  "tr_1": {
-  "query": "cappadocia balloons",
+  "query": "id:169236",
   "pixabay_id": 169236,
   "url": "https://pixabay.com/videos/id-169236/",
   "by": "userphotographer",
@@ -168,7 +168,7 @@
   "portrait": true
  },
  "tr_2": {
-  "query": "pamukkale",
+  "query": "id:62520",
   "pixabay_id": 62520,
   "url": "https://pixabay.com/videos/id-62520/",
   "by": "RoseTheGuide",
@@ -176,7 +176,7 @@
   "portrait": false
  },
  "tr_4": {
-  "query": "antalya coast",
+  "query": "id:153602",
   "pixabay_id": 153602,
   "url": "https://pixabay.com/videos/id-153602/",
   "by": "Engin_Akyurt",
@@ -184,7 +184,7 @@
   "portrait": true
  },
  "ru_1": {
-  "query": "lake baikal",
+  "query": "id:26610",
   "pixabay_id": 26610,
   "url": "https://pixabay.com/videos/id-26610/",
   "by": "jeremy888",
@@ -192,7 +192,7 @@
   "portrait": false
  },
  "ru_2": {
-  "query": "altai mountains",
+  "query": "id:71063",
   "pixabay_id": 71063,
   "url": "https://pixabay.com/videos/id-71063/",
   "by": "NilovSergey",
@@ -200,23 +200,23 @@
   "portrait": false
  },
  "ru_3": {
-  "query": "kamchatka",
-  "pixabay_id": 248447,
-  "url": "https://pixabay.com/videos/id-248447/",
-  "by": "TungArt7",
-  "duration": 9,
-  "portrait": false
+  "query": "elbrus",
+  "pixabay_id": 152464,
+  "url": "https://pixabay.com/videos/id-152464/",
+  "by": "ViktoriyaPavlova",
+  "duration": 11,
+  "portrait": true
  },
  "ru_4": {
-  "query": "karelia",
-  "pixabay_id": 297745,
-  "url": "https://pixabay.com/videos/id-297745/",
-  "by": "ValeriyPet-ko",
-  "duration": 9,
+  "query": "russia winter forest",
+  "pixabay_id": 111367,
+  "url": "https://pixabay.com/videos/id-111367/",
+  "by": "Alexdupin",
+  "duration": 15,
   "portrait": false
  },
  "in_1": {
-  "query": "kerala backwaters",
+  "query": "id:138769",
   "pixabay_id": 138769,
   "url": "https://pixabay.com/videos/id-138769/",
   "by": "aneenaelzabinod",
@@ -224,15 +224,15 @@
   "portrait": true
  },
  "in_2": {
-  "query": "ladakh",
-  "pixabay_id": 200297,
-  "url": "https://pixabay.com/videos/id-200297/",
-  "by": "HarshitAggarwal",
+  "query": "kashmir lake",
+  "pixabay_id": 92833,
+  "url": "https://pixabay.com/videos/id-92833/",
+  "by": "yogendras31",
   "duration": 19,
   "portrait": true
  },
  "in_4": {
-  "query": "kashmir",
+  "query": "id:232090",
   "pixabay_id": 232090,
   "url": "https://pixabay.com/videos/id-232090/",
   "by": "filmakershally",
@@ -240,7 +240,7 @@
   "portrait": true
  },
  "cn_1": {
-  "query": "zhangjiajie",
+  "query": "id:385520",
   "pixabay_id": 385520,
   "url": "https://pixabay.com/videos/id-385520/",
   "by": "Razzak_100",
@@ -248,7 +248,7 @@
   "portrait": true
  },
  "cn_2": {
-  "query": "guilin",
+  "query": "id:205404",
   "pixabay_id": 205404,
   "url": "https://pixabay.com/videos/id-205404/",
   "by": "书生李尔基",
@@ -256,7 +256,7 @@
   "portrait": false
  },
  "cn_3": {
-  "query": "yunnan rice terraces",
+  "query": "id:205743",
   "pixabay_id": 205743,
   "url": "https://pixabay.com/videos/id-205743/",
   "by": "书生李尔基",
@@ -264,7 +264,7 @@
   "portrait": false
  },
  "cn_4": {
-  "query": "huangshan",
+  "query": "id:236366",
   "pixabay_id": 236366,
   "url": "https://pixabay.com/videos/id-236366/",
   "by": "HealingNatureRetreat",
@@ -272,7 +272,7 @@
   "portrait": false
  },
  "jp_1": {
-  "query": "mount fuji",
+  "query": "id:136017",
   "pixabay_id": 136017,
   "url": "https://pixabay.com/videos/id-136017/",
   "by": "kinchan_kinchan",
@@ -280,7 +280,7 @@
   "portrait": true
  },
  "jp_2": {
-  "query": "cherry blossom japan",
+  "query": "id:274538",
   "pixabay_id": 274538,
   "url": "https://pixabay.com/videos/id-274538/",
   "by": "Kanenori",
@@ -288,15 +288,15 @@
   "portrait": true
  },
  "jp_3": {
-  "query": "hokkaido",
-  "pixabay_id": 215932,
-  "url": "https://pixabay.com/videos/id-215932/",
-  "by": "VideoAnimals",
-  "duration": 10,
+  "query": "japan lake",
+  "pixabay_id": 342229,
+  "url": "https://pixabay.com/videos/id-342229/",
+  "by": "Kanenori",
+  "duration": 25,
   "portrait": true
  },
  "jp_4": {
-  "query": "japan autumn",
+  "query": "id:379062",
   "pixabay_id": 379062,
   "url": "https://pixabay.com/videos/id-379062/",
   "by": "Kanenori",
@@ -304,7 +304,7 @@
   "portrait": true
  },
  "kr_1": {
-  "query": "jeju island",
+  "query": "id:246297",
   "pixabay_id": 246297,
   "url": "https://pixabay.com/videos/id-246297/",
   "by": "bingbing2107",
@@ -312,47 +312,39 @@
   "portrait": true
  },
  "kr_3": {
-  "query": "korea autumn mountains",
-  "pixabay_id": 299196,
-  "url": "https://pixabay.com/videos/id-299196/",
-  "by": "City_at_Night",
-  "duration": 11,
+  "query": "jeju waterfall",
+  "pixabay_id": 197780,
+  "url": "https://pixabay.com/videos/id-197780/",
+  "by": "Docujeju",
+  "duration": 16,
   "portrait": false
  },
  "kr_4": {
-  "query": "korea cherry blossom",
-  "pixabay_id": 236666,
-  "url": "https://pixabay.com/videos/id-236666/",
-  "by": "Kris-1234",
-  "duration": 32,
-  "portrait": true
+  "query": "korea autumn",
+  "pixabay_id": 384548,
+  "url": "https://pixabay.com/videos/id-384548/",
+  "by": "KIMDAEJEUNG",
+  "duration": 26,
+  "portrait": false
  },
  "id_1": {
-  "query": "bali rice terrace",
-  "pixabay_id": 322969,
-  "url": "https://pixabay.com/videos/id-322969/",
-  "by": "hijef",
-  "duration": 9,
+  "query": "bali",
+  "pixabay_id": 262603,
+  "url": "https://pixabay.com/videos/id-262603/",
+  "by": "WonderfulBali_",
+  "duration": 16,
   "portrait": true
  },
  "id_2": {
-  "query": "raja ampat",
+  "query": "id:385732",
   "pixabay_id": 385732,
   "url": "https://pixabay.com/videos/id-385732/",
   "by": "Razzak_100",
   "duration": 8,
   "portrait": true
  },
- "id_3": {
-  "query": "bromo",
-  "pixabay_id": 37085,
-  "url": "https://pixabay.com/videos/id-37085/",
-  "by": "Ronin_Studio_Munich",
-  "duration": 16,
-  "portrait": false
- },
  "id_4": {
-  "query": "nusa penida",
+  "query": "id:386063",
   "pixabay_id": 386063,
   "url": "https://pixabay.com/videos/id-386063/",
   "by": "Razzak_100",
@@ -360,17 +352,49 @@
   "portrait": true
  },
  "no_1": {
-  "query": "northern lights norway",
+  "query": "id:166292",
   "pixabay_id": 166292,
   "url": "https://pixabay.com/videos/id-166292/",
   "by": "6696758",
   "duration": 31,
   "portrait": false
  },
- "no_3": {
-  "query": "lofoten",
+ "tr_3": {
+  "query": "kas turkey",
+  "pixabay_id": 273961,
+  "url": "https://pixabay.com/videos/id-273961/",
+  "by": "AbdulWahab_092",
+  "duration": 23,
+  "portrait": true
+ },
+ "in_3": {
+  "query": "meghalaya",
+  "pixabay_id": 132652,
+  "url": "https://pixabay.com/videos/id-132652/",
+  "by": "e_m_o_n",
+  "duration": 17,
+  "portrait": true
+ },
+ "kr_2": {
+  "query": "korea mountains",
+  "pixabay_id": 16129,
+  "url": "https://pixabay.com/videos/id-16129/",
+  "by": "JirisanET",
+  "duration": 25,
+  "portrait": false
+ },
+ "no_2": {
+  "query": "norway fjord",
   "pixabay_id": 385785,
   "url": "https://pixabay.com/videos/id-385785/",
+  "by": "Razzak_100",
+  "duration": 7,
+  "portrait": true
+ },
+ "no_4": {
+  "query": "id:385518",
+  "pixabay_id": 385518,
+  "url": "https://pixabay.com/videos/id-385518/",
   "by": "Razzak_100",
   "duration": 7,
   "portrait": true
