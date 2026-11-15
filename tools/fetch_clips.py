@@ -23,18 +23,19 @@ credits = json.load(open(credits_path)) if os.path.exists(credits_path) else {}
 
 # a clip only counts for a country when its Pixabay tags name that country or one of its places
 PLACES = {
-    "gb": ["london", "england", "britain", "british", "scotland", "edinburgh", "united kingdom", "uk"],
-    "fr": ["paris", "france", "french", "eiffel", "louvre", "saint-michel", "saint michel"],
-    "de": ["germany", "german", "berlin", "munich", "cologne", "bavaria", "neuschwanstein", "hamburg", "dresden"],
-    "it": ["italy", "italian", "rome", "venice", "florence", "amalfi", "milan", "tuscany", "colosseum"],
-    "tr": ["turkey", "turkish", "istanbul", "cappadocia", "bosphorus", "türkiye", "turkiye"],
-    "ru": ["russia", "russian", "moscow", "kremlin"],
-    "in": ["india", "indian", "delhi", "agra", "jaipur", "mumbai", "kerala", "varanasi", "taj mahal", "rajasthan"],
-    "cn": ["china", "chinese", "beijing", "shanghai", "great wall", "guilin", "hong kong"],
-    "jp": ["japan", "japanese", "tokyo", "kyoto", "osaka", "fuji", "nara"],
-    "kr": ["korea", "korean", "seoul", "busan", "jeju"],
-    "id": ["indonesia", "indonesian", "bali", "jakarta", "java", "bromo", "borobudur", "lombok", "komodo"],
-    "no": ["norway", "norwegian", "oslo", "bergen", "lofoten", "tromso", "geiranger", "preikestolen"],
+    "es": ["spain", "spanish", "españa", "tenerife", "canary", "canarias", "mallorca", "majorca", "pyrenees", "andalusia", "andalucia", "ibiza", "menorca", "picos de europa", "gran canaria", "lanzarote"],
+    "gb": ["scotland", "scottish", "highlands", "skye", "lake district", "wales", "cornwall", "dover", "england", "united kingdom", "britain", "uk", "glencoe", "snowdonia"],
+    "fr": ["france", "french", "provence", "lavender", "corsica", "normandy", "etretat", "étretat", "chamonix", "mont blanc", "verdon", "brittany", "alsace"],
+    "de": ["germany", "german", "bavaria", "bavarian", "black forest", "saxon", "zugspitze", "königssee", "koenigssee", "konigssee", "rhine", "harz", "eibsee"],
+    "it": ["italy", "italian", "dolomites", "dolomiti", "como", "tuscany", "toscana", "sicily", "sardinia", "garda", "amalfi", "cinque terre", "positano", "capri"],
+    "tr": ["turkey", "turkish", "türkiye", "turkiye", "cappadocia", "pamukkale", "antalya", "fethiye", "oludeniz", "ölüdeniz", "kas", "bodrum"],
+    "ru": ["russia", "russian", "baikal", "altai", "kamchatka", "siberia", "karelia", "caucasus", "elbrus", "murmansk"],
+    "in": ["india", "indian", "kerala", "ladakh", "munnar", "kashmir", "goa", "himachal", "uttarakhand", "rajasthan", "meghalaya", "sikkim"],
+    "cn": ["china", "chinese", "zhangjiajie", "guilin", "yunnan", "huangshan", "li river", "jiuzhaigou", "yangshuo", "great wall"],
+    "jp": ["japan", "japanese", "fuji", "hokkaido", "kyoto", "nikko", "hakone", "okinawa", "sakura"],
+    "kr": ["korea", "korean", "jeju", "seoraksan", "busan", "gangwon"],
+    "id": ["indonesia", "indonesian", "bali", "raja ampat", "bromo", "lombok", "komodo", "java", "sumatra", "flores", "nusa penida"],
+    "no": ["norway", "norwegian", "lofoten", "tromso", "tromsø", "geiranger", "preikestolen", "senja", "trolltunga", "fjord", "reine"],
 }
 used_everywhere = set(queries.get("_skip", []))
 

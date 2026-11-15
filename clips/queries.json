@@ -1,90 +1,82 @@
 {
- "_note": "Pixabay videos for each country's clips, in the order they appear in the video, all checked by eye. Change a slot to a search (or 'id:12345') and push to a branch to fetch it again. '_skip' lists videos checked and rejected. Spain (es) clips came from Pexels.",
- "_skip": [
-  14205,
-  18792,
-  37085,
-  50593,
-  135797,
-  149011,
-  213799,
-  214630,
-  234537,
-  234538,
-  246297,
-  322969,
-  334836,
-  378101,
-  385785
+ "_note": "Pixabay searches for each country's nature clips (the most beautiful landscapes, not the capital), in the order they appear in the video. 'id:12345' keeps one exact Pixabay video. '_skip' lists videos checked and rejected.",
+ "_skip": [],
+ "es": [
+  "tenerife",
+  "mallorca coast",
+  "pyrenees",
+  "andalusia landscape"
  ],
  "gb": [
-  "id:21437",
-  "id:291454",
-  "id:27031",
-  "id:45085"
+  "scotland highlands",
+  "isle of skye",
+  "lake district",
+  "cliffs dover"
  ],
  "fr": [
-  "id:213812",
-  "id:34694",
-  "id:34321",
-  "id:272820"
+  "lavender provence",
+  "mont blanc chamonix",
+  "corsica",
+  "etretat cliffs"
  ],
  "de": [
-  "id:278381",
-  "id:36992",
-  "id:290563"
+  "bavaria alps",
+  "black forest",
+  "saxon switzerland",
+  "königssee"
  ],
  "it": [
-  "id:204384",
-  "id:343158",
-  "id:29731",
-  "id:10784"
+  "dolomites",
+  "lake como",
+  "tuscany",
+  "amalfi coast"
  ],
  "tr": [
-  "id:273961",
-  "id:273967",
-  "id:169236",
-  "id:377100"
+  "cappadocia balloons",
+  "pamukkale",
+  "oludeniz",
+  "antalya coast"
  ],
  "ru": [
-  "id:43252",
-  "id:44263",
-  "id:291430"
+  "lake baikal",
+  "altai mountains",
+  "kamchatka",
+  "karelia"
  ],
  "in": [
-  "id:23592",
-  "id:191437",
-  "id:206065",
-  "id:86686"
+  "kerala backwaters",
+  "ladakh",
+  "munnar tea",
+  "kashmir"
  ],
  "cn": [
-  "id:199199",
-  "id:212404",
-  "id:220942",
-  "id:205404"
+  "zhangjiajie",
+  "guilin",
+  "yunnan rice terraces",
+  "huangshan"
  ],
  "jp": [
-  "id:136017",
-  "id:298643",
-  "id:211067",
-  "id:136854"
+  "mount fuji",
+  "cherry blossom japan",
+  "hokkaido",
+  "japan autumn"
  ],
  "kr": [
-  "id:250953",
-  "id:218013",
-  "id:209575",
-  "id:21116"
+  "jeju island",
+  "seoraksan",
+  "korea autumn mountains",
+  "korea cherry blossom"
  ],
  "id": [
-  "id:262603",
-  "id:197166",
-  "id:258025",
-  "id:38361"
+  "bali rice terrace",
+  "raja ampat",
+  "bromo",
+  "nusa penida"
  ],
  "no": [
-  "id:304761",
-  "id:254616",
-  "id:385785",
-  "id:385518"
+  "northern lights norway",
+  "geirangerfjord",
+  "lofoten",
+  "preikestolen"
  ]
 }
