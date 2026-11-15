@@ -8,7 +8,7 @@
   "portrait": false
  },
  "gb_2": {
-  "query": "westminster",
+  "query": "id:291454",
   "pixabay_id": 291454,
   "url": "https://pixabay.com/videos/id-291454/",
   "by": "TungArt7",
@@ -64,12 +64,12 @@
   "portrait": true
  },
  "de_1": {
-  "query": "brandenburg gate",
-  "pixabay_id": 234538,
-  "url": "https://pixabay.com/videos/id-234538/",
-  "by": "Folk-Er",
-  "duration": 20,
-  "portrait": false
+  "query": "berlin",
+  "pixabay_id": 290563,
+  "url": "https://pixabay.com/videos/id-290563/",
+  "by": "SandraFire",
+  "duration": 31,
+  "portrait": true
  },
  "de_2": {
   "query": "id:278381",
@@ -96,7 +96,7 @@
   "portrait": true
  },
  "it_1": {
-  "query": "rome",
+  "query": "id:204384",
   "pixabay_id": 204384,
   "url": "https://pixabay.com/videos/id-204384/",
   "by": "furiocapozzi",
@@ -184,15 +184,15 @@
   "portrait": false
  },
  "ru_4": {
-  "query": "moscow city",
-  "pixabay_id": 378101,
-  "url": "https://pixabay.com/videos/id-378101/",
-  "by": "xusenru",
+  "query": "moscow river",
+  "pixabay_id": 272514,
+  "url": "https://pixabay.com/videos/id-272514/",
+  "by": "TungArt7",
   "duration": 15,
-  "portrait": true
+  "portrait": false
  },
  "in_1": {
-  "query": "taj mahal agra",
+  "query": "id:23592",
   "pixabay_id": 23592,
   "url": "https://pixabay.com/videos/id-23592/",
   "by": "hossamov04",
@@ -200,7 +200,7 @@
   "portrait": false
  },
  "in_2": {
-  "query": "hawa mahal",
+  "query": "id:191437",
   "pixabay_id": 191437,
   "url": "https://pixabay.com/videos/id-191437/",
   "by": "u_rvuxc0ykru",
@@ -296,7 +296,7 @@
   "portrait": true
  },
  "kr_3": {
-  "query": "busan city",
+  "query": "id:209575",
   "pixabay_id": 209575,
   "url": "https://pixabay.com/videos/id-209575/",
   "by": "Evgeniy__Mironov",
@@ -304,7 +304,7 @@
   "portrait": false
  },
  "kr_4": {
-  "query": "seoul night",
+  "query": "id:21116",
   "pixabay_id": 21116,
   "url": "https://pixabay.com/videos/id-21116/",
   "by": "RafterJr72",
@@ -320,11 +320,11 @@
   "portrait": true
  },
  "id_2": {
-  "query": "bali rice terrace",
-  "pixabay_id": 322969,
-  "url": "https://pixabay.com/videos/id-322969/",
-  "by": "hijef",
-  "duration": 9,
+  "query": "bali",
+  "pixabay_id": 197166,
+  "url": "https://pixabay.com/videos/id-197166/",
+  "by": "krisnapratama72",
+  "duration": 18,
   "portrait": true
  },
  "id_3": {
@@ -336,7 +336,7 @@
   "portrait": true
  },
  "id_4": {
-  "query": "bromo volcano",
+  "query": "id:38361",
   "pixabay_id": 38361,
   "url": "https://pixabay.com/videos/id-38361/",
   "by": "Ronin_Studio_Munich",
@@ -344,11 +344,11 @@
   "portrait": false
  },
  "no_1": {
-  "query": "fjord norway",
-  "pixabay_id": 385785,
-  "url": "https://pixabay.com/videos/id-385785/",
-  "by": "Razzak_100",
-  "duration": 7,
+  "query": "bergen norway",
+  "pixabay_id": 304761,
+  "url": "https://pixabay.com/videos/id-304761/",
+  "by": "u_7nvykl6fpi",
+  "duration": 15,
   "portrait": true
  },
  "no_2": {
