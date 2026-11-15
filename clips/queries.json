@@ -1,90 +1,96 @@
 {
- "_note": "Pixabay videos for each country's clips, in the order they appear in the video, all checked by eye. Change a slot to a search (or 'id:12345') and push to a branch to fetch it again. '_skip' lists videos checked and rejected. Spain (es) clips came from Pexels.",
+ "_note": "Pixabay nature videos for each country's clips (the most beautiful landscapes, not the capital), in the order they appear in the video, all checked by eye. Change a slot to a search (or 'id:12345') and push to a branch to fetch it again. '_skip' lists videos checked and rejected.",
  "_skip": [
-  14205,
-  18792,
+  34630,
   37085,
-  50593,
-  135797,
-  149011,
-  213799,
-  214630,
-  234537,
-  234538,
-  246297,
+  48654,
+  132652,
+  156620,
+  200297,
+  215932,
+  236666,
+  248447,
+  273961,
+  297745,
+  299196,
   322969,
-  334836,
-  378101,
-  385785
+  379979
+ ],
+ "es": [
+  "id:20451",
+  "id:182187",
+  "id:175183",
+  "id:197529"
  ],
  "gb": [
-  "id:21437",
-  "id:291454",
-  "id:27031",
-  "id:45085"
+  "id:370134",
+  "id:248653",
+  "id:153860",
+  "id:116967"
  ],
  "fr": [
-  "id:213812",
-  "id:34694",
-  "id:34321",
-  "id:272820"
+  "id:93272",
+  "id:205062",
+  "id:155525",
+  "id:26603"
  ],
  "de": [
-  "id:278381",
-  "id:36992",
-  "id:290563"
+  "id:38370",
+  "id:254787",
+  "id:240744",
+  "id:126367"
  ],
  "it": [
-  "id:204384",
-  "id:343158",
-  "id:29731",
+  "id:11949",
+  "id:67201",
+  "id:274864",
   "id:10784"
  ],
  "tr": [
-  "id:273961",
-  "id:273967",
   "id:169236",
-  "id:377100"
+  "id:62520",
+  "id:153602"
  ],
  "ru": [
-  "id:43252",
-  "id:44263",
-  "id:291430"
+  "id:26610",
+  "id:71063",
+  "id:152464",
+  "id:111367"
  ],
  "in": [
-  "id:23592",
-  "id:191437",
-  "id:206065",
-  "id:86686"
+  "id:138769",
+  "id:92833",
+  "id:358730",
+  "id:232090"
  ],
  "cn": [
-  "id:199199",
-  "id:212404",
-  "id:220942",
-  "id:205404"
+  "id:385520",
+  "id:205404",
+  "id:205743",
+  "id:236366"
  ],
  "jp": [
   "id:136017",
-  "id:298643",
-  "id:211067",
-  "id:136854"
+  "id:274538",
+  "id:342229",
+  "id:379062"
  ],
  "kr": [
-  "id:250953",
-  "id:218013",
-  "id:209575",
-  "id:21116"
+  "id:246297",
+  "id:16129",
+  "id:197780",
+  "id:384548"
  ],
  "id": [
   "id:262603",
-  "id:197166",
-  "id:258025",
-  "id:38361"
+  "id:385732",
+  "id:365704",
+  "id:386063"
  ],
  "no": [
-  "id:304761",
-  "id:254616",
+  "id:166292",
   "id:385785",
+  "id:48873",
   "id:385518"
  ]
 }
