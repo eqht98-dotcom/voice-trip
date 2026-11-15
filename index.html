@@ -1406,10 +1406,17 @@ async function api(path, opts={}){
 }
 let lastCredits = null;
 async function refreshCredits(){
-  if (!cfg.key){ $('credits').textContent = PROXY ? '' : 'بدون مفتاح'; return null; }
+  if (!cfg.key && !PROXY){ $('credits').textContent = 'بدون مفتاح'; return null; }
   try {
-    const s = await (await api('/user/subscription')).json();
-    const left = (s.character_limit ?? 0) - (s.character_count ?? 0);
+    let left;
+    if (cfg.key){ const s = await (await api('/user/subscription')).json(); left = (s.character_limit ?? 0) - (s.character_count ?? 0); }
+    else {
+      // through the Worker, which holds the key and returns only the number left
+      const r = await fetch(PROXY + '/credits');
+      if (!r.ok) throw new Error('HTTP '+r.status);
+      left = (await r.json()).left;
+      if (typeof left !== 'number') throw new Error('no balance');
+    }
     $('credits').textContent = 'الرصيد: ' + left.toLocaleString('en-US');
     lastCredits = left; return left;
   } catch(e){ $('credits').textContent='—'; log('credits: '+e.message); return null; }

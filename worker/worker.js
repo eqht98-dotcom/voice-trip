@@ -35,6 +35,16 @@ export default {
     const ip = req.headers.get('CF-Connecting-IP') || 'x';
     const day = new Date().toISOString().slice(0, 10);
 
+    // ---- remaining ElevenLabs credits, for the balance at the top of the page ----
+    // only the number left is returned (never the key or the account details), and it is not counted
+    // in the daily call limit
+    if (p === '/credits' && req.method === 'GET') {
+      const r = await fetch('https://api.elevenlabs.io/v1/user/subscription', {headers: {'xi-api-key': env.ELEVENLABS_KEY}});
+      if (!r.ok) return j({error: 'upstream', status: r.status}, 502, h);
+      const s = await r.json();
+      return j({left: (s.character_limit ?? 0) - (s.character_count ?? 0)}, 200, h);
+    }
+
     if (!(await bump(env.LIMITS, `c:${day}:${ip}`, CALLS_PER_DAY)))
       return j({error: 'limit', detail: 'daily_calls'}, 429, h);
 
