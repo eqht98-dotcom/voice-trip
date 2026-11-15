@@ -64,14 +64,6 @@
   "portrait": true
  },
  "de_1": {
-  "query": "berlin",
-  "pixabay_id": 290563,
-  "url": "https://pixabay.com/videos/id-290563/",
-  "by": "SandraFire",
-  "duration": 31,
-  "portrait": true
- },
- "de_2": {
   "query": "id:278381",
   "pixabay_id": 278381,
   "url": "https://pixabay.com/videos/id-278381/",
@@ -79,7 +71,7 @@
   "duration": 28,
   "portrait": false
  },
- "de_3": {
+ "de_2": {
   "query": "id:36992",
   "pixabay_id": 36992,
   "url": "https://pixabay.com/videos/id-36992/",
@@ -87,7 +79,7 @@
   "duration": 33,
   "portrait": false
  },
- "de_4": {
+ "de_3": {
   "query": "id:290563",
   "pixabay_id": 290563,
   "url": "https://pixabay.com/videos/id-290563/",
@@ -181,14 +173,6 @@
   "url": "https://pixabay.com/videos/id-291430/",
   "by": "TungArt7",
   "duration": 8,
-  "portrait": false
- },
- "ru_4": {
-  "query": "moscow river",
-  "pixabay_id": 272514,
-  "url": "https://pixabay.com/videos/id-272514/",
-  "by": "TungArt7",
-  "duration": 15,
   "portrait": false
  },
  "in_1": {

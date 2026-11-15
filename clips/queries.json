@@ -1,5 +1,5 @@
 {
- "_note": "Pixabay searches for each country's clips, in the order they appear in the video. 'id:12345' keeps one exact Pixabay video (already checked). '_skip' lists videos checked and rejected. Spain (es) already has its clips. Run 4.",
+ "_note": "Pixabay videos for each country's clips, in the order they appear in the video, all checked by eye. Change a slot to a search (or 'id:12345') and push to a branch to fetch it again. '_skip' lists videos checked and rejected. Spain (es) clips came from Pexels.",
  "_skip": [
   14205,
   18792,
@@ -30,7 +30,6 @@
   "id:272820"
  ],
  "de": [
-  "berlin",
   "id:278381",
   "id:36992",
   "id:290563"
@@ -50,8 +49,7 @@
  "ru": [
   "id:43252",
   "id:44263",
-  "id:291430",
-  "moscow river"
+  "id:291430"
  ],
  "in": [
   "id:23592",
@@ -79,12 +77,12 @@
  ],
  "id": [
   "id:262603",
-  "bali",
+  "id:197166",
   "id:258025",
   "id:38361"
  ],
  "no": [
-  "bergen norway",
+  "id:304761",
   "id:254616",
   "id:385785",
   "id:385518"
