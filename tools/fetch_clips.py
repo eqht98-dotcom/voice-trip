@@ -86,6 +86,10 @@ for code, slots in queries.items():
             pick = ok[0] if ok else None
             if not pick:
                 report.append(f"{code}_{n}: nothing found for '{q}'")
+                stale = os.path.join(CLIPS, f"{code}_{n}.mp4")
+                if os.path.exists(stale):
+                    os.remove(stale)   # never leave an older clip in this slot
+                credits.pop(f"{code}_{n}", None)
                 continue
             used.add(pick["id"]); used_everywhere.add(pick["id"])
             f = best_file(pick)

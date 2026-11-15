@@ -1,82 +1,94 @@
 {
  "_note": "Pixabay searches for each country's nature clips (the most beautiful landscapes, not the capital), in the order they appear in the video. 'id:12345' keeps one exact Pixabay video. '_skip' lists videos checked and rejected.",
- "_skip": [],
+ "_skip": [
+  37085,
+  48654,
+  156620,
+  200297,
+  215932,
+  236666,
+  248447,
+  297745,
+  299196,
+  322969,
+  379979
+ ],
  "es": [
-  "tenerife",
-  "mallorca coast",
-  "pyrenees",
-  "andalusia landscape"
+  "id:20451",
+  "id:182187",
+  "picos de europa",
+  "lanzarote"
  ],
  "gb": [
-  "scotland highlands",
-  "isle of skye",
-  "lake district",
-  "cliffs dover"
+  "id:370134",
+  "id:248653",
+  "id:153860",
+  "id:116967"
  ],
  "fr": [
-  "lavender provence",
-  "mont blanc chamonix",
-  "corsica",
-  "etretat cliffs"
+  "id:93272",
+  "id:205062",
+  "id:155525",
+  "id:26603"
  ],
  "de": [
-  "bavaria alps",
-  "black forest",
-  "saxon switzerland",
-  "königssee"
+  "id:38370",
+  "eibsee",
+  "id:240744",
+  "id:126367"
  ],
  "it": [
-  "dolomites",
-  "lake como",
-  "tuscany",
-  "amalfi coast"
+  "id:11949",
+  "id:67201",
+  "id:274864",
+  "id:10784"
  ],
  "tr": [
-  "cappadocia balloons",
-  "pamukkale",
-  "oludeniz",
-  "antalya coast"
+  "id:169236",
+  "id:62520",
+  "kas turkey",
+  "id:153602"
  ],
  "ru": [
-  "lake baikal",
-  "altai mountains",
-  "kamchatka",
-  "karelia"
+  "id:26610",
+  "id:71063",
+  "elbrus",
+  "russia winter forest"
  ],
  "in": [
-  "kerala backwaters",
-  "ladakh",
-  "munnar tea",
-  "kashmir"
+  "id:138769",
+  "kashmir lake",
+  "meghalaya",
+  "id:232090"
  ],
  "cn": [
-  "zhangjiajie",
-  "guilin",
-  "yunnan rice terraces",
-  "huangshan"
+  "id:385520",
+  "id:205404",
+  "id:205743",
+  "id:236366"
  ],
  "jp": [
-  "mount fuji",
-  "cherry blossom japan",
-  "hokkaido",
-  "japan autumn"
+  "id:136017",
+  "id:274538",
+  "japan lake",
+  "id:379062"
  ],
  "kr": [
-  "jeju island",
-  "seoraksan",
-  "korea autumn mountains",
-  "korea cherry blossom"
+  "id:246297",
+  "korea mountains",
+  "jeju waterfall",
+  "korea autumn"
  ],
  "id": [
-  "bali rice terrace",
-  "raja ampat",
-  "bromo",
-  "nusa penida"
+  "bali",
+  "id:385732",
+  "bromo sunrise",
+  "id:386063"
  ],
  "no": [
-  "northern lights norway",
-  "geirangerfjord",
-  "lofoten",
-  "preikestolen"
+  "id:166292",
+  "norway fjord",
+  "id:385785",
+  "id:385518"
  ]
 }
