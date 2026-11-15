@@ -1,16 +1,17 @@
-"""Fetch each country's cinematic clips from Pexels and prepare them for the site.
+"""Fetch each country's cinematic clips from Pixabay and prepare them for the site.
 
-Runs in GitHub Actions (see .github/workflows/clips.yml). Needs the PEXELS_API_KEY secret.
-For every country in clips/queries.json it searches Pexels for portrait videos, takes the best
-unused result per search, and writes clips/<code>_<n>.mp4 at 720x1280, 24 fps, no B-frames
-(the page reads frames in order with the browser's video decoder). It also writes a contact
-sheet per country (clips/_preview/<code>.jpg) and the credits (clips/credits.json).
+Runs in GitHub Actions (see .github/workflows/clips.yml). Needs the PIXABAY_API_KEY secret.
+For every country in clips/queries.json it searches Pixabay videos, prefers portrait videos
+(landscape ones are cropped to the middle), takes the best unused result per search, and writes
+clips/<code>_<n>.mp4 at 720x1280, 24 fps, no B-frames (the page reads frames in order with the
+browser's video decoder). It also writes a contact sheet per country (clips/_preview/<code>.jpg)
+and the credits (clips/credits.json). A slot can be "id:12345" to use one exact Pixabay video.
 """
 import json, os, subprocess, sys, urllib.request, urllib.parse, tempfile
 
-KEY = os.environ.get("PEXELS_API_KEY", "").strip()
+KEY = os.environ.get("PIXABAY_API_KEY", "").strip()
 if not KEY:
-    sys.exit("PEXELS_API_KEY secret is missing")
+    sys.exit("PIXABAY_API_KEY secret is missing")
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CLIPS = os.path.join(ROOT, "clips")
 PREVIEW = os.path.join(CLIPS, "_preview")
@@ -20,18 +21,27 @@ only = [c for c in os.environ.get("ONLY", "").split(",") if c]
 credits_path = os.path.join(CLIPS, "credits.json")
 credits = json.load(open(credits_path)) if os.path.exists(credits_path) else {}
 
-def api(path):
-    req = urllib.request.Request("https://api.pexels.com" + path, headers={"Authorization": KEY, "User-Agent": "voice-trip-clips"})
+def search(q):
+    params = {"key": KEY, "per_page": 30, "safesearch": "true", "video_type": "film"}
+    if q.startswith("id:"):
+        params["id"] = q[3:]
+    else:
+        params["q"] = q
+    req = urllib.request.Request("https://pixabay.com/api/videos/?" + urllib.parse.urlencode(params), headers={"User-Agent": "voice-trip-clips"})
     with urllib.request.urlopen(req, timeout=60) as r:
-        return json.load(r)
+        return json.load(r).get("hits", [])
 
-def best_file(video):
-    files = [f for f in video.get("video_files", []) if f.get("width") and f.get("height") and f["height"] > f["width"] and f.get("file_type") == "video/mp4"]
+def best_file(hit):
+    # the version closest to 1920 on its long side; portrait videos come first when choosing between hits
+    files = [v for v in (hit.get("videos") or {}).values() if v.get("url") and v.get("width") and v.get("height")]
     if not files:
         return None
-    # the smallest portrait file that is still at least 1280 tall, else the tallest
-    big = [f for f in files if f["height"] >= 1280]
-    return min(big, key=lambda f: f["height"]) if big else max(files, key=lambda f: f["height"])
+    return min(files, key=lambda v: abs(max(v["width"], v["height"]) - 1920))
+
+def rank(hit):
+    f = best_file(hit)
+    portrait = f and f["height"] > f["width"]
+    return (0 if portrait else 1)
 
 def run(cmd):
     subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
@@ -43,18 +53,17 @@ for code, slots in queries.items():
     used, made = set(), []
     for n, q in enumerate(slots, 1):
         try:
-            if q.startswith("id:"):
-                videos = [api("/videos/videos/" + q[3:])]
-            else:
-                videos = api("/videos/search?" + urllib.parse.urlencode({"query": q, "orientation": "portrait", "per_page": 15})).get("videos", [])
-            pick = next((v for v in videos if v["id"] not in used and v.get("duration", 0) >= 6 and best_file(v)), None)
+            hits = search(q)
+            ok = [h for h in hits if h["id"] not in used and h.get("duration", 0) >= 6 and best_file(h)]
+            ok.sort(key=rank)   # stable: keeps Pixabay's popularity order within portrait / landscape
+            pick = ok[0] if ok else None
             if not pick:
                 report.append(f"{code}_{n}: nothing found for '{q}'")
                 continue
             used.add(pick["id"])
             f = best_file(pick)
             with tempfile.NamedTemporaryFile(suffix=".mp4") as src:
-                req = urllib.request.Request(f["link"], headers={"User-Agent": "voice-trip-clips"})
+                req = urllib.request.Request(f["url"], headers={"User-Agent": "voice-trip-clips"})
                 with urllib.request.urlopen(req, timeout=180) as r:
                     src.write(r.read()); src.flush()
                 out = os.path.join(CLIPS, f"{code}_{n}.mp4")
@@ -62,9 +71,9 @@ for code, slots in queries.items():
                      "-vf", "scale=720:1280:force_original_aspect_ratio=increase,crop=720:1280,fps=24,format=yuv420p",
                      "-c:v", "libx264", "-preset", "veryfast", "-crf", "29", "-profile:v", "main", "-bf", "0", "-g", "48",
                      "-movflags", "+faststart", out])
-            credits[f"{code}_{n}"] = {"query": q, "pexels_id": pick["id"], "url": pick.get("url"), "by": (pick.get("user") or {}).get("name"), "duration": pick.get("duration")}
+            credits[f"{code}_{n}"] = {"query": q, "pixabay_id": pick["id"], "url": pick.get("pageURL"), "by": pick.get("user"), "duration": pick.get("duration"), "portrait": f["height"] > f["width"]}
             made.append(out)
-            report.append(f"{code}_{n}: {pick.get('url')} ({pick.get('duration')}s)")
+            report.append(f"{code}_{n}: {pick.get('pageURL')} ({pick.get('duration')}s, {'portrait' if f['height'] > f['width'] else 'landscape, cropped'})")
         except Exception as e:  # keep going with the other clips
             report.append(f"{code}_{n}: error {e}")
     # remove leftover clips beyond the ones made now

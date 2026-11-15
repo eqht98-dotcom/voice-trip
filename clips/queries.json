@@ -1,5 +1,5 @@
 {
-  "_note": "Pexels searches for each country's clips, in the order they appear in the video. A slot can also be 'id:12345' to use one exact Pexels video. Spain (es) already has its clips.",
+  "_note": "Pixabay searches for each country's clips, in the order they appear in the video. A slot can also be 'id:12345' to use one exact Pixabay video. Spain (es) already has its clips.",
   "gb": ["big ben london", "tower bridge london", "edinburgh castle", "london street red bus"],
   "fr": ["eiffel tower", "louvre paris", "paris street cafe", "mont saint michel"],
   "de": ["brandenburg gate berlin", "neuschwanstein castle", "cologne cathedral", "munich old town"],

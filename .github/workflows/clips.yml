@@ -1,5 +1,5 @@
 name: Fetch country clips
-# Runs when clips/queries.json changes on a branch other than main, fetches the clips from Pexels
+# Runs when clips/queries.json changes on a branch other than main, fetches the clips from Pixabay
 # and commits them back to that branch for review before merging.
 on:
   push:
@@ -17,7 +17,7 @@ jobs:
         run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
       - name: Fetch and prepare clips
         env:
-          PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
+          PIXABAY_API_KEY: ${{ secrets.PIXABAY_API_KEY }}
           ONLY: ""
         run: python3 tools/fetch_clips.py
       - name: Commit clips
@@ -25,5 +25,5 @@ jobs:
           git config user.name "clips-bot"
           git config user.email "actions@users.noreply.github.com"
           git add clips
-          git commit -m "Add country clips from Pexels" || echo "nothing to commit"
+          git commit -m "Add country clips from Pixabay" || echo "nothing to commit"
           git push
