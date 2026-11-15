@@ -1,75 +1,75 @@
 {
- "_note": "Pixabay searches for each country's clips, in the order they appear in the video. A slot can also be 'id:12345' to use one exact Pixabay video. Spain (es) already has its clips. Run 1.",
+ "_note": "Pixabay searches for each country's clips, in the order they appear in the video. 'id:12345' keeps one exact Pixabay video (already checked). Spain (es) already has its clips. Run 2.",
  "gb": [
-  "big ben london",
-  "tower bridge london",
-  "edinburgh castle",
-  "london street red bus"
+  "id:21437",
+  "big ben",
+  "tower bridge",
+  "edinburgh castle"
  ],
  "fr": [
-  "eiffel tower",
-  "louvre paris",
-  "paris street cafe",
-  "mont saint michel"
+  "id:213812",
+  "id:34694",
+  "louvre",
+  "id:272820"
  ],
  "de": [
-  "brandenburg gate berlin",
-  "neuschwanstein castle",
-  "cologne cathedral",
-  "munich old town"
+  "brandenburg gate",
+  "neuschwanstein",
+  "id:36992",
+  "berlin"
  ],
  "it": [
-  "colosseum rome",
-  "venice canal gondola",
-  "florence cathedral",
+  "colosseum",
+  "id:343158",
+  "id:29731",
   "amalfi coast"
  ],
  "tr": [
-  "hagia sophia istanbul",
-  "blue mosque istanbul",
-  "cappadocia balloons",
-  "bosphorus istanbul"
+  "id:273961",
+  "id:273967",
+  "id:169236",
+  "id:377100"
  ],
  "ru": [
+  "id:43252",
   "red square moscow",
-  "saint basil cathedral",
-  "saint petersburg",
-  "moscow kremlin"
+  "kremlin",
+  "saint petersburg"
  ],
  "in": [
   "taj mahal",
-  "jaipur palace",
-  "india gate delhi",
-  "kerala backwaters"
+  "jaipur",
+  "india gate",
+  "varanasi"
  ],
  "cn": [
-  "great wall of china",
-  "forbidden city beijing",
-  "shanghai skyline",
-  "guilin li river"
+  "id:199199",
+  "forbidden city",
+  "id:220942",
+  "guilin"
  ],
  "jp": [
-  "mount fuji",
-  "kyoto temple",
-  "tokyo street night",
-  "fushimi inari"
+  "id:136017",
+  "id:298643",
+  "id:211067",
+  "shibuya tokyo"
  ],
  "kr": [
-  "gyeongbokgung palace",
-  "seoul city",
-  "busan gamcheon",
-  "jeju island"
+  "id:250953",
+  "id:218013",
+  "busan",
+  "jeju"
  ],
  "id": [
+  "id:262603",
   "bali temple",
   "borobudur",
-  "jakarta city",
-  "mount bromo"
+  "bromo"
  ],
  "no": [
-  "geirangerfjord norway",
-  "oslo opera house",
-  "lofoten islands",
-  "northern lights norway"
+  "id:14205",
+  "oslo",
+  "id:385785",
+  "lofoten"
  ]
 }

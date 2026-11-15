@@ -21,8 +21,25 @@ only = [c for c in os.environ.get("ONLY", "").split(",") if c]
 credits_path = os.path.join(CLIPS, "credits.json")
 credits = json.load(open(credits_path)) if os.path.exists(credits_path) else {}
 
+# a clip only counts for a country when its Pixabay tags name that country or one of its places
+PLACES = {
+    "gb": ["london", "england", "britain", "british", "scotland", "edinburgh", "united kingdom", "uk"],
+    "fr": ["paris", "france", "french", "eiffel", "louvre", "saint-michel", "saint michel"],
+    "de": ["germany", "german", "berlin", "munich", "cologne", "bavaria", "neuschwanstein", "hamburg", "dresden"],
+    "it": ["italy", "italian", "rome", "venice", "florence", "amalfi", "milan", "tuscany", "colosseum"],
+    "tr": ["turkey", "turkish", "istanbul", "cappadocia", "bosphorus", "türkiye", "turkiye"],
+    "ru": ["russia", "russian", "moscow", "kremlin", "petersburg"],
+    "in": ["india", "indian", "delhi", "agra", "jaipur", "mumbai", "kerala", "varanasi", "taj mahal", "rajasthan"],
+    "cn": ["china", "chinese", "beijing", "shanghai", "great wall", "guilin", "hong kong"],
+    "jp": ["japan", "japanese", "tokyo", "kyoto", "osaka", "fuji", "nara"],
+    "kr": ["korea", "korean", "seoul", "busan", "jeju"],
+    "id": ["indonesia", "indonesian", "bali", "jakarta", "java", "bromo", "borobudur", "lombok", "komodo"],
+    "no": ["norway", "norwegian", "oslo", "bergen", "lofoten", "tromso", "geiranger", "preikestolen"],
+}
+used_everywhere = set()
+
 def search(q):
-    params = {"key": KEY, "per_page": 30, "safesearch": "true", "video_type": "film"}
+    params = {"key": KEY, "per_page": 60, "safesearch": "true", "video_type": "film"}
     if q.startswith("id:"):
         params["id"] = q[3:]
     else:
@@ -54,13 +71,22 @@ for code, slots in queries.items():
     for n, q in enumerate(slots, 1):
         try:
             hits = search(q)
-            ok = [h for h in hits if h["id"] not in used and h.get("duration", 0) >= 6 and best_file(h)]
-            ok.sort(key=rank)   # stable: keeps Pixabay's popularity order within portrait / landscape
+            places = PLACES.get(code, [])
+            words = [w for w in q.lower().split() if len(w) > 2]
+            def score(h):
+                tags = (h.get("tags") or "").lower()
+                place = any(p in tags for p in places)
+                landmark = sum(w in tags for w in words)
+                return (0 if place else 1, -landmark, rank(h))
+            ok = [h for h in hits if h["id"] not in used and h["id"] not in used_everywhere and h.get("duration", 0) >= 6 and best_file(h)]
+            if not q.startswith("id:"):
+                ok = [h for h in ok if any(p in (h.get("tags") or "").lower() for p in places)]
+            ok.sort(key=score)
             pick = ok[0] if ok else None
             if not pick:
                 report.append(f"{code}_{n}: nothing found for '{q}'")
                 continue
-            used.add(pick["id"])
+            used.add(pick["id"]); used_everywhere.add(pick["id"])
             f = best_file(pick)
             with tempfile.NamedTemporaryFile(suffix=".mp4") as src:
                 req = urllib.request.Request(f["url"], headers={"User-Agent": "voice-trip-clips"})
@@ -73,7 +99,7 @@ for code, slots in queries.items():
                      "-movflags", "+faststart", out])
             credits[f"{code}_{n}"] = {"query": q, "pixabay_id": pick["id"], "url": pick.get("pageURL"), "by": pick.get("user"), "duration": pick.get("duration"), "portrait": f["height"] > f["width"]}
             made.append(out)
-            report.append(f"{code}_{n}: {pick.get('pageURL')} ({pick.get('duration')}s, {'portrait' if f['height'] > f['width'] else 'landscape, cropped'})")
+            report.append(f"{code}_{n}: [{pick.get('tags')}] {pick.get('pageURL')} ({pick.get('duration')}s, {'portrait' if f['height'] > f['width'] else 'landscape, cropped'})")
         except Exception as e:  # keep going with the other clips
             report.append(f"{code}_{n}: error {e}")
     # remove leftover clips beyond the ones made now
