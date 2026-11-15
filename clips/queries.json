@@ -1,15 +1,75 @@
 {
-  "_note": "Pixabay searches for each country's clips, in the order they appear in the video. A slot can also be 'id:12345' to use one exact Pixabay video. Spain (es) already has its clips.",
-  "gb": ["big ben london", "tower bridge london", "edinburgh castle", "london street red bus"],
-  "fr": ["eiffel tower", "louvre paris", "paris street cafe", "mont saint michel"],
-  "de": ["brandenburg gate berlin", "neuschwanstein castle", "cologne cathedral", "munich old town"],
-  "it": ["colosseum rome", "venice canal gondola", "florence cathedral", "amalfi coast"],
-  "tr": ["hagia sophia istanbul", "blue mosque istanbul", "cappadocia balloons", "bosphorus istanbul"],
-  "ru": ["red square moscow", "saint basil cathedral", "saint petersburg", "moscow kremlin"],
-  "in": ["taj mahal", "jaipur palace", "india gate delhi", "kerala backwaters"],
-  "cn": ["great wall of china", "forbidden city beijing", "shanghai skyline", "guilin li river"],
-  "jp": ["mount fuji", "kyoto temple", "tokyo street night", "fushimi inari"],
-  "kr": ["gyeongbokgung palace", "seoul city", "busan gamcheon", "jeju island"],
-  "id": ["bali temple", "borobudur", "jakarta city", "mount bromo"],
-  "no": ["geirangerfjord norway", "oslo opera house", "lofoten islands", "northern lights norway"]
+ "_note": "Pixabay searches for each country's clips, in the order they appear in the video. A slot can also be 'id:12345' to use one exact Pixabay video. Spain (es) already has its clips. Run 1.",
+ "gb": [
+  "big ben london",
+  "tower bridge london",
+  "edinburgh castle",
+  "london street red bus"
+ ],
+ "fr": [
+  "eiffel tower",
+  "louvre paris",
+  "paris street cafe",
+  "mont saint michel"
+ ],
+ "de": [
+  "brandenburg gate berlin",
+  "neuschwanstein castle",
+  "cologne cathedral",
+  "munich old town"
+ ],
+ "it": [
+  "colosseum rome",
+  "venice canal gondola",
+  "florence cathedral",
+  "amalfi coast"
+ ],
+ "tr": [
+  "hagia sophia istanbul",
+  "blue mosque istanbul",
+  "cappadocia balloons",
+  "bosphorus istanbul"
+ ],
+ "ru": [
+  "red square moscow",
+  "saint basil cathedral",
+  "saint petersburg",
+  "moscow kremlin"
+ ],
+ "in": [
+  "taj mahal",
+  "jaipur palace",
+  "india gate delhi",
+  "kerala backwaters"
+ ],
+ "cn": [
+  "great wall of china",
+  "forbidden city beijing",
+  "shanghai skyline",
+  "guilin li river"
+ ],
+ "jp": [
+  "mount fuji",
+  "kyoto temple",
+  "tokyo street night",
+  "fushimi inari"
+ ],
+ "kr": [
+  "gyeongbokgung palace",
+  "seoul city",
+  "busan gamcheon",
+  "jeju island"
+ ],
+ "id": [
+  "bali temple",
+  "borobudur",
+  "jakarta city",
+  "mount bromo"
+ ],
+ "no": [
+  "geirangerfjord norway",
+  "oslo opera house",
+  "lofoten islands",
+  "northern lights norway"
+ ]
 }
