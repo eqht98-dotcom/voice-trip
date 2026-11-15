@@ -1,28 +1,41 @@
 {
- "_note": "Pixabay searches for each country's clips, in the order they appear in the video. 'id:12345' keeps one exact Pixabay video (already checked). Spain (es) already has its clips. Run 2.",
+ "_note": "Pixabay searches for each country's clips, in the order they appear in the video. 'id:12345' keeps one exact Pixabay video (already checked). '_skip' lists videos checked and rejected. Spain (es) already has its clips. Run 3.",
+ "_skip": [
+  18792,
+  234537,
+  213799,
+  135797,
+  149011,
+  214630,
+  334836,
+  246297,
+  50593,
+  37085,
+  14205
+ ],
  "gb": [
   "id:21437",
-  "big ben",
-  "tower bridge",
-  "edinburgh castle"
+  "westminster",
+  "id:27031",
+  "id:45085"
  ],
  "fr": [
   "id:213812",
   "id:34694",
-  "louvre",
+  "id:34321",
   "id:272820"
  ],
  "de": [
   "brandenburg gate",
-  "neuschwanstein",
+  "id:278381",
   "id:36992",
-  "berlin"
+  "id:290563"
  ],
  "it": [
-  "colosseum",
+  "rome",
   "id:343158",
   "id:29731",
-  "amalfi coast"
+  "id:10784"
  ],
  "tr": [
   "id:273961",
@@ -32,44 +45,44 @@
  ],
  "ru": [
   "id:43252",
-  "red square moscow",
-  "kremlin",
-  "saint petersburg"
+  "id:44263",
+  "id:291430",
+  "moscow city"
  ],
  "in": [
-  "taj mahal",
-  "jaipur",
-  "india gate",
-  "varanasi"
+  "taj mahal agra",
+  "hawa mahal",
+  "id:206065",
+  "id:86686"
  ],
  "cn": [
   "id:199199",
-  "forbidden city",
+  "id:212404",
   "id:220942",
-  "guilin"
+  "id:205404"
  ],
  "jp": [
   "id:136017",
   "id:298643",
   "id:211067",
-  "shibuya tokyo"
+  "id:136854"
  ],
  "kr": [
   "id:250953",
   "id:218013",
-  "busan",
-  "jeju"
+  "busan city",
+  "seoul night"
  ],
  "id": [
   "id:262603",
-  "bali temple",
-  "borobudur",
-  "bromo"
+  "bali rice terrace",
+  "id:258025",
+  "bromo volcano"
  ],
  "no": [
-  "id:14205",
-  "oslo",
+  "fjord norway",
+  "id:254616",
   "id:385785",
-  "lofoten"
+  "id:385518"
  ]
 }

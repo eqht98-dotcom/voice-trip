@@ -28,7 +28,7 @@ PLACES = {
     "de": ["germany", "german", "berlin", "munich", "cologne", "bavaria", "neuschwanstein", "hamburg", "dresden"],
     "it": ["italy", "italian", "rome", "venice", "florence", "amalfi", "milan", "tuscany", "colosseum"],
     "tr": ["turkey", "turkish", "istanbul", "cappadocia", "bosphorus", "türkiye", "turkiye"],
-    "ru": ["russia", "russian", "moscow", "kremlin", "petersburg"],
+    "ru": ["russia", "russian", "moscow", "kremlin"],
     "in": ["india", "indian", "delhi", "agra", "jaipur", "mumbai", "kerala", "varanasi", "taj mahal", "rajasthan"],
     "cn": ["china", "chinese", "beijing", "shanghai", "great wall", "guilin", "hong kong"],
     "jp": ["japan", "japanese", "tokyo", "kyoto", "osaka", "fuji", "nara"],
@@ -36,7 +36,7 @@ PLACES = {
     "id": ["indonesia", "indonesian", "bali", "jakarta", "java", "bromo", "borobudur", "lombok", "komodo"],
     "no": ["norway", "norwegian", "oslo", "bergen", "lofoten", "tromso", "geiranger", "preikestolen"],
 }
-used_everywhere = set()
+used_everywhere = set(queries.get("_skip", []))
 
 def search(q):
     params = {"key": KEY, "per_page": 60, "safesearch": "true", "video_type": "film"}
@@ -65,7 +65,7 @@ def run(cmd):
 
 report = []
 for code, slots in queries.items():
-    if code.startswith("_") or (only and code not in only):
+    if code.startswith("_") or not isinstance(slots, list) or (only and code not in only):
         continue
     used, made = set(), []
     for n, q in enumerate(slots, 1):
