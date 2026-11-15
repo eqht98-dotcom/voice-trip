@@ -2462,6 +2462,37 @@ function mp4File(v, a){
   const mdatLen = pos - head + 8;
   return new Blob([new Uint8Array(ftyp), new Uint8Array(moov(offs)), new Uint8Array([...u32(mdatLen), ...enc.encode('mdat')]), ...order.map(o=>o.s)], {type:'video/mp4'});
 }
+// iPhone and Safari do not play MP3 sound inside an MP4, so there the sound is re-encoded to AAC
+const appleWebKit = () => { const ua = navigator.userAgent; return /iPhone|iPad|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1) || (/Safari\//.test(ua) && !/Chrome|Chromium|CriOS|FxiOS|Android/.test(ua)); };
+async function aacTrack(parts, T){
+  if (!window.AudioEncoder || !window.AudioData || !window.OfflineAudioContext) throw new Error('NO_AUDIO_ENCODER');
+  const sr = 44100, ch = 1, cfg = {codec:'mp4a.40.2', sampleRate:sr, numberOfChannels:ch, bitrate:128000};
+  if (!(await AudioEncoder.isConfigSupported(cfg)).supported) throw new Error('NO_AAC');
+  // mix every country's voice onto one timeline (silence under the title cards), resampled and in mono
+  const oac = new OfflineAudioContext(ch, Math.ceil((T + 1)*sr), sr);
+  for (const P of parts){
+    const b = await oac.decodeAudioData(await P.t.blob.arrayBuffer());
+    const src = oac.createBufferSource(); src.buffer = b; src.connect(oac.destination); src.start(P.aStart);
+  }
+  const data = (await oac.startRendering()).getChannelData(0), len = Math.ceil(T*sr);
+  const chunks = []; let failed = null;
+  const enc = new AudioEncoder({output: c=>{ const d = new Uint8Array(c.byteLength); c.copyTo(d); chunks.push({d, ts:c.timestamp}); }, error: e=>{ failed = e; }});
+  enc.configure(cfg);
+  for (let i = 0; i < len; i += 4096){
+    const n = Math.min(4096, len - i);
+    const ad = new AudioData({format:'f32-planar', sampleRate:sr, numberOfFrames:n, numberOfChannels:ch, timestamp:Math.round(i*1e6/sr), data:data.slice(i, i + n)});
+    enc.encode(ad); ad.close();
+    if (failed) throw failed;
+  }
+  await enc.flush(); enc.close();
+  if (failed) throw failed;
+  if (!chunks.length) throw new Error('NO_AAC_OUTPUT');
+  chunks.sort((a,b)=>a.ts - b.ts);
+  // the decoder setup for AAC-LC is written here rather than taken from the encoder (Safari has given a wrong one)
+  const sfi = [96000,88200,64000,48000,44100,32000,24000,22050,16000,12000,11025,8000].indexOf(sr);
+  const asc = new Uint8Array([(2 << 3) | (sfi >> 1), ((sfi & 1) << 7) | (ch << 3)]);
+  return {oti:0x40, sr, channels:ch, bitrate:128000, asc, samples:chunks.map(c=>c.d), durs:chunks.map(()=>1024), times:chunks.map((c,i)=>i*1024/sr), duration:chunks.length*1024/sr};
+}
 async function fastTripVideo(onProg, job){
   const key = tripKey();
   const codes = Object.keys(sess.trips).filter(c=>sess.trips[c] && !sess.trips[c].pending);
@@ -2494,7 +2525,13 @@ async function fastTripVideo(onProg, job){
   for (const P of parts) if (P.clips.length){ const rs = await clipReaders(P.c); if (rs && rs.length === P.clips.length) P.readers = rs; }
   const closeReaders = () => parts.forEach(P=>{ (P.readers || []).forEach(r=>r.close()); P.readers = null; P.frames = null; });
   if (job && job.cancel){ closeReaders(); throw new Error(job.interrupted ? 'INTERRUPTED' : 'CANCELLED'); }
-  const audio = {oti:0x6B, sr, channels:ch, bitrate:kbps*1000, asc:null, samples:aFrames, durs:aFrames.map(()=>1152), times:aFrames.map((f,i)=>i*1152/sr), duration:T};
+  let audio = {oti:0x6B, sr, channels:ch, bitrate:kbps*1000, asc:null, samples:aFrames, durs:aFrames.map(()=>1152), times:aFrames.map((f,i)=>i*1152/sr), duration:T};
+  try { audio = await aacTrack(parts, T); log('video sound: AAC'); }
+  catch(e){
+    log('video sound: '+e.message);
+    // without AAC an iPhone video would be silent, so there the slower real-time recording is used instead
+    if (appleWebKit()){ parts.forEach(P=>{ (P.readers || []).forEach(r=>r.close()); }); throw new Error('NO_AAC_ON_APPLE'); }
+  }
   // video
   const cv = document.createElement('canvas'); cv.width = W; cv.height = H; const ctx = cv.getContext('2d');
   const draw = tripDrawer(ctx, parts, W, H, INTRO, GAP, body);
