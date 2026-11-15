@@ -1,21 +1,25 @@
 {
- "_note": "Pixabay searches for each country's clips, in the order they appear in the video. 'id:12345' keeps one exact Pixabay video (already checked). '_skip' lists videos checked and rejected. Spain (es) already has its clips. Run 3.",
+ "_note": "Pixabay searches for each country's clips, in the order they appear in the video. 'id:12345' keeps one exact Pixabay video (already checked). '_skip' lists videos checked and rejected. Spain (es) already has its clips. Run 4.",
  "_skip": [
+  14205,
   18792,
-  234537,
-  213799,
+  37085,
+  50593,
   135797,
   149011,
+  213799,
   214630,
-  334836,
+  234537,
+  234538,
   246297,
-  50593,
-  37085,
-  14205
+  322969,
+  334836,
+  378101,
+  385785
  ],
  "gb": [
   "id:21437",
-  "westminster",
+  "id:291454",
   "id:27031",
   "id:45085"
  ],
@@ -26,13 +30,13 @@
   "id:272820"
  ],
  "de": [
-  "brandenburg gate",
+  "berlin",
   "id:278381",
   "id:36992",
   "id:290563"
  ],
  "it": [
-  "rome",
+  "id:204384",
   "id:343158",
   "id:29731",
   "id:10784"
@@ -47,11 +51,11 @@
   "id:43252",
   "id:44263",
   "id:291430",
-  "moscow city"
+  "moscow river"
  ],
  "in": [
-  "taj mahal agra",
-  "hawa mahal",
+  "id:23592",
+  "id:191437",
   "id:206065",
   "id:86686"
  ],
@@ -70,17 +74,17 @@
  "kr": [
   "id:250953",
   "id:218013",
-  "busan city",
-  "seoul night"
+  "id:209575",
+  "id:21116"
  ],
  "id": [
   "id:262603",
-  "bali rice terrace",
+  "bali",
   "id:258025",
-  "bromo volcano"
+  "id:38361"
  ],
  "no": [
-  "fjord norway",
+  "bergen norway",
   "id:254616",
   "id:385785",
   "id:385518"
