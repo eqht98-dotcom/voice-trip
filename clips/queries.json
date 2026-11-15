@@ -1,6 +1,7 @@
 {
- "_note": "Pixabay searches for each country's nature clips (the most beautiful landscapes, not the capital), in the order they appear in the video. 'id:12345' keeps one exact Pixabay video. '_skip' lists videos checked and rejected.",
+ "_note": "Pixabay nature videos for each country's clips (the most beautiful landscapes, not the capital), in the order they appear in the video, all checked by eye. Change a slot to a search (or 'id:12345') and push to a branch to fetch it again. '_skip' lists videos checked and rejected.",
  "_skip": [
+  34630,
   37085,
   48654,
   132652,
@@ -48,7 +49,6 @@
  "tr": [
   "id:169236",
   "id:62520",
-  "fethiye",
   "id:153602"
  ],
  "ru": [
@@ -60,7 +60,7 @@
  "in": [
   "id:138769",
   "id:92833",
-  "goa beach",
+  "id:358730",
   "id:232090"
  ],
  "cn": [
@@ -84,13 +84,13 @@
  "id": [
   "id:262603",
   "id:385732",
-  "lombok",
+  "id:365704",
   "id:386063"
  ],
  "no": [
   "id:166292",
   "id:385785",
-  "tromso",
+  "id:48873",
   "id:385518"
  ]
 }
