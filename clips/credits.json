@@ -16,7 +16,7 @@
   "portrait": true
  },
  "es_3": {
-  "query": "picos de europa",
+  "query": "id:175183",
   "pixabay_id": 175183,
   "url": "https://pixabay.com/videos/id-175183/",
   "by": "OleksandrPidvalnyi",
@@ -24,7 +24,7 @@
   "portrait": false
  },
  "es_4": {
-  "query": "lanzarote",
+  "query": "id:197529",
   "pixabay_id": 197529,
   "url": "https://pixabay.com/videos/id-197529/",
   "by": "Matthias_Groeneveld",
@@ -104,7 +104,7 @@
   "portrait": false
  },
  "de_2": {
-  "query": "eibsee",
+  "query": "id:254787",
   "pixabay_id": 254787,
   "url": "https://pixabay.com/videos/id-254787/",
   "by": "nirjharbasakuet",
@@ -200,7 +200,7 @@
   "portrait": false
  },
  "ru_3": {
-  "query": "elbrus",
+  "query": "id:152464",
   "pixabay_id": 152464,
   "url": "https://pixabay.com/videos/id-152464/",
   "by": "ViktoriyaPavlova",
@@ -208,7 +208,7 @@
   "portrait": true
  },
  "ru_4": {
-  "query": "russia winter forest",
+  "query": "id:111367",
   "pixabay_id": 111367,
   "url": "https://pixabay.com/videos/id-111367/",
   "by": "Alexdupin",
@@ -224,7 +224,7 @@
   "portrait": true
  },
  "in_2": {
-  "query": "kashmir lake",
+  "query": "id:92833",
   "pixabay_id": 92833,
   "url": "https://pixabay.com/videos/id-92833/",
   "by": "yogendras31",
@@ -288,7 +288,7 @@
   "portrait": true
  },
  "jp_3": {
-  "query": "japan lake",
+  "query": "id:342229",
   "pixabay_id": 342229,
   "url": "https://pixabay.com/videos/id-342229/",
   "by": "Kanenori",
@@ -312,7 +312,7 @@
   "portrait": true
  },
  "kr_3": {
-  "query": "jeju waterfall",
+  "query": "id:197780",
   "pixabay_id": 197780,
   "url": "https://pixabay.com/videos/id-197780/",
   "by": "Docujeju",
@@ -320,7 +320,7 @@
   "portrait": false
  },
  "kr_4": {
-  "query": "korea autumn",
+  "query": "id:384548",
   "pixabay_id": 384548,
   "url": "https://pixabay.com/videos/id-384548/",
   "by": "KIMDAEJEUNG",
@@ -328,7 +328,7 @@
   "portrait": false
  },
  "id_1": {
-  "query": "bali",
+  "query": "id:262603",
   "pixabay_id": 262603,
   "url": "https://pixabay.com/videos/id-262603/",
   "by": "WonderfulBali_",
@@ -360,23 +360,23 @@
   "portrait": false
  },
  "tr_3": {
-  "query": "kas turkey",
-  "pixabay_id": 273961,
-  "url": "https://pixabay.com/videos/id-273961/",
-  "by": "AbdulWahab_092",
-  "duration": 23,
-  "portrait": true
+  "query": "fethiye",
+  "pixabay_id": 34630,
+  "url": "https://pixabay.com/videos/id-34630/",
+  "by": "yucelozel",
+  "duration": 11,
+  "portrait": false
  },
  "in_3": {
-  "query": "meghalaya",
-  "pixabay_id": 132652,
-  "url": "https://pixabay.com/videos/id-132652/",
-  "by": "e_m_o_n",
-  "duration": 17,
+  "query": "goa beach",
+  "pixabay_id": 358730,
+  "url": "https://pixabay.com/videos/id-358730/",
+  "by": "u_89pkru9gtp",
+  "duration": 12,
   "portrait": true
  },
  "kr_2": {
-  "query": "korea mountains",
+  "query": "id:16129",
   "pixabay_id": 16129,
   "url": "https://pixabay.com/videos/id-16129/",
   "by": "JirisanET",
@@ -384,7 +384,7 @@
   "portrait": false
  },
  "no_2": {
-  "query": "norway fjord",
+  "query": "id:385785",
   "pixabay_id": 385785,
   "url": "https://pixabay.com/videos/id-385785/",
   "by": "Razzak_100",
@@ -398,5 +398,21 @@
   "by": "Razzak_100",
   "duration": 7,
   "portrait": true
+ },
+ "id_3": {
+  "query": "lombok",
+  "pixabay_id": 365704,
+  "url": "https://pixabay.com/videos/id-365704/",
+  "by": "timeworx",
+  "duration": 25,
+  "portrait": false
+ },
+ "no_3": {
+  "query": "tromso",
+  "pixabay_id": 48873,
+  "url": "https://pixabay.com/videos/id-48873/",
+  "by": "Hassas_Arts",
+  "duration": 60,
+  "portrait": false
  }
 }
