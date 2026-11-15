@@ -1,38 +1,38 @@
 {
  "gb_1": {
-  "query": "big ben london",
-  "pixabay_id": 201281,
-  "url": "https://pixabay.com/videos/id-201281/",
-  "by": "Nirjan",
-  "duration": 13,
-  "portrait": true
- },
- "gb_2": {
-  "query": "tower bridge london",
-  "pixabay_id": 367164,
-  "url": "https://pixabay.com/videos/id-367164/",
-  "by": "Kanenori",
-  "duration": 19,
-  "portrait": true
- },
- "gb_3": {
-  "query": "edinburgh castle",
-  "pixabay_id": 250395,
-  "url": "https://pixabay.com/videos/id-250395/",
-  "by": "Kanenori",
-  "duration": 24,
-  "portrait": true
- },
- "gb_4": {
-  "query": "london street red bus",
+  "query": "id:21437",
   "pixabay_id": 21437,
   "url": "https://pixabay.com/videos/id-21437/",
   "by": "lizmavor",
   "duration": 11,
   "portrait": false
  },
+ "gb_2": {
+  "query": "big ben",
+  "pixabay_id": 18792,
+  "url": "https://pixabay.com/videos/id-18792/",
+  "by": "ChristianBodhi",
+  "duration": 16,
+  "portrait": false
+ },
+ "gb_3": {
+  "query": "tower bridge",
+  "pixabay_id": 27031,
+  "url": "https://pixabay.com/videos/id-27031/",
+  "by": "davide_giordani",
+  "duration": 62,
+  "portrait": false
+ },
+ "gb_4": {
+  "query": "edinburgh castle",
+  "pixabay_id": 45085,
+  "url": "https://pixabay.com/videos/id-45085/",
+  "by": "HotaruFilms",
+  "duration": 60,
+  "portrait": false
+ },
  "fr_1": {
-  "query": "eiffel tower",
+  "query": "id:213812",
   "pixabay_id": 213812,
   "url": "https://pixabay.com/videos/id-213812/",
   "by": "yxlab",
@@ -40,7 +40,7 @@
   "portrait": true
  },
  "fr_2": {
-  "query": "louvre paris",
+  "query": "id:34694",
   "pixabay_id": 34694,
   "url": "https://pixabay.com/videos/id-34694/",
   "by": "caelan",
@@ -48,15 +48,15 @@
   "portrait": false
  },
  "fr_3": {
-  "query": "paris street cafe",
-  "pixabay_id": 236256,
-  "url": "https://pixabay.com/videos/id-236256/",
-  "by": "xBriantcx",
-  "duration": 7,
-  "portrait": true
+  "query": "louvre",
+  "pixabay_id": 34321,
+  "url": "https://pixabay.com/videos/id-34321/",
+  "by": "caelan",
+  "duration": 19,
+  "portrait": false
  },
  "fr_4": {
-  "query": "mont saint michel",
+  "query": "id:272820",
   "pixabay_id": 272820,
   "url": "https://pixabay.com/videos/id-272820/",
   "by": "santorihan",
@@ -64,23 +64,23 @@
   "portrait": true
  },
  "de_1": {
-  "query": "brandenburg gate berlin",
-  "pixabay_id": 18392,
-  "url": "https://pixabay.com/videos/id-18392/",
-  "by": "Nature-Stock-Footage",
+  "query": "brandenburg gate",
+  "pixabay_id": 234537,
+  "url": "https://pixabay.com/videos/id-234537/",
+  "by": "Folk-Er",
   "duration": 20,
   "portrait": false
  },
  "de_2": {
-  "query": "neuschwanstein castle",
-  "pixabay_id": 250395,
-  "url": "https://pixabay.com/videos/id-250395/",
-  "by": "Kanenori",
-  "duration": 24,
-  "portrait": true
+  "query": "neuschwanstein",
+  "pixabay_id": 278381,
+  "url": "https://pixabay.com/videos/id-278381/",
+  "by": "Felix-Mittermeier",
+  "duration": 28,
+  "portrait": false
  },
  "de_3": {
-  "query": "cologne cathedral",
+  "query": "id:36992",
   "pixabay_id": 36992,
   "url": "https://pixabay.com/videos/id-36992/",
   "by": "caelan",
@@ -88,15 +88,15 @@
   "portrait": false
  },
  "de_4": {
-  "query": "munich old town",
-  "pixabay_id": 157989,
-  "url": "https://pixabay.com/videos/id-157989/",
-  "by": "u_urqhiwwe29",
-  "duration": 29,
+  "query": "berlin",
+  "pixabay_id": 290563,
+  "url": "https://pixabay.com/videos/id-290563/",
+  "by": "SandraFire",
+  "duration": 31,
   "portrait": true
  },
  "it_1": {
-  "query": "colosseum rome",
+  "query": "colosseum",
   "pixabay_id": 213799,
   "url": "https://pixabay.com/videos/id-213799/",
   "by": "furiocapozzi",
@@ -104,7 +104,7 @@
   "portrait": true
  },
  "it_2": {
-  "query": "venice canal gondola",
+  "query": "id:343158",
   "pixabay_id": 343158,
   "url": "https://pixabay.com/videos/id-343158/",
   "by": "Sign_G",
@@ -112,7 +112,7 @@
   "portrait": true
  },
  "it_3": {
-  "query": "florence cathedral",
+  "query": "id:29731",
   "pixabay_id": 29731,
   "url": "https://pixabay.com/videos/id-29731/",
   "by": "BreakDownPictures",
@@ -128,7 +128,7 @@
   "portrait": false
  },
  "tr_1": {
-  "query": "hagia sophia istanbul",
+  "query": "id:273961",
   "pixabay_id": 273961,
   "url": "https://pixabay.com/videos/id-273961/",
   "by": "AbdulWahab_092",
@@ -136,7 +136,7 @@
   "portrait": true
  },
  "tr_2": {
-  "query": "blue mosque istanbul",
+  "query": "id:273967",
   "pixabay_id": 273967,
   "url": "https://pixabay.com/videos/id-273967/",
   "by": "AbdulWahab_092",
@@ -144,7 +144,7 @@
   "portrait": true
  },
  "tr_3": {
-  "query": "cappadocia balloons",
+  "query": "id:169236",
   "pixabay_id": 169236,
   "url": "https://pixabay.com/videos/id-169236/",
   "by": "userphotographer",
@@ -152,7 +152,7 @@
   "portrait": true
  },
  "tr_4": {
-  "query": "bosphorus istanbul",
+  "query": "id:377100",
   "pixabay_id": 377100,
   "url": "https://pixabay.com/videos/id-377100/",
   "by": "YakupIpek",
@@ -160,7 +160,7 @@
   "portrait": true
  },
  "ru_1": {
-  "query": "red square moscow",
+  "query": "id:43252",
   "pixabay_id": 43252,
   "url": "https://pixabay.com/videos/id-43252/",
   "by": "aghyadnajjar",
@@ -168,28 +168,28 @@
   "portrait": false
  },
  "ru_2": {
-  "query": "saint basil cathedral",
-  "pixabay_id": 221299,
-  "url": "https://pixabay.com/videos/id-221299/",
-  "by": "choxyltd",
-  "duration": 11,
-  "portrait": true
+  "query": "red square moscow",
+  "pixabay_id": 44263,
+  "url": "https://pixabay.com/videos/id-44263/",
+  "by": "aghyadnajjar",
+  "duration": 16,
+  "portrait": false
  },
  "ru_3": {
-  "query": "saint petersburg",
-  "pixabay_id": 272820,
-  "url": "https://pixabay.com/videos/id-272820/",
-  "by": "santorihan",
-  "duration": 19,
-  "portrait": true
+  "query": "kremlin",
+  "pixabay_id": 291430,
+  "url": "https://pixabay.com/videos/id-291430/",
+  "by": "TungArt7",
+  "duration": 8,
+  "portrait": false
  },
  "ru_4": {
-  "query": "moscow kremlin",
-  "pixabay_id": 378101,
-  "url": "https://pixabay.com/videos/id-378101/",
-  "by": "xusenru",
-  "duration": 15,
-  "portrait": true
+  "query": "saint petersburg",
+  "pixabay_id": 135797,
+  "url": "https://pixabay.com/videos/id-135797/",
+  "by": "bsotoiii",
+  "duration": 25,
+  "portrait": false
  },
  "in_1": {
   "query": "taj mahal",
@@ -200,7 +200,7 @@
   "portrait": true
  },
  "in_2": {
-  "query": "jaipur palace",
+  "query": "jaipur",
   "pixabay_id": 214630,
   "url": "https://pixabay.com/videos/id-214630/",
   "by": "Banzaraguy",
@@ -208,23 +208,23 @@
   "portrait": false
  },
  "in_3": {
-  "query": "india gate delhi",
-  "pixabay_id": 200297,
-  "url": "https://pixabay.com/videos/id-200297/",
-  "by": "HarshitAggarwal",
-  "duration": 19,
-  "portrait": true
+  "query": "india gate",
+  "pixabay_id": 206065,
+  "url": "https://pixabay.com/videos/id-206065/",
+  "by": "InOldNews",
+  "duration": 36,
+  "portrait": false
  },
  "in_4": {
-  "query": "kerala backwaters",
-  "pixabay_id": 138769,
-  "url": "https://pixabay.com/videos/id-138769/",
-  "by": "aneenaelzabinod",
-  "duration": 6,
-  "portrait": true
+  "query": "varanasi",
+  "pixabay_id": 86686,
+  "url": "https://pixabay.com/videos/id-86686/",
+  "by": "21778395",
+  "duration": 12,
+  "portrait": false
  },
  "cn_1": {
-  "query": "great wall of china",
+  "query": "id:199199",
   "pixabay_id": 199199,
   "url": "https://pixabay.com/videos/id-199199/",
   "by": "jianmeittup",
@@ -232,15 +232,15 @@
   "portrait": true
  },
  "cn_2": {
-  "query": "forbidden city beijing",
-  "pixabay_id": 296958,
-  "url": "https://pixabay.com/videos/id-296958/",
-  "by": "engrahmad2653",
-  "duration": 25,
-  "portrait": true
+  "query": "forbidden city",
+  "pixabay_id": 212404,
+  "url": "https://pixabay.com/videos/id-212404/",
+  "by": "素君",
+  "duration": 12,
+  "portrait": false
  },
  "cn_3": {
-  "query": "shanghai skyline",
+  "query": "id:220942",
   "pixabay_id": 220942,
   "url": "https://pixabay.com/videos/id-220942/",
   "by": "TungArt7",
@@ -248,15 +248,15 @@
   "portrait": false
  },
  "cn_4": {
-  "query": "guilin li river",
-  "pixabay_id": 367164,
-  "url": "https://pixabay.com/videos/id-367164/",
-  "by": "Kanenori",
-  "duration": 19,
-  "portrait": true
+  "query": "guilin",
+  "pixabay_id": 205404,
+  "url": "https://pixabay.com/videos/id-205404/",
+  "by": "书生李尔基",
+  "duration": 31,
+  "portrait": false
  },
  "jp_1": {
-  "query": "mount fuji",
+  "query": "id:136017",
   "pixabay_id": 136017,
   "url": "https://pixabay.com/videos/id-136017/",
   "by": "kinchan_kinchan",
@@ -264,7 +264,7 @@
   "portrait": true
  },
  "jp_2": {
-  "query": "kyoto temple",
+  "query": "id:298643",
   "pixabay_id": 298643,
   "url": "https://pixabay.com/videos/id-298643/",
   "by": "Kanenori",
@@ -272,7 +272,7 @@
   "portrait": true
  },
  "jp_3": {
-  "query": "tokyo street night",
+  "query": "id:211067",
   "pixabay_id": 211067,
   "url": "https://pixabay.com/videos/id-211067/",
   "by": "Kanenori",
@@ -280,7 +280,7 @@
   "portrait": true
  },
  "kr_1": {
-  "query": "gyeongbokgung palace",
+  "query": "id:250953",
   "pixabay_id": 250953,
   "url": "https://pixabay.com/videos/id-250953/",
   "by": "fifthplanett",
@@ -288,7 +288,7 @@
   "portrait": false
  },
  "kr_2": {
-  "query": "seoul city",
+  "query": "id:218013",
   "pixabay_id": 218013,
   "url": "https://pixabay.com/videos/id-218013/",
   "by": "MagicTV",
@@ -296,7 +296,7 @@
   "portrait": true
  },
  "kr_3": {
-  "query": "busan gamcheon",
+  "query": "busan",
   "pixabay_id": 334836,
   "url": "https://pixabay.com/videos/id-334836/",
   "by": "gmkwon",
@@ -304,7 +304,7 @@
   "portrait": true
  },
  "kr_4": {
-  "query": "jeju island",
+  "query": "jeju",
   "pixabay_id": 246297,
   "url": "https://pixabay.com/videos/id-246297/",
   "by": "bingbing2107",
@@ -312,7 +312,7 @@
   "portrait": true
  },
  "id_1": {
-  "query": "bali temple",
+  "query": "id:262603",
   "pixabay_id": 262603,
   "url": "https://pixabay.com/videos/id-262603/",
   "by": "WonderfulBali_",
@@ -320,6 +320,14 @@
   "portrait": true
  },
  "id_2": {
+  "query": "bali temple",
+  "pixabay_id": 50593,
+  "url": "https://pixabay.com/videos/id-50593/",
+  "by": "MahmurMarganti",
+  "duration": 31,
+  "portrait": false
+ },
+ "id_3": {
   "query": "borobudur",
   "pixabay_id": 258025,
   "url": "https://pixabay.com/videos/id-258025/",
@@ -327,24 +335,16 @@
   "duration": 16,
   "portrait": true
  },
- "id_3": {
-  "query": "jakarta city",
-  "pixabay_id": 155109,
-  "url": "https://pixabay.com/videos/id-155109/",
-  "by": "rendy_g",
-  "duration": 19,
-  "portrait": true
- },
  "id_4": {
-  "query": "mount bromo",
-  "pixabay_id": 342229,
-  "url": "https://pixabay.com/videos/id-342229/",
-  "by": "Kanenori",
-  "duration": 25,
-  "portrait": true
+  "query": "bromo",
+  "pixabay_id": 37085,
+  "url": "https://pixabay.com/videos/id-37085/",
+  "by": "Ronin_Studio_Munich",
+  "duration": 16,
+  "portrait": false
  },
  "no_1": {
-  "query": "geirangerfjord norway",
+  "query": "id:14205",
   "pixabay_id": 14205,
   "url": "https://pixabay.com/videos/id-14205/",
   "by": "OjasweinGuptaOJG",
@@ -352,15 +352,15 @@
   "portrait": false
  },
  "no_2": {
-  "query": "oslo opera house",
-  "pixabay_id": 156373,
-  "url": "https://pixabay.com/videos/id-156373/",
-  "by": "BINGIL",
-  "duration": 6,
-  "portrait": true
+  "query": "oslo",
+  "pixabay_id": 254616,
+  "url": "https://pixabay.com/videos/id-254616/",
+  "by": "borystr74",
+  "duration": 10,
+  "portrait": false
  },
  "no_3": {
-  "query": "lofoten islands",
+  "query": "id:385785",
   "pixabay_id": 385785,
   "url": "https://pixabay.com/videos/id-385785/",
   "by": "Razzak_100",
@@ -368,11 +368,19 @@
   "portrait": true
  },
  "no_4": {
-  "query": "northern lights norway",
-  "pixabay_id": 319755,
-  "url": "https://pixabay.com/videos/id-319755/",
-  "by": "Kanenori",
-  "duration": 13,
+  "query": "lofoten",
+  "pixabay_id": 385518,
+  "url": "https://pixabay.com/videos/id-385518/",
+  "by": "Razzak_100",
+  "duration": 7,
+  "portrait": true
+ },
+ "jp_4": {
+  "query": "shibuya tokyo",
+  "pixabay_id": 136854,
+  "url": "https://pixabay.com/videos/id-136854/",
+  "by": "shin307",
+  "duration": 25,
   "portrait": true
  }
 }
