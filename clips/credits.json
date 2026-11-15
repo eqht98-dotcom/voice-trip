@@ -360,7 +360,7 @@
   "portrait": false
  },
  "in_3": {
-  "query": "goa beach",
+  "query": "id:358730",
   "pixabay_id": 358730,
   "url": "https://pixabay.com/videos/id-358730/",
   "by": "u_89pkru9gtp",
@@ -392,7 +392,7 @@
   "portrait": true
  },
  "id_3": {
-  "query": "lombok",
+  "query": "id:365704",
   "pixabay_id": 365704,
   "url": "https://pixabay.com/videos/id-365704/",
   "by": "timeworx",
@@ -400,11 +400,19 @@
   "portrait": false
  },
  "no_3": {
-  "query": "tromso",
+  "query": "id:48873",
   "pixabay_id": 48873,
   "url": "https://pixabay.com/videos/id-48873/",
   "by": "Hassas_Arts",
   "duration": 60,
   "portrait": false
+ },
+ "tr_3": {
+  "query": "id:153602",
+  "pixabay_id": 153602,
+  "url": "https://pixabay.com/videos/id-153602/",
+  "by": "Engin_Akyurt",
+  "duration": 30,
+  "portrait": true
  }
 }
