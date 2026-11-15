@@ -304,7 +304,7 @@
   "portrait": true
  },
  "id_2": {
-  "query": "bali",
+  "query": "id:197166",
   "pixabay_id": 197166,
   "url": "https://pixabay.com/videos/id-197166/",
   "by": "krisnapratama72",
@@ -328,7 +328,7 @@
   "portrait": false
  },
  "no_1": {
-  "query": "bergen norway",
+  "query": "id:304761",
   "pixabay_id": 304761,
   "url": "https://pixabay.com/videos/id-304761/",
   "by": "u_7nvykl6fpi",
