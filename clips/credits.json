@@ -1,0 +1,378 @@
+{
+ "gb_1": {
+  "query": "big ben london",
+  "pixabay_id": 201281,
+  "url": "https://pixabay.com/videos/id-201281/",
+  "by": "Nirjan",
+  "duration": 13,
+  "portrait": true
+ },
+ "gb_2": {
+  "query": "tower bridge london",
+  "pixabay_id": 367164,
+  "url": "https://pixabay.com/videos/id-367164/",
+  "by": "Kanenori",
+  "duration": 19,
+  "portrait": true
+ },
+ "gb_3": {
+  "query": "edinburgh castle",
+  "pixabay_id": 250395,
+  "url": "https://pixabay.com/videos/id-250395/",
+  "by": "Kanenori",
+  "duration": 24,
+  "portrait": true
+ },
+ "gb_4": {
+  "query": "london street red bus",
+  "pixabay_id": 21437,
+  "url": "https://pixabay.com/videos/id-21437/",
+  "by": "lizmavor",
+  "duration": 11,
+  "portrait": false
+ },
+ "fr_1": {
+  "query": "eiffel tower",
+  "pixabay_id": 213812,
+  "url": "https://pixabay.com/videos/id-213812/",
+  "by": "yxlab",
+  "duration": 7,
+  "portrait": true
+ },
+ "fr_2": {
+  "query": "louvre paris",
+  "pixabay_id": 34694,
+  "url": "https://pixabay.com/videos/id-34694/",
+  "by": "caelan",
+  "duration": 25,
+  "portrait": false
+ },
+ "fr_3": {
+  "query": "paris street cafe",
+  "pixabay_id": 236256,
+  "url": "https://pixabay.com/videos/id-236256/",
+  "by": "xBriantcx",
+  "duration": 7,
+  "portrait": true
+ },
+ "fr_4": {
+  "query": "mont saint michel",
+  "pixabay_id": 272820,
+  "url": "https://pixabay.com/videos/id-272820/",
+  "by": "santorihan",
+  "duration": 19,
+  "portrait": true
+ },
+ "de_1": {
+  "query": "brandenburg gate berlin",
+  "pixabay_id": 18392,
+  "url": "https://pixabay.com/videos/id-18392/",
+  "by": "Nature-Stock-Footage",
+  "duration": 20,
+  "portrait": false
+ },
+ "de_2": {
+  "query": "neuschwanstein castle",
+  "pixabay_id": 250395,
+  "url": "https://pixabay.com/videos/id-250395/",
+  "by": "Kanenori",
+  "duration": 24,
+  "portrait": true
+ },
+ "de_3": {
+  "query": "cologne cathedral",
+  "pixabay_id": 36992,
+  "url": "https://pixabay.com/videos/id-36992/",
+  "by": "caelan",
+  "duration": 33,
+  "portrait": false
+ },
+ "de_4": {
+  "query": "munich old town",
+  "pixabay_id": 157989,
+  "url": "https://pixabay.com/videos/id-157989/",
+  "by": "u_urqhiwwe29",
+  "duration": 29,
+  "portrait": true
+ },
+ "it_1": {
+  "query": "colosseum rome",
+  "pixabay_id": 213799,
+  "url": "https://pixabay.com/videos/id-213799/",
+  "by": "furiocapozzi",
+  "duration": 18,
+  "portrait": true
+ },
+ "it_2": {
+  "query": "venice canal gondola",
+  "pixabay_id": 343158,
+  "url": "https://pixabay.com/videos/id-343158/",
+  "by": "Sign_G",
+  "duration": 6,
+  "portrait": true
+ },
+ "it_3": {
+  "query": "florence cathedral",
+  "pixabay_id": 29731,
+  "url": "https://pixabay.com/videos/id-29731/",
+  "by": "BreakDownPictures",
+  "duration": 19,
+  "portrait": false
+ },
+ "it_4": {
+  "query": "amalfi coast",
+  "pixabay_id": 10784,
+  "url": "https://pixabay.com/videos/id-10784/",
+  "by": "Coverr-Free-Footage",
+  "duration": 18,
+  "portrait": false
+ },
+ "tr_1": {
+  "query": "hagia sophia istanbul",
+  "pixabay_id": 273961,
+  "url": "https://pixabay.com/videos/id-273961/",
+  "by": "AbdulWahab_092",
+  "duration": 23,
+  "portrait": true
+ },
+ "tr_2": {
+  "query": "blue mosque istanbul",
+  "pixabay_id": 273967,
+  "url": "https://pixabay.com/videos/id-273967/",
+  "by": "AbdulWahab_092",
+  "duration": 17,
+  "portrait": true
+ },
+ "tr_3": {
+  "query": "cappadocia balloons",
+  "pixabay_id": 169236,
+  "url": "https://pixabay.com/videos/id-169236/",
+  "by": "userphotographer",
+  "duration": 12,
+  "portrait": true
+ },
+ "tr_4": {
+  "query": "bosphorus istanbul",
+  "pixabay_id": 377100,
+  "url": "https://pixabay.com/videos/id-377100/",
+  "by": "YakupIpek",
+  "duration": 16,
+  "portrait": true
+ },
+ "ru_1": {
+  "query": "red square moscow",
+  "pixabay_id": 43252,
+  "url": "https://pixabay.com/videos/id-43252/",
+  "by": "aghyadnajjar",
+  "duration": 15,
+  "portrait": false
+ },
+ "ru_2": {
+  "query": "saint basil cathedral",
+  "pixabay_id": 221299,
+  "url": "https://pixabay.com/videos/id-221299/",
+  "by": "choxyltd",
+  "duration": 11,
+  "portrait": true
+ },
+ "ru_3": {
+  "query": "saint petersburg",
+  "pixabay_id": 272820,
+  "url": "https://pixabay.com/videos/id-272820/",
+  "by": "santorihan",
+  "duration": 19,
+  "portrait": true
+ },
+ "ru_4": {
+  "query": "moscow kremlin",
+  "pixabay_id": 378101,
+  "url": "https://pixabay.com/videos/id-378101/",
+  "by": "xusenru",
+  "duration": 15,
+  "portrait": true
+ },
+ "in_1": {
+  "query": "taj mahal",
+  "pixabay_id": 149011,
+  "url": "https://pixabay.com/videos/id-149011/",
+  "by": "DesignwithRiyas",
+  "duration": 15,
+  "portrait": true
+ },
+ "in_2": {
+  "query": "jaipur palace",
+  "pixabay_id": 214630,
+  "url": "https://pixabay.com/videos/id-214630/",
+  "by": "Banzaraguy",
+  "duration": 49,
+  "portrait": false
+ },
+ "in_3": {
+  "query": "india gate delhi",
+  "pixabay_id": 200297,
+  "url": "https://pixabay.com/videos/id-200297/",
+  "by": "HarshitAggarwal",
+  "duration": 19,
+  "portrait": true
+ },
+ "in_4": {
+  "query": "kerala backwaters",
+  "pixabay_id": 138769,
+  "url": "https://pixabay.com/videos/id-138769/",
+  "by": "aneenaelzabinod",
+  "duration": 6,
+  "portrait": true
+ },
+ "cn_1": {
+  "query": "great wall of china",
+  "pixabay_id": 199199,
+  "url": "https://pixabay.com/videos/id-199199/",
+  "by": "jianmeittup",
+  "duration": 7,
+  "portrait": true
+ },
+ "cn_2": {
+  "query": "forbidden city beijing",
+  "pixabay_id": 296958,
+  "url": "https://pixabay.com/videos/id-296958/",
+  "by": "engrahmad2653",
+  "duration": 25,
+  "portrait": true
+ },
+ "cn_3": {
+  "query": "shanghai skyline",
+  "pixabay_id": 220942,
+  "url": "https://pixabay.com/videos/id-220942/",
+  "by": "TungArt7",
+  "duration": 15,
+  "portrait": false
+ },
+ "cn_4": {
+  "query": "guilin li river",
+  "pixabay_id": 367164,
+  "url": "https://pixabay.com/videos/id-367164/",
+  "by": "Kanenori",
+  "duration": 19,
+  "portrait": true
+ },
+ "jp_1": {
+  "query": "mount fuji",
+  "pixabay_id": 136017,
+  "url": "https://pixabay.com/videos/id-136017/",
+  "by": "kinchan_kinchan",
+  "duration": 10,
+  "portrait": true
+ },
+ "jp_2": {
+  "query": "kyoto temple",
+  "pixabay_id": 298643,
+  "url": "https://pixabay.com/videos/id-298643/",
+  "by": "Kanenori",
+  "duration": 20,
+  "portrait": true
+ },
+ "jp_3": {
+  "query": "tokyo street night",
+  "pixabay_id": 211067,
+  "url": "https://pixabay.com/videos/id-211067/",
+  "by": "Kanenori",
+  "duration": 31,
+  "portrait": true
+ },
+ "kr_1": {
+  "query": "gyeongbokgung palace",
+  "pixabay_id": 250953,
+  "url": "https://pixabay.com/videos/id-250953/",
+  "by": "fifthplanett",
+  "duration": 14,
+  "portrait": false
+ },
+ "kr_2": {
+  "query": "seoul city",
+  "pixabay_id": 218013,
+  "url": "https://pixabay.com/videos/id-218013/",
+  "by": "MagicTV",
+  "duration": 16,
+  "portrait": true
+ },
+ "kr_3": {
+  "query": "busan gamcheon",
+  "pixabay_id": 334836,
+  "url": "https://pixabay.com/videos/id-334836/",
+  "by": "gmkwon",
+  "duration": 16,
+  "portrait": true
+ },
+ "kr_4": {
+  "query": "jeju island",
+  "pixabay_id": 246297,
+  "url": "https://pixabay.com/videos/id-246297/",
+  "by": "bingbing2107",
+  "duration": 13,
+  "portrait": true
+ },
+ "id_1": {
+  "query": "bali temple",
+  "pixabay_id": 262603,
+  "url": "https://pixabay.com/videos/id-262603/",
+  "by": "WonderfulBali_",
+  "duration": 16,
+  "portrait": true
+ },
+ "id_2": {
+  "query": "borobudur",
+  "pixabay_id": 258025,
+  "url": "https://pixabay.com/videos/id-258025/",
+  "by": "Fahmiajik",
+  "duration": 16,
+  "portrait": true
+ },
+ "id_3": {
+  "query": "jakarta city",
+  "pixabay_id": 155109,
+  "url": "https://pixabay.com/videos/id-155109/",
+  "by": "rendy_g",
+  "duration": 19,
+  "portrait": true
+ },
+ "id_4": {
+  "query": "mount bromo",
+  "pixabay_id": 342229,
+  "url": "https://pixabay.com/videos/id-342229/",
+  "by": "Kanenori",
+  "duration": 25,
+  "portrait": true
+ },
+ "no_1": {
+  "query": "geirangerfjord norway",
+  "pixabay_id": 14205,
+  "url": "https://pixabay.com/videos/id-14205/",
+  "by": "OjasweinGuptaOJG",
+  "duration": 13,
+  "portrait": false
+ },
+ "no_2": {
+  "query": "oslo opera house",
+  "pixabay_id": 156373,
+  "url": "https://pixabay.com/videos/id-156373/",
+  "by": "BINGIL",
+  "duration": 6,
+  "portrait": true
+ },
+ "no_3": {
+  "query": "lofoten islands",
+  "pixabay_id": 385785,
+  "url": "https://pixabay.com/videos/id-385785/",
+  "by": "Razzak_100",
+  "duration": 7,
+  "portrait": true
+ },
+ "no_4": {
+  "query": "northern lights norway",
+  "pixabay_id": 319755,
+  "url": "https://pixabay.com/videos/id-319755/",
+  "by": "Kanenori",
+  "duration": 13,
+  "portrait": true
+ }
+}
