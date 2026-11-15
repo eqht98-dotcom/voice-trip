@@ -8,15 +8,15 @@
   "portrait": false
  },
  "gb_2": {
-  "query": "big ben",
-  "pixabay_id": 18792,
-  "url": "https://pixabay.com/videos/id-18792/",
-  "by": "ChristianBodhi",
-  "duration": 16,
+  "query": "westminster",
+  "pixabay_id": 291454,
+  "url": "https://pixabay.com/videos/id-291454/",
+  "by": "TungArt7",
+  "duration": 22,
   "portrait": false
  },
  "gb_3": {
-  "query": "tower bridge",
+  "query": "id:27031",
   "pixabay_id": 27031,
   "url": "https://pixabay.com/videos/id-27031/",
   "by": "davide_giordani",
@@ -24,7 +24,7 @@
   "portrait": false
  },
  "gb_4": {
-  "query": "edinburgh castle",
+  "query": "id:45085",
   "pixabay_id": 45085,
   "url": "https://pixabay.com/videos/id-45085/",
   "by": "HotaruFilms",
@@ -48,7 +48,7 @@
   "portrait": false
  },
  "fr_3": {
-  "query": "louvre",
+  "query": "id:34321",
   "pixabay_id": 34321,
   "url": "https://pixabay.com/videos/id-34321/",
   "by": "caelan",
@@ -65,14 +65,14 @@
  },
  "de_1": {
   "query": "brandenburg gate",
-  "pixabay_id": 234537,
-  "url": "https://pixabay.com/videos/id-234537/",
+  "pixabay_id": 234538,
+  "url": "https://pixabay.com/videos/id-234538/",
   "by": "Folk-Er",
   "duration": 20,
   "portrait": false
  },
  "de_2": {
-  "query": "neuschwanstein",
+  "query": "id:278381",
   "pixabay_id": 278381,
   "url": "https://pixabay.com/videos/id-278381/",
   "by": "Felix-Mittermeier",
@@ -88,7 +88,7 @@
   "portrait": false
  },
  "de_4": {
-  "query": "berlin",
+  "query": "id:290563",
   "pixabay_id": 290563,
   "url": "https://pixabay.com/videos/id-290563/",
   "by": "SandraFire",
@@ -96,11 +96,11 @@
   "portrait": true
  },
  "it_1": {
-  "query": "colosseum",
-  "pixabay_id": 213799,
-  "url": "https://pixabay.com/videos/id-213799/",
+  "query": "rome",
+  "pixabay_id": 204384,
+  "url": "https://pixabay.com/videos/id-204384/",
   "by": "furiocapozzi",
-  "duration": 18,
+  "duration": 16,
   "portrait": true
  },
  "it_2": {
@@ -120,7 +120,7 @@
   "portrait": false
  },
  "it_4": {
-  "query": "amalfi coast",
+  "query": "id:10784",
   "pixabay_id": 10784,
   "url": "https://pixabay.com/videos/id-10784/",
   "by": "Coverr-Free-Footage",
@@ -168,7 +168,7 @@
   "portrait": false
  },
  "ru_2": {
-  "query": "red square moscow",
+  "query": "id:44263",
   "pixabay_id": 44263,
   "url": "https://pixabay.com/videos/id-44263/",
   "by": "aghyadnajjar",
@@ -176,7 +176,7 @@
   "portrait": false
  },
  "ru_3": {
-  "query": "kremlin",
+  "query": "id:291430",
   "pixabay_id": 291430,
   "url": "https://pixabay.com/videos/id-291430/",
   "by": "TungArt7",
@@ -184,31 +184,31 @@
   "portrait": false
  },
  "ru_4": {
-  "query": "saint petersburg",
-  "pixabay_id": 135797,
-  "url": "https://pixabay.com/videos/id-135797/",
-  "by": "bsotoiii",
-  "duration": 25,
-  "portrait": false
- },
- "in_1": {
-  "query": "taj mahal",
-  "pixabay_id": 149011,
-  "url": "https://pixabay.com/videos/id-149011/",
-  "by": "DesignwithRiyas",
+  "query": "moscow city",
+  "pixabay_id": 378101,
+  "url": "https://pixabay.com/videos/id-378101/",
+  "by": "xusenru",
   "duration": 15,
   "portrait": true
  },
+ "in_1": {
+  "query": "taj mahal agra",
+  "pixabay_id": 23592,
+  "url": "https://pixabay.com/videos/id-23592/",
+  "by": "hossamov04",
+  "duration": 35,
+  "portrait": false
+ },
  "in_2": {
-  "query": "jaipur",
-  "pixabay_id": 214630,
-  "url": "https://pixabay.com/videos/id-214630/",
-  "by": "Banzaraguy",
-  "duration": 49,
+  "query": "hawa mahal",
+  "pixabay_id": 191437,
+  "url": "https://pixabay.com/videos/id-191437/",
+  "by": "u_rvuxc0ykru",
+  "duration": 12,
   "portrait": false
  },
  "in_3": {
-  "query": "india gate",
+  "query": "id:206065",
   "pixabay_id": 206065,
   "url": "https://pixabay.com/videos/id-206065/",
   "by": "InOldNews",
@@ -216,7 +216,7 @@
   "portrait": false
  },
  "in_4": {
-  "query": "varanasi",
+  "query": "id:86686",
   "pixabay_id": 86686,
   "url": "https://pixabay.com/videos/id-86686/",
   "by": "21778395",
@@ -232,7 +232,7 @@
   "portrait": true
  },
  "cn_2": {
-  "query": "forbidden city",
+  "query": "id:212404",
   "pixabay_id": 212404,
   "url": "https://pixabay.com/videos/id-212404/",
   "by": "素君",
@@ -248,7 +248,7 @@
   "portrait": false
  },
  "cn_4": {
-  "query": "guilin",
+  "query": "id:205404",
   "pixabay_id": 205404,
   "url": "https://pixabay.com/videos/id-205404/",
   "by": "书生李尔基",
@@ -296,20 +296,20 @@
   "portrait": true
  },
  "kr_3": {
-  "query": "busan",
-  "pixabay_id": 334836,
-  "url": "https://pixabay.com/videos/id-334836/",
-  "by": "gmkwon",
-  "duration": 16,
-  "portrait": true
+  "query": "busan city",
+  "pixabay_id": 209575,
+  "url": "https://pixabay.com/videos/id-209575/",
+  "by": "Evgeniy__Mironov",
+  "duration": 30,
+  "portrait": false
  },
  "kr_4": {
-  "query": "jeju",
-  "pixabay_id": 246297,
-  "url": "https://pixabay.com/videos/id-246297/",
-  "by": "bingbing2107",
-  "duration": 13,
-  "portrait": true
+  "query": "seoul night",
+  "pixabay_id": 21116,
+  "url": "https://pixabay.com/videos/id-21116/",
+  "by": "RafterJr72",
+  "duration": 7,
+  "portrait": false
  },
  "id_1": {
   "query": "id:262603",
@@ -320,15 +320,15 @@
   "portrait": true
  },
  "id_2": {
-  "query": "bali temple",
-  "pixabay_id": 50593,
-  "url": "https://pixabay.com/videos/id-50593/",
-  "by": "MahmurMarganti",
-  "duration": 31,
-  "portrait": false
+  "query": "bali rice terrace",
+  "pixabay_id": 322969,
+  "url": "https://pixabay.com/videos/id-322969/",
+  "by": "hijef",
+  "duration": 9,
+  "portrait": true
  },
  "id_3": {
-  "query": "borobudur",
+  "query": "id:258025",
   "pixabay_id": 258025,
   "url": "https://pixabay.com/videos/id-258025/",
   "by": "Fahmiajik",
@@ -336,23 +336,23 @@
   "portrait": true
  },
  "id_4": {
-  "query": "bromo",
-  "pixabay_id": 37085,
-  "url": "https://pixabay.com/videos/id-37085/",
+  "query": "bromo volcano",
+  "pixabay_id": 38361,
+  "url": "https://pixabay.com/videos/id-38361/",
   "by": "Ronin_Studio_Munich",
-  "duration": 16,
+  "duration": 12,
   "portrait": false
  },
  "no_1": {
-  "query": "id:14205",
-  "pixabay_id": 14205,
-  "url": "https://pixabay.com/videos/id-14205/",
-  "by": "OjasweinGuptaOJG",
-  "duration": 13,
-  "portrait": false
+  "query": "fjord norway",
+  "pixabay_id": 385785,
+  "url": "https://pixabay.com/videos/id-385785/",
+  "by": "Razzak_100",
+  "duration": 7,
+  "portrait": true
  },
  "no_2": {
-  "query": "oslo",
+  "query": "id:254616",
   "pixabay_id": 254616,
   "url": "https://pixabay.com/videos/id-254616/",
   "by": "borystr74",
@@ -368,7 +368,7 @@
   "portrait": true
  },
  "no_4": {
-  "query": "lofoten",
+  "query": "id:385518",
   "pixabay_id": 385518,
   "url": "https://pixabay.com/videos/id-385518/",
   "by": "Razzak_100",
@@ -376,7 +376,7 @@
   "portrait": true
  },
  "jp_4": {
-  "query": "shibuya tokyo",
+  "query": "id:136854",
   "pixabay_id": 136854,
   "url": "https://pixabay.com/videos/id-136854/",
   "by": "shin307",
