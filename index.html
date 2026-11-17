@@ -770,7 +770,7 @@ details.logbox summary{cursor:pointer;color:var(--muted);font-size:14px;padding:
 
       <section class="grp">
         <h4>صيانة</h4>
-        <div class="usage" id="syncNote" style="text-align:start;margin-bottom:8px">☁️ الإعدادات تتزامن مع كل جهاز تدخل فيه بالرمز السري.</div>
+        <div class="usage" id="syncNote" style="text-align:start;margin-bottom:8px;white-space:pre-line">☁️ الإعدادات تتزامن مع كل جهاز تدخل فيه بالرمز السري.</div>
         <button type="button" class="btn mini" id="xferBtn">📲 نقل الإعدادات لجهاز ثاني (QR)</button>
         <button type="button" class="btn mini" id="cleanup">🧹 احذف كل أصوات الزوار المتبقية</button>
         <details class="logbox"><summary>سجل الأخطاء</summary><div class="log" id="log"></div></details>
@@ -2737,6 +2737,7 @@ async function syncPull(pinValue){
       log('settings pulled from cloud');
     } else if (!res || !res.data) syncNote('☁️ لسا ما انحفظت إعدادات من أي جهاز. غيّر أي شي في الإعدادات وقفلها، وتنتقل لكل الأجهزة.');
     else syncNote('☁️ الإعدادات متزامنة مع كل الأجهزة.');
+    if (res && res.booth) syncNote($('syncNote').textContent + '\n🎟️ هذا الجهاز جهاز كشك: ما عليه حد الرحلات اليومي.');
   } catch(e){ syncNote('☁️ ما قدرنا نجيب الإعدادات من الأجهزة الثانية (تأكد من الإنترنت).'); log('sync pull: '+e.message); }
 }
 async function syncPush(){
