@@ -788,6 +788,8 @@ details.logbox summary{cursor:pointer;color:var(--muted);font-size:14px;padding:
 const API = 'https://api.elevenlabs.io/v1';
 const PROXY = 'https://voice-trip.eqht98.workers.dev'; // رابط الـ Worker (غير سري). يُعبّأ بعد نشره على Cloudflare
 const hasEL = () => !!(cfg.key || PROXY);
+// set on this device when settings are opened with the PIN; lets the Worker skip the per-visitor daily limits
+const boothHdr = () => cfg.booth ? {'x-booth': cfg.booth} : {};
 const PREFIX = 'StudentDay-';
 const MSG_PROMPT = '💌 الحين وجّه رسالة لشخص تحبه… ابدأ باسمه';
 const MSG_HINT = 'مثلاً: «يا أمي، شكراً على كل شي… أحبك»';
@@ -1403,7 +1405,7 @@ function setPhase(n){
 async function api(path, opts={}){
   if (!hasEL()) throw new Error('NO_KEY');
   const direct = !!cfg.key;
-  const headers = Object.assign(direct ? {'xi-api-key': cfg.key} : {}, opts.headers||{});
+  const headers = Object.assign(direct ? {'xi-api-key': cfg.key} : boothHdr(), opts.headers||{});
   let r;
   try { r = await fetch((direct ? API : PROXY+'/el')+path, Object.assign({}, opts, {headers})); }
   catch(e){ throw new Error('NETWORK: '+e.message); }
@@ -1646,7 +1648,7 @@ Return ONLY a JSON object exactly like {"about":[{"t":"translated sentence","ar"
   let r;
   try {
     r = await fetch(cfg.ckey ? 'https://api.anthropic.com/v1/messages' : PROXY+'/claude', {method:'POST',
-      headers: cfg.ckey ? {'x-api-key':cfg.ckey,'anthropic-version':'2023-06-01','content-type':'application/json','anthropic-dangerous-direct-browser-access':'true'} : {'content-type':'application/json'},
+      headers: cfg.ckey ? {'x-api-key':cfg.ckey,'anthropic-version':'2023-06-01','content-type':'application/json','anthropic-dangerous-direct-browser-access':'true'} : Object.assign({'content-type':'application/json'}, boothHdr()),
       body: JSON.stringify({model:cfg.cmodel||DEFAULTS.cmodel, max_tokens:2500, system:sys, messages:[{role:'user', content:JSON.stringify(parts)}]})});
   } catch(e){ throw new Error('CLAUDE_NET: '+e.message); }
   if (!r.ok){ let t=''; try{ t = await r.text(); }catch(e){} throw new Error('CLAUDE HTTP '+r.status+': '+t.slice(0,300)); }
@@ -1990,6 +1992,9 @@ function friendly(e){
   if (m.includes('401')) return 'المفتاح غير صحيح، أو ناقصه صلاحية (Text to Speech، Speech to Text، Voices، User).';
   if (m.includes('quota') || m.includes('credits')) return 'الرصيد خلص أو ما يكفي.';
   if (m.includes('voice_limit') || m.includes('maximum amount of custom voices')) return 'وصلت للحد الأعلى من الأصوات. اضغط 🧹 في الإعدادات.';
+  if (m.includes('trips_per_day')) return 'هذا الجهاز وصل لحد الرحلات اليومي. افتح الإعدادات بالرمز السري مرة وحدة عشان يصير جهاز الكشك بدون حد.';
+  if (m.includes('daily_calls')) return 'هذا الجهاز وصل لحد الطلبات اليومي. افتح الإعدادات بالرمز السري مرة وحدة عشان يصير جهاز الكشك بدون حد.';
+  if (m.includes('"global"')) return 'وصلنا للحد اليومي لكل الرحلات. كلّم المنظمين.';
   if (m.includes('429')) return 'طلبات كثيرة بنفس الوقت. انتظر ثواني وجرّب مرة ثانية.';
   return 'صار خطأ. جرّب مرة ثانية.';
 }
@@ -2724,6 +2729,7 @@ async function syncCall(body){
 async function syncPull(pinValue){
   try {
     const res = await syncCall({pin:pinValue});
+    if (res && res.booth){ cfg.booth = res.booth; saveCfg(); }
     if (res && res.data && res.t > (cfg.syncT||0)){
       SYNC_FIELDS.forEach(k=>{ if (res.data[k] !== undefined) cfg[k] = res.data[k]; });
       cfg.syncT = res.t; saveCfg();

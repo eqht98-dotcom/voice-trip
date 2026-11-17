@@ -8,10 +8,11 @@ const GLOBAL_TRIPS = 200;     // سقف الرحلات اليومي لكل ال�
 const CLAUDE_MODEL = 'claude-sonnet-5-5';
 const PIN_HASH = 'e1455f44cbeb2ab3da7f3ba62deeb4e6e08ea090641f3b3313104053e4f306c5'; // same PIN as the page
 const PIN_TRIES_PER_DAY = 20; // wrong PINs per IP per day
+const BOOTH_DAYS = 30;        // a device unlocked with the PIN skips the per-visitor limits for this long
 
 const cors = o => ({
   'Access-Control-Allow-Origin': o,
-  'Access-Control-Allow-Headers': 'content-type',
+  'Access-Control-Allow-Headers': 'content-type,x-booth',
   'Access-Control-Allow-Methods': 'GET,POST,DELETE,OPTIONS',
   'Vary': 'Origin'
 });
@@ -36,6 +37,9 @@ export default {
     const p = url.pathname;
     const ip = req.headers.get('CF-Connecting-IP') || 'x';
     const day = new Date().toISOString().slice(0, 10);
+    // the booth's own devices (opened once with the PIN) carry a token; every visitor there shares one IP
+    const bt = req.headers.get('x-booth') || '';
+    const booth = /^[a-f0-9]{32}$/.test(bt) && !!(await env.LIMITS.get('booth:' + bt));
 
     // ---- organisers' settings, shared by every device that knows the PIN ----
     // the PIN is checked here (same hash as the page); wrong PINs are limited per IP and day
@@ -47,14 +51,16 @@ export default {
       const d = new TextEncoder().encode('voice-trip:' + String(b.pin || ''));
       const hash = [...new Uint8Array(await crypto.subtle.digest('SHA-256', d))].map(x => x.toString(16).padStart(2, '0')).join('');
       if (hash !== PIN_HASH) { await env.LIMITS.put(tries, String(n + 1), {expirationTtl: 90000}); return j({error: 'pin'}, 403, h); }
+      const token = crypto.randomUUID().replace(/-/g, '');
+      await env.LIMITS.put('booth:' + token, '1', {expirationTtl: BOOTH_DAYS * 86400});
       if (b.data !== undefined) {
         const body = JSON.stringify({t: Date.now(), data: b.data});
         if (body.length > 200000) return j({error: 'too_big'}, 413, h);
         await env.LIMITS.put('sync:v2', body);
-        return j({ok: true, t: JSON.parse(body).t}, 200, h);
+        return j({ok: true, t: JSON.parse(body).t, booth: token}, 200, h);
       }
       const saved = await env.LIMITS.get('sync:v2');
-      return j(saved ? JSON.parse(saved) : {t: 0, data: null}, 200, h);
+      return j(Object.assign(saved ? JSON.parse(saved) : {t: 0, data: null}, {booth: token}), 200, h);
     }
 
     // ---- remaining ElevenLabs credits, for the balance at the top of the page ----
@@ -67,7 +73,7 @@ export default {
       return j({left: (s.character_limit ?? 0) - (s.character_count ?? 0)}, 200, h);
     }
 
-    if (!(await bump(env.LIMITS, `c:${day}:${ip}`, CALLS_PER_DAY)))
+    if (!booth && !(await bump(env.LIMITS, `c:${day}:${ip}`, CALLS_PER_DAY)))
       return j({error: 'limit', detail: 'daily_calls'}, 429, h);
 
     // ---- Claude ----
@@ -94,7 +100,7 @@ export default {
       if (!allowed) return j({error: 'not_allowed'}, 403, h);
 
       if (sub === '/voices/add') {
-        if (!(await bump(env.LIMITS, `t:${day}:${ip}`, TRIPS_PER_DAY)))
+        if (!booth && !(await bump(env.LIMITS, `t:${day}:${ip}`, TRIPS_PER_DAY)))
           return j({error: 'limit', detail: 'trips_per_day'}, 429, h);
         if (!(await bump(env.LIMITS, `g:${day}`, GLOBAL_TRIPS)))
           return j({error: 'limit', detail: 'global'}, 429, h);
