@@ -35,7 +35,11 @@ jobs:
           ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
           sleep 5
-          B=$(curl -sS "https://api.cloudflare.com/client/v4/accounts/$ACCOUNT/workers/scripts/voice-trip/settings" -H "Authorization: Bearer $TOKEN" | jq -c '[.result.bindings[]?|.type+":"+.name]')
+          A="https://api.cloudflare.com/client/v4/accounts/$ACCOUNT/workers"
+          echo "::notice title=scripts::$(curl -sS "$A/scripts" -H "Authorization: Bearer $TOKEN" | jq -c '[.result[]?|.id+" "+.modified_on] , .errors' | head -c 600)"
+          echo "::notice title=subdomain::$(curl -sS "$A/subdomain" -H "Authorization: Bearer $TOKEN" | jq -c '.result,.errors' | head -c 300)"
+          echo "::notice title=live-code::$(curl -sS "$A/scripts/voice-trip/content/v2" -H "Authorization: Bearer $TOKEN" | grep -c '/sync') sync-lines"
+          B=$(curl -sS "https://api.cloudflare.com/client/v4/accounts/$ACCOUNT/workers/scripts/voice-trip/settings" -H "Authorization: Bearer $TOKEN" | jq -c '[.result.bindings[]?|.type+":"+.name], .errors')
           echo "::notice title=bindings::$B"
           O='Origin: https://eqht98-dotcom.github.io'
           C=$(curl -sS -H "$O" -w ' %{http_code}' https://voice-trip.eqht98.workers.dev/credits | head -c 300)
