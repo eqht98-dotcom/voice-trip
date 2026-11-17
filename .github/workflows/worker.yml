@@ -29,3 +29,16 @@ jobs:
             -F "metadata=@metadata.json;type=application/json" \
             -F "worker.js=@worker/worker.js;type=application/javascript+module" \
             | jq '{success, errors}'
+      - name: Check the live worker
+        env:
+          TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          sleep 5
+          B=$(curl -sS "https://api.cloudflare.com/client/v4/accounts/$ACCOUNT/workers/scripts/voice-trip/settings" -H "Authorization: Bearer $TOKEN" | jq -c '[.result.bindings[]?|.type+":"+.name]')
+          echo "::notice title=bindings::$B"
+          O='Origin: https://eqht98-dotcom.github.io'
+          C=$(curl -sS -H "$O" -w ' %{http_code}' https://voice-trip.eqht98.workers.dev/credits | head -c 300)
+          echo "::notice title=credits::$C"
+          S=$(curl -sS -H "$O" -H 'content-type: application/json' -X POST -d 'x' -w ' %{http_code}' https://voice-trip.eqht98.workers.dev/sync | head -c 300)
+          echo "::notice title=sync::$S"
