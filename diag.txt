@@ -1,0 +1,7 @@
+upload: {"success":true,"errors":[],"id":"voice-trip","etag":"3786c0c6dc20a39800b61314e361db090d558413b135e72f4478ab75dfc72d5c"}
+::notice title=scripts::["restless-haze-d859 2026-06-13T01:58:46.127222Z","voice-trip 2026-11-17T07:07:49.578635Z","wc-fantasy-events 2026-06-13T06:41:55.684998Z","wc-fantasy-scorer 2026-06-13T03:48:03.478576Z","worldcupfantasy 2026-06-13T06:51:07.543403Z"] [] 
+::notice title=subdomain::{"subdomain":"eqht98"} [] 
+::notice title=live-code::--6e1ee629f97e1700da63150736099cdebe3d2edb5c1a0acecf89e79c937c Content-Disposition: form-data; name="worker.js"; filename="worker.js" Content-Type: application/javascript+module  // Cloudflare Wor
+::notice title=bindings::["secret_text:ANTHROPIC_KEY","secret_text:ELEVENLABS_KEY","kv_namespace:LIMITS"] [] 
+::notice title=credits::{"left":73645} 200
+::notice title=sync::{"error":"bad"} 400
