@@ -28,7 +28,8 @@ jobs:
             -H "Authorization: Bearer $TOKEN" \
             -F "metadata=@metadata.json;type=application/json" \
             -F "worker.js=@worker/worker.js;type=application/javascript+module" \
-            | jq '{success, errors}'
+            | jq -c '{success, errors, id: .result.id, etag: .result.etag}' | tee r.json
+          echo "::notice title=upload::$(cat r.json)"
       - name: Check the live worker
         env:
           TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -36,10 +37,10 @@ jobs:
         run: |
           sleep 5
           A="https://api.cloudflare.com/client/v4/accounts/$ACCOUNT/workers"
-          echo "::notice title=scripts::$(curl -sS "$A/scripts" -H "Authorization: Bearer $TOKEN" | jq -c '[.result[]?|.id+" "+.modified_on] , .errors' | head -c 600)"
-          echo "::notice title=subdomain::$(curl -sS "$A/subdomain" -H "Authorization: Bearer $TOKEN" | jq -c '.result,.errors' | head -c 300)"
-          echo "::notice title=live-code::$(curl -sS "$A/scripts/voice-trip/content/v2" -H "Authorization: Bearer $TOKEN" | grep -c '/sync') sync-lines"
-          B=$(curl -sS "https://api.cloudflare.com/client/v4/accounts/$ACCOUNT/workers/scripts/voice-trip/settings" -H "Authorization: Bearer $TOKEN" | jq -c '[.result.bindings[]?|.type+":"+.name], .errors')
+          echo "::notice title=scripts::$(curl -sS "$A/scripts" -H "Authorization: Bearer $TOKEN" | jq -c '[.result[]?|.id+" "+.modified_on] , .errors' | tr '\n' ' ' | head -c 600)"
+          echo "::notice title=subdomain::$(curl -sS "$A/subdomain" -H "Authorization: Bearer $TOKEN" | jq -c '.result,.errors' | tr '\n' ' ' | head -c 300)"
+          echo "::notice title=live-code::$(curl -sS "$A/scripts/voice-trip/content/v2" -H "Authorization: Bearer $TOKEN" | head -c 200 | tr "\n" " ")"
+          B=$(curl -sS "https://api.cloudflare.com/client/v4/accounts/$ACCOUNT/workers/scripts/voice-trip/settings" -H "Authorization: Bearer $TOKEN" | jq -c '[.result.bindings[]?|.type+":"+.name], .errors' | tr '\n' ' ')
           echo "::notice title=bindings::$B"
           O='Origin: https://eqht98-dotcom.github.io'
           C=$(curl -sS -H "$O" -w ' %{http_code}' https://voice-trip.eqht98.workers.dev/credits | head -c 300)
