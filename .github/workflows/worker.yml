@@ -1,0 +1,31 @@
+name: Deploy worker
+
+# Uploads worker/worker.js to Cloudflare whenever it changes on main.
+# Needs two repository secrets: CLOUDFLARE_API_TOKEN (Edit Cloudflare Workers
+# template) and CLOUDFLARE_ACCOUNT_ID. The existing KV binding and secrets
+# (LIMITS, ELEVENLABS_KEY, ANTHROPIC_KEY) are kept as they are.
+
+on:
+  push:
+    branches: [main]
+    paths: ['worker/**']
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Upload to Cloudflare
+        env:
+          TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -e
+          echo '{"main_module":"worker.js","compatibility_date":"2024-11-01","keep_bindings":["kv_namespace","secret_text","plain_text"]}' > metadata.json
+          curl -sS --fail-with-body -X PUT \
+            "https://api.cloudflare.com/client/v4/accounts/$ACCOUNT/workers/scripts/voice-trip" \
+            -H "Authorization: Bearer $TOKEN" \
+            -F "metadata=@metadata.json;type=application/json" \
+            -F "worker.js=@worker/worker.js;type=application/javascript+module" \
+            | jq '{success, errors}'
