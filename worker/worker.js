@@ -6,6 +6,8 @@ const TRIPS_PER_DAY = 3;      // رحلات لكل جهاز/IP باليوم (ت�
 const CALLS_PER_DAY = 60;     // إجمالي الطلبات لكل IP باليوم
 const GLOBAL_TRIPS = 200;     // سقف الرحلات اليومي لكل الزوار
 const CLAUDE_MODEL = 'claude-sonnet-5-5';
+const PIN_HASH = 'e1455f44cbeb2ab3da7f3ba62deeb4e6e08ea090641f3b3313104053e4f306c5'; // same PIN as the page
+const PIN_TRIES_PER_DAY = 20; // wrong PINs per IP per day
 
 const cors = o => ({
   'Access-Control-Allow-Origin': o,
@@ -34,6 +36,26 @@ export default {
     const p = url.pathname;
     const ip = req.headers.get('CF-Connecting-IP') || 'x';
     const day = new Date().toISOString().slice(0, 10);
+
+    // ---- organisers' settings, shared by every device that knows the PIN ----
+    // the PIN is checked here (same hash as the page); wrong PINs are limited per IP and day
+    if (p === '/sync' && req.method === 'POST') {
+      let b; try { b = await req.json(); } catch (e) { return j({error: 'bad'}, 400, h); }
+      const tries = `pin:${day}:${ip}`;
+      const n = parseInt((await env.LIMITS.get(tries)) || '0', 10);
+      if (n >= PIN_TRIES_PER_DAY) return j({error: 'limit', detail: 'pin_tries'}, 429, h);
+      const d = new TextEncoder().encode('voice-trip:' + String(b.pin || ''));
+      const hash = [...new Uint8Array(await crypto.subtle.digest('SHA-256', d))].map(x => x.toString(16).padStart(2, '0')).join('');
+      if (hash !== PIN_HASH) { await env.LIMITS.put(tries, String(n + 1), {expirationTtl: 90000}); return j({error: 'pin'}, 403, h); }
+      if (b.data !== undefined) {
+        const body = JSON.stringify({t: Date.now(), data: b.data});
+        if (body.length > 200000) return j({error: 'too_big'}, 413, h);
+        await env.LIMITS.put('sync:settings', body);
+        return j({ok: true, t: JSON.parse(body).t}, 200, h);
+      }
+      const saved = await env.LIMITS.get('sync:settings');
+      return j(saved ? JSON.parse(saved) : {t: 0, data: null}, 200, h);
+    }
 
     // ---- remaining ElevenLabs credits, for the balance at the top of the page ----
     // only the number left is returned (never the key or the account details), and it is not counted
