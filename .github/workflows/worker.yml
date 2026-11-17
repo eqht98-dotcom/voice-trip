@@ -11,6 +11,9 @@ on:
     paths: ['worker/**', '.github/workflows/worker.yml']
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -29,13 +32,15 @@ jobs:
             -F "metadata=@metadata.json;type=application/json" \
             -F "worker.js=@worker/worker.js;type=application/javascript+module" \
             | jq -c '{success, errors, id: .result.id, etag: .result.etag}' | tee r.json
-          echo "::notice title=upload::$(cat r.json)"
+          cp r.json /tmp/upload.json
       - name: Check the live worker
         env:
           TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
           sleep 5
+          exec > >(tee /tmp/diag.txt) 2>&1
+          echo upload: $(cat /tmp/upload.json)
           A="https://api.cloudflare.com/client/v4/accounts/$ACCOUNT/workers"
           echo "::notice title=scripts::$(curl -sS "$A/scripts" -H "Authorization: Bearer $TOKEN" | jq -c '[.result[]?|.id+" "+.modified_on] , .errors' | tr '\n' ' ' | head -c 600)"
           echo "::notice title=subdomain::$(curl -sS "$A/subdomain" -H "Authorization: Bearer $TOKEN" | jq -c '.result,.errors' | tr '\n' ' ' | head -c 300)"
@@ -47,3 +52,8 @@ jobs:
           echo "::notice title=credits::$C"
           S=$(curl -sS -H "$O" -H 'content-type: application/json' -X POST -d 'x' -w ' %{http_code}' https://voice-trip.eqht98.workers.dev/sync | head -c 300)
           echo "::notice title=sync::$S"
+      - name: Save the checks to the diag branch
+        if: always()
+        run: |
+          git config user.name diag; git config user.email diag@users.noreply.github.com
+          git checkout --orphan diag && git rm -rfq . && cp /tmp/diag.txt diag.txt && git add diag.txt && git commit -qm diag && git push -qf origin diag
