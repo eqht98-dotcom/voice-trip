@@ -50,10 +50,10 @@ export default {
       if (b.data !== undefined) {
         const body = JSON.stringify({t: Date.now(), data: b.data});
         if (body.length > 200000) return j({error: 'too_big'}, 413, h);
-        await env.LIMITS.put('sync:settings', body);
+        await env.LIMITS.put('sync:v2', body);
         return j({ok: true, t: JSON.parse(body).t}, 200, h);
       }
-      const saved = await env.LIMITS.get('sync:settings');
+      const saved = await env.LIMITS.get('sync:v2');
       return j(saved ? JSON.parse(saved) : {t: 0, data: null}, 200, h);
     }
 
