@@ -8,7 +8,7 @@ name: Deploy worker
 on:
   push:
     branches: [main]
-    paths: ['worker/**']
+    paths: ['worker/**', '.github/workflows/worker.yml']
   workflow_dispatch:
 
 jobs:
