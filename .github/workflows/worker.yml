@@ -24,7 +24,9 @@ jobs:
           TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
-          set -e
+          set -eo pipefail
+          ACCOUNT=$(printf %s "$ACCOUNT" | tr -dc "a-f0-9"); TOKEN=$(printf %s "$TOKEN" | tr -d "[:space:]")
+          echo "account id length: ${#ACCOUNT}"
           echo '{"main_module":"worker.js","compatibility_date":"2024-11-01","keep_bindings":["kv_namespace","secret_text","plain_text"]}' > metadata.json
           curl -sS --fail-with-body -X PUT \
             "https://api.cloudflare.com/client/v4/accounts/$ACCOUNT/workers/scripts/voice-trip" \
@@ -39,6 +41,8 @@ jobs:
           ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
           sleep 5
+          ACCOUNT=$(printf %s "$ACCOUNT" | tr -dc "a-f0-9"); TOKEN=$(printf %s "$TOKEN" | tr -d "[:space:]")
+          echo "account id length: ${#ACCOUNT}"
           exec > >(tee /tmp/diag.txt) 2>&1
           echo upload: $(cat /tmp/upload.json)
           A="https://api.cloudflare.com/client/v4/accounts/$ACCOUNT/workers"
