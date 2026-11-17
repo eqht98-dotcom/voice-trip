@@ -2712,6 +2712,8 @@ async function hashPin(pin){
    shared (the Worker holds the real keys); use the QR transfer for those. */
 const SYNC_FIELDS = ['model','enAccent','sim','stab','noise','cleanAudio','msgSecs','maxChars','wa','picSrc','cmodel','picks'];
 let adminPin = '';
+let syncSnap = null; // settings as they were when settings opened; only real changes are pushed
+const syncState = () => JSON.stringify(SYNC_FIELDS.map(k=>cfg[k] === undefined ? null : cfg[k]));
 function syncNote(t){ const n = $('syncNote'); if (n) n.textContent = t; }
 async function syncCall(body){
   if (!PROXY) throw new Error('NO_PROXY');
@@ -2727,13 +2729,16 @@ async function syncPull(pinValue){
       cfg.syncT = res.t; saveCfg();
       syncNote('☁️ وصلت آخر إعدادات من الأجهزة الثانية ('+new Date(res.t).toLocaleString('ar-SA-u-nu-latn',{dateStyle:'short',timeStyle:'short'})+').');
       log('settings pulled from cloud');
-    } else syncNote('☁️ الإعدادات متزامنة مع كل الأجهزة.');
+    } else if (!res || !res.data) syncNote('☁️ لسا ما انحفظت إعدادات من أي جهاز. غيّر أي شي في الإعدادات وقفلها، وتنتقل لكل الأجهزة.');
+    else syncNote('☁️ الإعدادات متزامنة مع كل الأجهزة.');
   } catch(e){ syncNote('☁️ ما قدرنا نجيب الإعدادات من الأجهزة الثانية (تأكد من الإنترنت).'); log('sync pull: '+e.message); }
 }
 async function syncPush(){
   if (!adminPin) return;
+  // closing settings without changing anything must not overwrite the other devices
+  if (syncSnap !== null && syncState() === syncSnap) return;
   const data = {}; SYNC_FIELDS.forEach(k=>{ if (cfg[k] !== undefined) data[k] = cfg[k]; });
-  try { const r = await syncCall({pin:adminPin, data}); cfg.syncT = r.t || Date.now(); saveCfg(); syncNote('☁️ انحفظت الإعدادات لكل الأجهزة.'); }
+  try { const r = await syncCall({pin:adminPin, data}); cfg.syncT = r.t || Date.now(); saveCfg(); syncSnap = syncState(); syncNote('☁️ انحفظت الإعدادات لكل الأجهزة.'); }
   catch(e){ syncNote('☁️ ما قدرنا نحفظ الإعدادات للأجهزة الثانية (تأكد من الإنترنت).'); log('sync push: '+e.message); }
 }
 const FIXED_PIN_HASH = 'e1455f44cbeb2ab3da7f3ba62deeb4e6e08ea090641f3b3313104053e4f306c5';
@@ -2757,7 +2762,7 @@ $('pinForm').addEventListener('submit', async e=>{
   const v = $('pinInput').value.trim();
   if (pin.mode==='unlock'){
     if (Date.now() < pin.until){ pinUI('unlock', `محاولات كثيرة. انتظر ${Math.ceil((pin.until-Date.now())/1000)} ثانية`, true); return; }
-    if (await hashPin(v) === FIXED_PIN_HASH){ pin.fails = 0; adminPin = v; $('pinDlg').close(); await syncPull(v); reallyOpenSettings(); return; }
+    if (await hashPin(v) === FIXED_PIN_HASH){ pin.fails = 0; adminPin = v; $('pinDlg').close(); await syncPull(v); syncSnap = syncState(); reallyOpenSettings(); return; }
     pin.fails++; shakePin();
     if (pin.fails >= 5){ pin.until = Date.now() + 60000; pin.fails = 0; pinUI('unlock', 'محاولات كثيرة. انتظر دقيقة', true); }
     else pinUI('unlock', 'الرمز غلط', true);
