@@ -770,6 +770,7 @@ details.logbox summary{cursor:pointer;color:var(--muted);font-size:14px;padding:
 
       <section class="grp">
         <h4>صيانة</h4>
+        <div class="usage" id="syncNote" style="text-align:start;margin-bottom:8px">☁️ الإعدادات تتزامن مع كل جهاز تدخل فيه بالرمز السري.</div>
         <button type="button" class="btn mini" id="xferBtn">📲 نقل الإعدادات لجهاز ثاني (QR)</button>
         <button type="button" class="btn mini" id="cleanup">🧹 احذف كل أصوات الزوار المتبقية</button>
         <details class="logbox"><summary>سجل الأخطاء</summary><div class="log" id="log"></div></details>
@@ -2705,6 +2706,36 @@ async function hashPin(pin){
   try { const h = await crypto.subtle.digest('SHA-256', data); return Array.from(new Uint8Array(h)).map(b=>b.toString(16).padStart(2,'0')).join(''); }
   catch(e){ let x = 5381; for (const b of data) x = ((x<<5)+x+b)>>>0; return 'd'+x.toString(16); }
 }
+/* ================= settings shared across devices =================
+   Opening settings with the PIN loads the organisers' settings saved by any other device, and closing
+   settings saves them for the others. Stored by the Worker, which checks the same PIN. API keys are not
+   shared (the Worker holds the real keys); use the QR transfer for those. */
+const SYNC_FIELDS = ['model','enAccent','sim','stab','noise','cleanAudio','msgSecs','maxChars','wa','picSrc','cmodel','picks'];
+let adminPin = '';
+function syncNote(t){ const n = $('syncNote'); if (n) n.textContent = t; }
+async function syncCall(body){
+  if (!PROXY) throw new Error('NO_PROXY');
+  const r = await fetch(PROXY + '/sync', {method:'POST', headers:{'content-type':'application/json'}, body:JSON.stringify(body)});
+  if (!r.ok) throw new Error('HTTP '+r.status);
+  return r.json();
+}
+async function syncPull(pinValue){
+  try {
+    const res = await syncCall({pin:pinValue});
+    if (res && res.data && res.t > (cfg.syncT||0)){
+      SYNC_FIELDS.forEach(k=>{ if (res.data[k] !== undefined) cfg[k] = res.data[k]; });
+      cfg.syncT = res.t; saveCfg();
+      syncNote('☁️ وصلت آخر إعدادات من الأجهزة الثانية ('+new Date(res.t).toLocaleString('ar-SA-u-nu-latn',{dateStyle:'short',timeStyle:'short'})+').');
+      log('settings pulled from cloud');
+    } else syncNote('☁️ الإعدادات متزامنة مع كل الأجهزة.');
+  } catch(e){ syncNote('☁️ ما قدرنا نجيب الإعدادات من الأجهزة الثانية (تأكد من الإنترنت).'); log('sync pull: '+e.message); }
+}
+async function syncPush(){
+  if (!adminPin) return;
+  const data = {}; SYNC_FIELDS.forEach(k=>{ if (cfg[k] !== undefined) data[k] = cfg[k]; });
+  try { const r = await syncCall({pin:adminPin, data}); cfg.syncT = r.t || Date.now(); saveCfg(); syncNote('☁️ انحفظت الإعدادات لكل الأجهزة.'); }
+  catch(e){ syncNote('☁️ ما قدرنا نحفظ الإعدادات للأجهزة الثانية (تأكد من الإنترنت).'); log('sync push: '+e.message); }
+}
 const FIXED_PIN_HASH = 'e1455f44cbeb2ab3da7f3ba62deeb4e6e08ea090641f3b3313104053e4f306c5';
 const pin = {mode:'unlock', first:'', fails:0, until:0};
 function pinUI(mode, msg, bad){
@@ -2726,7 +2757,7 @@ $('pinForm').addEventListener('submit', async e=>{
   const v = $('pinInput').value.trim();
   if (pin.mode==='unlock'){
     if (Date.now() < pin.until){ pinUI('unlock', `محاولات كثيرة. انتظر ${Math.ceil((pin.until-Date.now())/1000)} ثانية`, true); return; }
-    if (await hashPin(v) === FIXED_PIN_HASH){ pin.fails = 0; $('pinDlg').close(); reallyOpenSettings(); return; }
+    if (await hashPin(v) === FIXED_PIN_HASH){ pin.fails = 0; adminPin = v; $('pinDlg').close(); await syncPull(v); reallyOpenSettings(); return; }
     pin.fails++; shakePin();
     if (pin.fails >= 5){ pin.until = Date.now() + 60000; pin.fails = 0; pinUI('unlock', 'محاولات كثيرة. انتظر دقيقة', true); }
     else pinUI('unlock', 'الرمز غلط', true);
@@ -2749,7 +2780,7 @@ $('openSettings').addEventListener('click', openSettings);
 $('saveSettings').addEventListener('click', closeSettings);
 $('closeSettings').addEventListener('click', closeSettings);
 $('settings').addEventListener('click', e=>{ if (e.target === $('settings')) closeSettings(); });
-$('settings').addEventListener('close', ()=>{ document.body.classList.remove('modal-open'); refreshCredits(); renderQRs(); fillSettings(); });
+$('settings').addEventListener('close', ()=>{ syncPush(); document.body.classList.remove('modal-open'); refreshCredits(); renderQRs(); fillSettings(); });
 $('testKey').addEventListener('click', async ()=>{
   autoSave(); $('keyStatus').textContent = '…جاري الاختبار';
   try { const s = await (await api('/user/subscription')).json(); const left = (s.character_limit??0)-(s.character_count??0);
