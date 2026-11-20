@@ -94,6 +94,7 @@ export default {
       const sub = p.slice(3); // يبدأ بـ /
       const allowed =
         (sub === '/speech-to-text' && req.method === 'POST') ||
+        (sub === '/voices' && req.method === 'GET') ||   // voice library list, for the melody site (same origin)
         (sub === '/voices/add' && req.method === 'POST') ||
         (/^\/voices\/[\w-]+$/.test(sub) && req.method === 'DELETE') ||
         (/^\/text-to-speech\/[\w-]+\/with-timestamps$/.test(sub) && req.method === 'POST');
