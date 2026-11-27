@@ -2311,9 +2311,12 @@ class ClipReader {
   async frameAt(t){
     const tr = this.tr, want = Math.max(0, Math.min(tr.sizes.length - 1, Math.floor(t*tr.fps + 1e-6)));
     if (want <= this.curIdx && this.cur) return this.cur;
+    let since = performance.now();
     while (this.curIdx < want){
       if (this.err) throw this.err;
-      if (this.out.length){ const f = this.out.shift(); if (this.cur) this.cur.close(); this.cur = f; this.curIdx++; continue; }
+      if (this.out.length){ const f = this.out.shift(); if (this.cur) this.cur.close(); this.cur = f; this.curIdx++; since = performance.now(); continue; }
+      // some phones (seen on iPhone) accept the clip but never hand back a frame: stop waiting
+      if (performance.now() - since > 3000) throw new Error('DECODER_STALL');
       // keep a few frames in flight so the decoder stays busy
       let fed = false; while (this.next - this.curIdx - 1 - this.out.length < 8 && this.feed()) fed = true;
       if (!fed && this.next >= tr.sizes.length && this.dec.decodeQueueSize === 0){ await this.dec.flush(); if (!this.out.length) break; continue; }
@@ -2502,7 +2505,8 @@ async function aacTrack(parts, T){
     enc.encode(ad); ad.close();
     if (failed) throw failed;
   }
-  await enc.flush(); enc.close();
+  await Promise.race([enc.flush(), new Promise((_, no)=>setTimeout(()=>no(new Error('AAC_STALL')), 8000))]);
+  try { enc.close(); } catch(e){}
   if (failed) throw failed;
   if (!chunks.length) throw new Error('NO_AAC_OUTPUT');
   chunks.sort((a,b)=>a.ts - b.ts);
@@ -2565,13 +2569,16 @@ async function fastTripVideo(onProg, job){
   for (let i = 0; i < N; i++){
     if (failed){ closeReaders(); throw failed; }
     if (job && job.cancel){ try { encoder.close(); } catch(e){} closeReaders(); throw new Error(job.interrupted ? 'INTERRUPTED' : 'CANCELLED'); }
-    await draw.seek(i/fps); draw(i/fps);
+    try { await draw.seek(i/fps); }
+    catch(e){ if (e.message !== 'DECODER_STALL') throw e; log('clip decoder stalled, using the video elements'); closeReaders(); await draw.seek(i/fps); }
+    draw(i/fps);
     const fr = new VideoFrame(cv, {timestamp: Math.round(i*1e6/fps), duration: Math.round(1e6/fps)});
     encoder.encode(fr, {keyFrame: i % (fps*2) === 0}); fr.close();
-    if (encoder.encodeQueueSize > 6) await new Promise(r=>{ const w = ()=> encoder.encodeQueueSize > 2 ? setTimeout(w, 5) : r(); w(); });
+    if (encoder.encodeQueueSize > 6) await new Promise((r, no)=>{ const t0 = performance.now(); const w = ()=> encoder.encodeQueueSize <= 2 ? r() : performance.now() - t0 > 8000 ? no(new Error('ENCODER_STALL')) : setTimeout(w, 5); w(); });
     if (i % 12 === 0){ onProg && onProg(i/N); await new Promise(r=>setTimeout(r, 0)); }
   }
-  await encoder.flush(); encoder.close(); closeReaders();
+  await Promise.race([encoder.flush(), new Promise((_, no)=>setTimeout(()=>no(new Error('ENCODER_STALL')), 15000))]);
+  try { encoder.close(); } catch(e){} closeReaders();
   if (failed) throw failed;
   if (!v.avcC || !v.samples.length) throw new Error('NO_AVCC');
   v.duration = N/fps;
